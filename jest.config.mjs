@@ -14,6 +14,16 @@ const config = {
   extensionsToTreatAsEsm: ['.ts'],
   moduleNameMapper: {
     '^(\\.{1,2}/.*)\\.js$': '$1',
+
+    "^@shared-kernel/(.*)$": "<rootDir>/src/shared/kernel/$1",
+    "^@shared-domain/(.*)$": "<rootDir>/src/shared/domain/$1",
+    "^@shared-infrastructure/(.*)$": "<rootDir>/src/shared/infrastructure/$1",
+
+    "^@modules/(.*)$": "<rootDir>/src/modules/$1",
+    "^@users/(.*)$": "<rootDir>/src/modules/users/$1",
+    "^@users-domain/(.*)$": "<rootDir>/src/modules/users/domain/$1",
+    "^@users-application/(.*)$": "<rootDir>/src/modules/users/application/$1",
+    "^@users-infrastructure/(.*)$": "<rootDir>/src/modules/users/infrastructure/$1",
   },
   transform: {
     '^.+\\.tsx?$': [

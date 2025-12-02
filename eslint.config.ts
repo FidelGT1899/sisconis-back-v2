@@ -18,6 +18,12 @@ const config = tseslint.config(
     ...tseslint.configs.disableTypeChecked,
   },
   {
+    files: ["**/*.test.ts", "**/__tests__/**/*.ts"],
+    rules: {
+      "@typescript-eslint/unbound-method": "off"
+    }
+  },
+  {
     ignores: ["dist/", "node_modules/", "coverage/"],
   }
 );

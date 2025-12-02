@@ -25,13 +25,18 @@
     "declarationMap": true,
 
     "resolveJsonModule": true,
-    "baseUrl": "./src",
+    "baseUrl": ".",
     "paths": {
-      "@domain/*": ["domain/*"],
-      "@application/*": ["application/*"],
-      "@infrastructure/*": ["infrastructure/*"],
-      "@presentation/*": ["presentation/*"],
-      "@shared/*": ["shared/*"]
+      // "@shared/*": ["shared/*"],
+      "@shared-kernel/*": ["src/shared/kernel/*"],
+      "@shared-domain/*": ["src/shared/domain/*"],
+      "@shared-infrastructure/*": ["src/shared/infrastructure/*"],
+
+      "@modules/*": ["src/modules/*"],
+      "@users/*": ["src/modules/users/*"],
+      "@users-domain/*": ["src/modules/users/domain/*"],
+      "@users-application/*": ["src/modules/users/application/*"],
+      "@users-infrastructure/*": ["src/modules/users/infrastructure/*"]
     },
     "verbatimModuleSyntax": true,
     "isolatedModules": true,
