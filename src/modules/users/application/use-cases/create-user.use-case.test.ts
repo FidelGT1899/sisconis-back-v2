@@ -26,12 +26,10 @@ const inputDto = {
     password: 'securepassword',
 };
 
-const validUser = UserEntity.fromPersistence({
-    id: 'mock-uuid-12345',
-    ...inputDto,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-});
+const validUser = {
+    getId: () => 'mock-uuid-12345',
+    getEmail: () => inputDto.email,
+} as unknown as UserEntity;
 
 describe('CreateUserUseCase', () => {
     let useCase: CreateUserUseCase;
@@ -52,7 +50,6 @@ describe('CreateUserUseCase', () => {
         const result = await useCase.execute(inputDto);
 
         expect(result.isOk()).toBe(true);
-        expect(result.value()).toBeInstanceOf(UserEntity);
         expect(mockUserRepository.existsByEmail).toHaveBeenCalledWith(inputDto.email);
         expect(UserEntity.create).toHaveBeenCalledWith(
             expect.objectContaining({ email: inputDto.email }), 

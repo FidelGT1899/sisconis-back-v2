@@ -59,30 +59,4 @@ export class UserEntity extends EntityBase<string> {
         this.updatedAt = new Date();
         return true;
     }
-
-    // Reconstruction Method
-    public static fromPersistence(
-        data: { 
-            id: string; 
-            name: string; 
-            lastName: string; 
-            email: string; 
-            password: string; 
-            createdAt: Date; 
-            updatedAt: Date 
-        }): UserEntity {
-        const user = new UserEntity(
-            {
-                name: data.name,
-                lastName: data.lastName,
-                email: data.email,
-                password: data.password
-            },
-            data.id,
-            undefined,
-            data.createdAt,
-            data.updatedAt
-        );
-        return user;
-    }
 }

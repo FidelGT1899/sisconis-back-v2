@@ -30,3 +30,5 @@ Desktop.ini
 *.swo
 
 docs/comandos.md
+
+/src/generated/prisma
