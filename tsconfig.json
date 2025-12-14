@@ -36,7 +36,9 @@
       "@users/*": ["src/modules/users/*"],
       "@users-domain/*": ["src/modules/users/domain/*"],
       "@users-application/*": ["src/modules/users/application/*"],
-      "@users-infrastructure/*": ["src/modules/users/infrastructure/*"]
+      "@users-infrastructure/*": ["src/modules/users/infrastructure/*"],
+
+      "@prisma/*": ["src/generated/prisma/*"]
     },
     "verbatimModuleSyntax": true,
     "isolatedModules": true,
