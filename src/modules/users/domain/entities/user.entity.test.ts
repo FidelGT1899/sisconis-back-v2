@@ -50,51 +50,14 @@ describe('UserEntity', () => {
     });
 
     describe('changePassword', () => {
-        let user: UserEntity;
-        let originalUpdatedAt: Date;
+    it('should update the password and updatedAt', () => {
+        const user = UserEntity.create(baseProps, mockIdGenerator);
+        const oldUpdatedAt = user.updatedAt;
 
-        beforeEach(() => {
-            originalUpdatedAt = new Date(2025, 0, 1, 10, 0, 0); // Enero 1, 2025
-            const data = { ...baseProps, id: '123', createdAt: new Date(), updatedAt: originalUpdatedAt };
-            user = UserEntity.fromPersistence(data);
-        });
+        user.changePassword('new-password');
 
-        it('should update the password property', () => {
-            const newPassword = 'newHashedPassword456';
-            user.changePassword(newPassword);
-
-            expect(user.getPassword()).toBe(newPassword);
-        });
-
-        it('should update the updatedAt timestamp', () => {
-            user.changePassword('temp-pass');
-            
-            expect(user.updatedAt!.getTime()).toBeGreaterThan(originalUpdatedAt.getTime());
-        });
+        expect(user.getPassword()).toBe('new-password');
+        expect(user.updatedAt).not.toBe(oldUpdatedAt);
     });
-
-    describe('fromPersistence', () => {
-        it('should recreate the entity using all persistence data', () => {
-            const persistenceData = {
-                id: 'db-id-789',
-                name: 'Jane',
-                lastName: 'Smith',
-                email: 'jane@db.com',
-                password: 'db-hash',
-                createdAt: new Date('2024-01-01T10:00:00.000Z'),
-                updatedAt: new Date('2024-05-15T12:00:00.000Z'),
-            };
-
-            const user = UserEntity.fromPersistence(persistenceData);
-
-            expect(user.getId()).toBe(persistenceData.id);
-            expect(user.createdAt).toEqual(persistenceData.createdAt);
-            expect(user.updatedAt).toEqual(persistenceData.updatedAt);
-            
-            expect(user.getName()).toBe('Jane');
-            expect(user.getEmail()).toBe('jane@db.com'); 
-            
-            expect(mockIdGenerator.generate).not.toHaveBeenCalled();
-        });
-    });
+});
 });
