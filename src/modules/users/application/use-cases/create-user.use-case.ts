@@ -6,12 +6,17 @@ import { UnexpectedError } from "@shared-kernel/errors/unexpected.error";
 import type { IUserRepository } from "../../domain/repositories/user.repository.interface";
 import type { IIdGenerator } from "@shared-domain/ports/id-generator";
 import type { CreateUserDto } from "../dtos/create-user.dto";
+import { injectable, inject } from "inversify";
+import { TYPES } from "@shared-kernel/ioc/types";
 
 export type CreateUserResult = Result<UserEntity, AppError>;
 
+@injectable()
 export class CreateUserUseCase {
     constructor(
+        @inject(TYPES.UserRepository)
         private readonly userRepository: IUserRepository,
+        @inject(TYPES.IdGenerator)
         private readonly idGenerator: IIdGenerator,
     ) {}
 

@@ -1,49 +1,75 @@
 {
-  "exclude": ["node_modules", "dist", "src/**/*.test.ts", "**/*.spec.ts", "**/*.test.ts"],
-  "include": ["src/**/*", "src/**/*.ts"],
-  "compilerOptions": {
-    "target": "ES2020",
-    "lib": ["ES2020"],
-    "module": "es2020",
-    "moduleResolution": "bundler",
-    "rootDir": "src",
-    "outDir": "dist",
-    
-    "strict": true,
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
-    "forceConsistentCasingInFileNames": true,
-    "skipLibCheck": true,
-
-    "noUncheckedIndexedAccess": true,
-    "exactOptionalPropertyTypes": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-
-    "sourceMap": true,
-    "declaration": true,
-    "declarationMap": true,
-
-    "resolveJsonModule": true,
-    "baseUrl": ".",
-    "paths": {
-      // "@shared/*": ["shared/*"],
-      "@shared-kernel/*": ["src/shared/kernel/*"],
-      "@shared-domain/*": ["src/shared/domain/*"],
-      "@shared-infrastructure/*": ["src/shared/infrastructure/*"],
-
-      "@modules/*": ["src/modules/*"],
-      "@users/*": ["src/modules/users/*"],
-      "@users-domain/*": ["src/modules/users/domain/*"],
-      "@users-application/*": ["src/modules/users/application/*"],
-      "@users-infrastructure/*": ["src/modules/users/infrastructure/*"],
-
-      "@prisma/*": ["src/generated/prisma/*"]
-    },
-    "verbatimModuleSyntax": true,
-    "isolatedModules": true,
-    
-    "types": ["node", "jest"]
-
-  }
+	"exclude": [
+		"node_modules",
+		"dist",
+		"src/**/*.test.ts",
+		"**/*.spec.ts",
+		"**/*.test.ts"
+	],
+	"include": [
+		"src/**/*",
+		"src/**/*.ts"
+	],
+	"compilerOptions": {
+		"target": "ES2020",
+		"lib": [
+			"ES2020"
+		],
+		"module": "es2020",
+		"moduleResolution": "bundler",
+		"rootDir": "src",
+		"outDir": "dist",
+		"experimentalDecorators": true,
+		"emitDecoratorMetadata": true,
+		"strict": true,
+		"esModuleInterop": true,
+		"allowSyntheticDefaultImports": true,
+		"forceConsistentCasingInFileNames": true,
+		"skipLibCheck": true,
+		"noUncheckedIndexedAccess": true,
+		"exactOptionalPropertyTypes": true,
+		"noUnusedLocals": true,
+		"noUnusedParameters": true,
+		"sourceMap": true,
+		"declaration": true,
+		"declarationMap": true,
+		"resolveJsonModule": true,
+		"baseUrl": ".",
+		"paths": {
+			// "@shared/*": ["shared/*"],
+			"@shared-kernel/*": [
+				"src/shared/kernel/*"
+			],
+			"@shared-domain/*": [
+				"src/shared/domain/*"
+			],
+			"@shared-infrastructure/*": [
+				"src/shared/infrastructure/*"
+			],
+			"@modules/*": [
+				"src/modules/*"
+			],
+			"@users/*": [
+				"src/modules/users/*"
+			],
+			"@users-domain/*": [
+				"src/modules/users/domain/*"
+			],
+			"@users-application/*": [
+				"src/modules/users/application/*"
+			],
+			"@users-infrastructure/*": [
+				"src/modules/users/infrastructure/*"
+			],
+			"@prisma-generated": [
+				"generated/prisma"
+			]
+		},
+		"verbatimModuleSyntax": true,
+		"isolatedModules": true,
+		"types": [
+			"node",
+			"jest"
+		]
+	}
 }

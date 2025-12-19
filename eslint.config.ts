@@ -34,7 +34,7 @@ const config = tseslint.config(
     }
   },
   {
-    ignores: ["dist/", "node_modules/", "coverage/"],
+    ignores: ["dist/", "node_modules/", "coverage/", "prisma/", "generated/"],
   }
 );
 
