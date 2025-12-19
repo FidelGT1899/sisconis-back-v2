@@ -24,6 +24,8 @@ const config = {
     "^@users-domain/(.*)$": "<rootDir>/src/modules/users/domain/$1",
     "^@users-application/(.*)$": "<rootDir>/src/modules/users/application/$1",
     "^@users-infrastructure/(.*)$": "<rootDir>/src/modules/users/infrastructure/$1",
+
+	  "^@prisma-generated/(.*)$": "<rootDir>/generated/prisma/$1",
   },
   transform: {
     '^.+\\.tsx?$': [

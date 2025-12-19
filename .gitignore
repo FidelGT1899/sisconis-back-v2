@@ -31,4 +31,4 @@ Desktop.ini
 
 docs/comandos.md
 
-/src/generated/prisma
+generated/

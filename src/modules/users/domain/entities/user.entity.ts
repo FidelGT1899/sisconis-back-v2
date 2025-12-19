@@ -1,41 +1,31 @@
 import type { IIdGenerator } from "@shared-domain/ports/id-generator";
-import { EntityBase } from "@shared-domain/entity.base";
+import { EntityBase, type BaseEntityProps } from "@shared-domain/entity.base";
 import { EmailVO } from "@users-domain/value-objects/email.vo";
 
-interface UserProps {
+interface UserProps extends BaseEntityProps<string> {
     name: string;
     lastName: string;
     email: string;
     password: string;
 }
 
-export class UserEntity extends EntityBase<string> {
-    private name: string;
-    private lastName: string;
+export class UserEntity extends EntityBase<string, UserProps> {
+    private props: UserProps;
     private email: EmailVO;
-    private password: string;
 
-    private constructor(
-        props: UserProps,
-        id?: string, 
-        idGenerator?: IIdGenerator, 
-        createdAt?: Date, 
-        updatedAt?: Date
-    ) {
-        super(id, idGenerator, createdAt, updatedAt);
-        this.name = props.name;
-        this.lastName = props.lastName;
+    private constructor(props: UserProps) {
+        super(props);
+        this.props = props;
         this.email = EmailVO.create(props.email);
-        this.password = props.password;
     }
 
     // Getters
     public getName(): string {
-        return this.name;
+        return this.props.name;
     }
 
     public getLastName(): string {
-        return this.lastName;
+        return this.props.lastName;
     }
 
     public getEmail(): string {
@@ -43,19 +33,29 @@ export class UserEntity extends EntityBase<string> {
     }
 
     public getPassword(): string {
-        return this.password;
+        return this.props.password;
     }
 
-    // Factory method
-    public static create(props: UserProps, idGenerator?: IIdGenerator): UserEntity {
-        const user = new UserEntity(props, undefined, idGenerator, new Date(), new Date());
-        return user;
+    /**
+     * Factory method
+     * Use Omit to exclude BaseEntityProps from UserProps
+    */
+    public static create(
+        payload: Omit<UserProps, keyof BaseEntityProps<string>>, 
+        idGenerator: IIdGenerator
+    ): UserEntity {
+        return new UserEntity({
+            ...payload,
+            idGenerator,
+            createdAt: new Date(),
+            updatedAt: new Date()
+        });
     }
 
     // Behavior Method
     public changePassword(password: string): boolean {
         // TODO: Implement password validation logic
-        this.password = password;
+        this.props.password = password;
         this.updatedAt = new Date();
         return true;
     }
