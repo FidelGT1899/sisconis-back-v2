@@ -17,22 +17,19 @@ interface UserPersistenceModel {
 
 export class UserMapper {
     static toDomain(raw: UserPersistenceModel): UserEntity {
-        return Object.assign(
-            Object.create(UserEntity.prototype),
-            {
-                id: raw.id,
-                name: raw.name,
-                lastName: raw.lastName,
-                email: EmailVO.create(raw.email),
-                password: raw.password,
-                createdAt: raw.createdAt,
-                updatedAt: raw.updatedAt,
-                deletedAt: raw.deletedAt,
-                createdBy: raw.createdBy,
-                updatedBy: raw.updatedBy,
-                deletedBy: raw.deletedBy
-            }
-        ) as UserEntity;
+        return UserEntity.rehydrate({
+            id: raw.id,
+            name: raw.name,
+            lastName: raw.lastName,
+            email: EmailVO.create(raw.email),
+            password: raw.password,
+            createdAt: raw.createdAt,
+            updatedAt: raw.updatedAt,
+            deletedAt: raw.deletedAt ?? undefined,
+            createdBy: raw.createdBy ?? undefined,
+            updatedBy: raw.updatedBy ?? undefined,
+            deletedBy: raw.deletedBy ?? undefined
+        });
     }
 
     static toPersistence(entity: UserEntity): UserPersistenceModel {

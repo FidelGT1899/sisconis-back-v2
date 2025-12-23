@@ -52,7 +52,7 @@ describe('CreateUserUseCase', () => {
         expect(result.isOk()).toBe(true);
         expect(mockUserRepository.existsByEmail).toHaveBeenCalledWith(inputDto.email);
         expect(UserEntity.create).toHaveBeenCalledWith(
-            expect.objectContaining({ email: inputDto.email }), 
+            expect.objectContaining({ email: inputDto.email }),
             mockIdGenerator
         );
         expect(mockUserRepository.save).toHaveBeenCalledWith(validUser);
@@ -71,7 +71,7 @@ describe('CreateUserUseCase', () => {
 
     it('should return AppError if UserEntity.create throws a DomainError (e.g., InvalidEmailError)', async () => {
         mockUserRepository.existsByEmail.mockResolvedValue(false);
-        
+
         jest.spyOn(UserEntity, 'create').mockImplementation(() => {
             throw new InvalidEmailError('email-invalido');
         });

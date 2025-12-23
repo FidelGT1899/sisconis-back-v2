@@ -5,20 +5,26 @@ import type { CreateUserController } from "@modules/users/infrastructure/http/co
 import type { Express } from "express";
 
 export function createApp(userController: CreateUserController): Express {
-	const app = express();
+    const app = express();
 
-	app.use(express.json());
+    app.use(express.json());
 
-	// health check
-	app.get("/health", (_req, res) => {
-		res.status(200).json({ status: "ok" });
-	});
+    // API base path
+    const apiRouter = express.Router();
 
-	// routes
-	app.use("/users", createUserRoutes(userController));
+    // health check
+    apiRouter.get("/health", (_req, res) => {
+        res.status(200).json({ status: "ok" });
+    });
 
-	// error middleware
-	app.use(globalErrorMiddleware);
+    // routes
+    apiRouter.use("/users", createUserRoutes(userController));
 
-	return app;
+    // mount api
+    app.use("/api", apiRouter);
+
+    // error middleware
+    app.use(globalErrorMiddleware);
+
+    return app;
 }

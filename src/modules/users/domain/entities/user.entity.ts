@@ -5,18 +5,16 @@ import { EmailVO } from "@users-domain/value-objects/email.vo";
 interface UserProps extends BaseEntityProps<string> {
     name: string;
     lastName: string;
-    email: string;
+    email: EmailVO;
     password: string;
 }
 
 export class UserEntity extends EntityBase<string, UserProps> {
     private props: UserProps;
-    private email: EmailVO;
 
     private constructor(props: UserProps) {
         super(props);
         this.props = props;
-        this.email = EmailVO.create(props.email);
     }
 
     // Getters
@@ -29,7 +27,7 @@ export class UserEntity extends EntityBase<string, UserProps> {
     }
 
     public getEmail(): string {
-        return this.email.getValue();
+        return this.props.email.getValue();
     }
 
     public getPassword(): string {
@@ -41,15 +39,29 @@ export class UserEntity extends EntityBase<string, UserProps> {
      * Use Omit to exclude BaseEntityProps from UserProps
     */
     public static create(
-        payload: Omit<UserProps, keyof BaseEntityProps<string>>, 
+        payload: {
+            name: string;
+            lastName: string;
+            email: string;
+            password: string;
+        },
         idGenerator: IIdGenerator
     ): UserEntity {
+        const id = idGenerator.generate();
+
         return new UserEntity({
-            ...payload,
-            idGenerator,
+            id,
+            name: payload.name,
+            lastName: payload.lastName,
+            email: EmailVO.create(payload.email),
+            password: payload.password,
             createdAt: new Date(),
             updatedAt: new Date()
         });
+    }
+
+    public static rehydrate(props: UserProps): UserEntity {
+        return new UserEntity(props);
     }
 
     // Behavior Method

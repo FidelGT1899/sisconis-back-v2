@@ -13,7 +13,7 @@ export class EmailVO extends ValueObjectBase<string> {
     }
 
     public equals(other: unknown): boolean {
-        if  (!(other instanceof EmailVO)) {
+        if (!(other instanceof EmailVO)) {
             return false;
         }
         return this.value === other.getValue();
@@ -30,7 +30,7 @@ export class EmailVO extends ValueObjectBase<string> {
     public static create(value: string): EmailVO {
         return new EmailVO(value);
     }
-    
+
     private static isValid(value: string): boolean {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         return emailRegex.test(value);
