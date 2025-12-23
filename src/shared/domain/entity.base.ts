@@ -5,13 +5,13 @@ export interface BaseEntityProps<TId> {
     idGenerator?: IIdGenerator;
     createdAt?: Date;
     updatedAt?: Date;
-    deletedAt?: Date;
-    createdBy?: string;
-    updatedBy?: string;
-    deletedBy?: string;
+    deletedAt?: Date | undefined;
+    createdBy?: string | undefined;
+    updatedBy?: string | undefined;
+    deletedBy?: string | undefined;
 }
 
-export abstract class EntityBase<TId extends string | number, Props extends BaseEntityProps<TId>> {
+export abstract class EntityBase<TId extends string, Props extends BaseEntityProps<TId>> {
     protected readonly id: TId;
     public readonly createdAt: Date;
     public updatedAt: Date | undefined;
@@ -19,7 +19,7 @@ export abstract class EntityBase<TId extends string | number, Props extends Base
     public createdBy: string | undefined;
     public updatedBy: string | undefined;
     public deletedBy: string | undefined;
-    
+
     constructor(props: Props) {
         if (props.id) {
             this.id = props.id;
@@ -28,7 +28,7 @@ export abstract class EntityBase<TId extends string | number, Props extends Base
         } else {
             throw new Error("Entity requires an ID or an ID generator.");
         }
-        
+
         this.createdAt = props.createdAt || new Date();
         this.updatedAt = props.updatedAt;
         this.deletedAt = props.deletedAt;
@@ -49,7 +49,7 @@ export abstract class EntityBase<TId extends string | number, Props extends Base
         if (!(entity instanceof EntityBase)) {
             return false;
         }
-        
+
         return this.id === entity.id;
     }
 

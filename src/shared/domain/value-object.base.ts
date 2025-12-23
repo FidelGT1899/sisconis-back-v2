@@ -5,18 +5,18 @@ export abstract class ValueObjectBase<T> {
         if (other === null || other === undefined) {
             return false;
         }
-        
+
         const components = this.getEqualityComponents();
         const otherComponents = other.getEqualityComponents();
-        
+
         if (components === null || components === undefined) {
             return false;
         }
-        
+
         if (typeof components !== 'object') {
             return components === otherComponents;
         }
-        
+
         return JSON.stringify(components) === JSON.stringify(otherComponents);
     }
 

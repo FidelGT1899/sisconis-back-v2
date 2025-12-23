@@ -3,11 +3,11 @@ import { expressAdapter } from "@shared-infrastructure/http/adapters/express.ada
 import type { CreateUserController } from "@modules/users/infrastructure/http/controllers/create-user.controller";
 
 export function createUserRoutes(
-  controller: CreateUserController
+    controller: CreateUserController
 ): Router {
-  const router = Router();
+    const router = Router();
 
-  router.post("/", expressAdapter(controller));
+    router.post("/", expressAdapter(controller));
 
-  return router;
+    return router;
 }

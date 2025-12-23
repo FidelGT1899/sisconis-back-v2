@@ -5,7 +5,7 @@ export class Result<T, E extends AppError = AppError> {
         private readonly _isOk: boolean,
         private readonly _value?: T,
         private readonly _error?: E
-    ) {}
+    ) { }
 
     public static ok<T, E extends AppError>(value: T): Result<T, E> {
         return new Result<T, E>(true, value);

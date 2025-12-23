@@ -18,11 +18,11 @@ export class CreateUserUseCase {
         private readonly userRepository: IUserRepository,
         @inject(TYPES.IdGenerator)
         private readonly idGenerator: IIdGenerator,
-    ) {}
+    ) { }
 
     async execute(dto: CreateUserDto): Promise<CreateUserResult> {
         const emailExists = await this.userRepository.existsByEmail(dto.email);
-        
+
         if (emailExists) {
             return Result.fail(new UserAlreadyExistsError(dto.email));
         }
@@ -45,8 +45,10 @@ export class CreateUserUseCase {
             if (error instanceof AppError) {
                 return Result.fail(error);
             }
-            const message = (error instanceof Error) ? error.message : 'Un error desconocido ha ocurrido.';
-            return Result.fail(new UnexpectedError(message));
+            const message = (error instanceof Error)
+                ? error.message
+                : 'Un error desconocido ha ocurrido.';
+            return Result.fail(new UnexpectedError('UNEXPECTED_ERROR', message));
         }
     }
 }

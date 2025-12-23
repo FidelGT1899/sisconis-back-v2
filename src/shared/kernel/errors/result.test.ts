@@ -3,7 +3,7 @@ import { Result } from "./result";
 
 class CustomTestError extends AppError {
     constructor() {
-        super('Test error occurred', 418);
+        super('TEST_ERROR', 'Test error occurred', 418);
     }
 }
 
