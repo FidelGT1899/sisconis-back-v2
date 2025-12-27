@@ -1,7 +1,7 @@
 import { ValueObjectBase } from '@shared-domain/value-object.base';
 import { InvalidEmailError } from '../errors/invalid-email.error';
 
-export class EmailVO extends ValueObjectBase<string> {
+export class EmailVO extends ValueObjectBase {
     private readonly value: string;
 
     private constructor(value: string) {
@@ -12,15 +12,8 @@ export class EmailVO extends ValueObjectBase<string> {
         this.value = value;
     }
 
-    public equals(other: unknown): boolean {
-        if (!(other instanceof EmailVO)) {
-            return false;
-        }
-        return this.value === other.getValue();
-    }
-
-    protected getEqualityComponents(): string {
-        return this.value;
+    protected getEqualityComponents(): ReadonlyArray<unknown> {
+        return [this.value];
     }
 
     public getValue(): string {

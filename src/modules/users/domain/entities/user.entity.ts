@@ -56,7 +56,6 @@ export class UserEntity extends EntityBase<string, UserProps> {
             email: EmailVO.create(payload.email),
             password: payload.password,
             createdAt: new Date(),
-            updatedAt: new Date()
         });
     }
 

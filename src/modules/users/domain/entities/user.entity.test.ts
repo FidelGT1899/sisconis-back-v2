@@ -1,5 +1,6 @@
 import type { IIdGenerator } from "@shared-domain/ports/id-generator";
 import { UserEntity } from "./user.entity";
+import { InvalidEmailError } from "@users-domain/errors/invalid-email.error";
 
 const mockIdGenerator: IIdGenerator = {
     generate: jest.fn(() => 'mock-uuid-12345'),
@@ -13,11 +14,6 @@ const baseProps = {
 };
 
 describe('UserEntity', () => {
-
-    beforeEach(() => {
-        jest.clearAllMocks();
-    });
-
     describe('create', () => {
         it('should create a new UserEntity with generated ID and current dates', () => {
             const user = UserEntity.create(baseProps, mockIdGenerator);
@@ -30,8 +26,7 @@ describe('UserEntity', () => {
             expect(user.getEmail()).toBe(baseProps.email);
 
             expect(user.createdAt).toBeInstanceOf(Date);
-            expect(user.updatedAt).toBeInstanceOf(Date);
-            expect(user.createdAt.getTime()).toBeCloseTo(new Date().getTime(), -100);
+            expect(user.updatedAt).toBeUndefined();
         });
 
         it('should initialize basic properties correctly via getters', () => {
@@ -45,7 +40,9 @@ describe('UserEntity', () => {
         it('should throw InvalidEmailError if props contains invalid email', () => {
             const invalidProps = { ...baseProps, email: 'not-an-email' };
 
-            expect(() => UserEntity.create(invalidProps, mockIdGenerator)).toThrow();
+            expect(() =>
+                UserEntity.create(invalidProps, mockIdGenerator)
+            ).toThrow(InvalidEmailError);
         });
     });
 
@@ -57,6 +54,7 @@ describe('UserEntity', () => {
             user.changePassword('new-password');
 
             expect(user.getPassword()).toBe('new-password');
+            expect(user.updatedAt).toBeInstanceOf(Date);
             expect(user.updatedAt).not.toBe(oldUpdatedAt);
         });
     });

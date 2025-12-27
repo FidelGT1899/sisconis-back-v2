@@ -8,6 +8,8 @@ export function globalErrorMiddleware(
     res: Response,
     _next: NextFunction
 ): Response {
+    // TODO: Implement proper error logging (e.g., to a file or monitoring service)
+    // maybe winston or pino
     console.error("Unhandled error:", error);
 
     // Zod Errors
@@ -48,7 +50,7 @@ export function globalErrorMiddleware(
         });
     }
 
-    // 
+    //
     return res.status(500).json({
         status: "error",
         error: {
