@@ -41,6 +41,30 @@ export abstract class EntityBase<TId extends string, Props extends BaseEntityPro
         return this.id;
     }
 
+    public getCreatedAt(): Date {
+        return this.createdAt;
+    }
+
+    public getUpdatedAt(): Date {
+        return this.updatedAt ?? this.createdAt;
+    }
+
+    // public getDeletedAt(): Date | undefined {
+    //     return this.deletedAt;
+    // }
+    // 
+    // public getCreatedBy(): string | undefined {
+    //     return this.createdBy;
+    // }
+    // 
+    // public getUpdatedBy(): string | undefined {
+    //     return this.updatedBy;
+    // }
+    // 
+    // public getDeletedBy(): string | undefined {
+    //     return this.deletedBy;
+    // }
+
     public equals(entity: EntityBase<TId, Props>): boolean {
         if (!entity.id || !this.id) {
             return false;

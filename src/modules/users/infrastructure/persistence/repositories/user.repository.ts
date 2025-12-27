@@ -1,7 +1,7 @@
-import type { IUserRepository } from "@modules/users/domain/repositories/user.repository.interface";
-import { UserMapper } from "@modules/users/infrastructure/mappers/user-persistence.mapper";
-import { UserEntity } from "@modules/users/domain/entities/user.entity";
-import { PrismaClient } from "../../../../../../generated/prisma";
+import type { IUserRepository } from "@users-domain/repositories/user.repository.interface";
+import { UserMapper } from "@users-infrastructure/mappers/user-persistence.mapper";
+import { UserEntity } from "@users-domain/entities/user.entity";
+import { PrismaClient } from "@prisma-generated";
 import { injectable, inject } from "inversify";
 import { TYPES } from "@shared-kernel/ioc/types";
 import { InfrastructureError } from "@shared-kernel/errors/infrastructure.error";
@@ -33,11 +33,15 @@ export class UserRepository implements IUserRepository {
     }
 
     async save(user: UserEntity): Promise<UserEntity> {
-        const data = UserMapper.toPersistence(user);
-        const created = await this.prisma.user.create({
-            data
-        });
-        return UserMapper.toDomain(created);
+        try {
+            const data = UserMapper.toPersistence(user);
+            const created = await this.prisma.user.create({
+                data
+            });
+            return UserMapper.toDomain(created);
+        } catch (_error) {
+            throw new InfrastructureError("DATABASE_UNAVAILABLE", "Database is not reachable", 503);
+        }
     }
 
     update(_user: UserEntity): Promise<UserEntity> {

@@ -16,8 +16,8 @@ export class UserResponseMapper {
             name: entity.getName(),
             lastName: entity.getLastName(),
             email: entity.getEmail(),
-            createdAt: entity.createdAt.toISOString(),
-            updatedAt: (entity.createdAt || entity.updatedAt).toISOString()
+            createdAt: entity.getCreatedAt().toISOString(),
+            updatedAt: entity.getUpdatedAt().toISOString()
         };
     }
 }

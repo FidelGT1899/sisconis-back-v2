@@ -1,24 +1,20 @@
-export abstract class ValueObjectBase<T> {
-    protected abstract getEqualityComponents(): T;
+export abstract class ValueObjectBase {
+    protected abstract getEqualityComponents(): ReadonlyArray<unknown>;
 
-    public equals(other: ValueObjectBase<T>): boolean {
-        if (other === null || other === undefined) {
-            return false;
-        }
+    public equals(other?: ValueObjectBase): boolean {
+        if (!other) return false;
+        if (this === other) return true;
+        if (this.constructor !== other.constructor) return false;
 
         const components = this.getEqualityComponents();
         const otherComponents = other.getEqualityComponents();
 
-        if (components === null || components === undefined) {
+        if (components.length !== otherComponents.length) {
             return false;
         }
 
-        if (typeof components !== 'object') {
-            return components === otherComponents;
-        }
-
-        return JSON.stringify(components) === JSON.stringify(otherComponents);
+        return components.every((value, index) => {
+            return value === otherComponents[index];
+        });
     }
-
-    public abstract getValue(): T;
 }
