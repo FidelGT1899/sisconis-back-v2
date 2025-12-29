@@ -34,10 +34,7 @@ export class UserEntity extends EntityBase<string, UserProps> {
         return this.props.password;
     }
 
-    /**
-     * Factory method
-     * Use Omit to exclude BaseEntityProps from UserProps
-    */
+    // Factory method
     public static create(
         payload: {
             name: string;
@@ -58,6 +55,28 @@ export class UserEntity extends EntityBase<string, UserProps> {
             createdAt: new Date(),
         });
     }
+
+    public static fromExisting(
+        id: string,
+        payload: {
+            name: string;
+            lastName: string;
+            email: string;
+            password: string;
+        },
+        createdAt: Date
+    ): UserEntity {
+        return new UserEntity({
+            id,
+            name: payload.name,
+            lastName: payload.lastName,
+            email: EmailVO.create(payload.email),
+            password: payload.password,
+            createdAt,
+            updatedAt: new Date(),
+        });
+    }
+
 
     public static rehydrate(props: UserProps): UserEntity {
         return new UserEntity(props);

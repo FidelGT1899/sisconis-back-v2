@@ -46,6 +46,46 @@ describe('UserEntity', () => {
         });
     });
 
+    describe('fromExisting', () => {
+        it('should recreate a UserEntity keeping id and createdAt, and updating updatedAt', () => {
+            const createdAt = new Date('2024-01-01');
+
+            const user = UserEntity.fromExisting(
+                'existing-id-123',
+                baseProps,
+                createdAt
+            );
+
+            expect(user).toBeInstanceOf(UserEntity);
+
+            expect(user.getId()).toBe('existing-id-123');
+            expect(user.createdAt).toBe(createdAt);
+
+            expect(user.updatedAt).toBeInstanceOf(Date);
+            expect(user.updatedAt).not.toBe(createdAt);
+
+            expect(user.getName()).toBe(baseProps.name);
+            expect(user.getLastName()).toBe(baseProps.lastName);
+            expect(user.getEmail()).toBe(baseProps.email);
+            expect(user.getPassword()).toBe(baseProps.password);
+        });
+
+        it('should throw InvalidEmailError if email is invalid', () => {
+            const createdAt = new Date();
+
+            const invalidProps = { ...baseProps, email: 'invalid-email' };
+
+            expect(() =>
+                UserEntity.fromExisting(
+                    'existing-id-123',
+                    invalidProps,
+                    createdAt
+                )
+            ).toThrow(InvalidEmailError);
+        });
+    });
+
+
     describe('changePassword', () => {
         it('should update the password and updatedAt', () => {
             const user = UserEntity.create(baseProps, mockIdGenerator);

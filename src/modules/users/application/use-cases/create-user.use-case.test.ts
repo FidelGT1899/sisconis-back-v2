@@ -2,7 +2,6 @@ import { UserEntity } from "@users-domain/entities/user.entity";
 import { CreateUserUseCase } from "./create-user.use-case";
 import { UserAlreadyExistsError } from "../errors/user-already-exists.error";
 import { InvalidEmailError } from "@users-domain/errors/invalid-email.error";
-import { UnexpectedError } from "@shared-kernel/errors/unexpected.error";
 import { IUserRepository } from "@users-domain/repositories/user.repository.interface";
 import { IIdGenerator } from "@shared-domain/ports/id-generator";
 
@@ -47,14 +46,15 @@ describe('CreateUserUseCase', () => {
         expect(savedUser.getId()).toBe('mock-uuid-12345');
     });
 
-    it('should return InvalidEmailError if email is invalid', async () => {
+    it('should throw InvalidEmailError if email is invalid', async () => {
         mockUserRepository.existsByEmail.mockResolvedValue(false);
 
         const invalidInput = { ...inputDto, email: 'invalid-email' };
-        const result = await useCase.execute(invalidInput);
 
-        expect(result.isErr()).toBe(true);
-        expect(result.error()).toBeInstanceOf(InvalidEmailError);
+        await expect(useCase.execute(invalidInput))
+            .rejects
+            .toBeInstanceOf(InvalidEmailError);
+
         expect(mockUserRepository.save).not.toHaveBeenCalled();
     });
 
@@ -68,17 +68,15 @@ describe('CreateUserUseCase', () => {
         expect(mockUserRepository.save).not.toHaveBeenCalled();
     });
 
-    it('should return UnexpectedError if repository save operation fails', async () => {
+    it('should throw error if repository save operation fails', async () => {
         mockUserRepository.existsByEmail.mockResolvedValue(false);
         mockIdGenerator.generate.mockReturnValue('any-id');
 
         const dbError = new Error('Database connection failed');
         mockUserRepository.save.mockRejectedValue(dbError);
 
-        const result = await useCase.execute(inputDto);
-
-        expect(result.isErr()).toBe(true);
-        expect(result.error()).toBeInstanceOf(UnexpectedError);
-        expect(result.error()?.message).toContain('Database connection failed');
+        await expect(useCase.execute(inputDto))
+            .rejects
+            .toThrow('Database connection failed');
     });
 });

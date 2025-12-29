@@ -5,6 +5,7 @@ import { PrismaClient } from "@prisma-generated";
 import { injectable, inject } from "inversify";
 import { TYPES } from "@shared-kernel/ioc/types";
 import { InfrastructureError } from "@shared-kernel/errors/infrastructure.error";
+import type { PaginationUsersDto } from "@modules/users/application/dtos/pagination-users.dto";
 
 @injectable()
 export class UserRepository implements IUserRepository {
@@ -24,12 +25,46 @@ export class UserRepository implements IUserRepository {
         }
     }
 
-    index(): Promise<UserEntity[]> {
-        throw new Error("Method not implemented.");
+    async index(pagination: PaginationUsersDto): Promise<UserEntity[]> {
+        try {
+            const users = await this.prisma.user.findMany({
+                where: {
+                    deletedAt: null,
+                    ...(pagination.search && {
+                        OR: [
+                            { name: { contains: pagination.search, mode: 'insensitive' } },
+                            { lastName: { contains: pagination.search, mode: 'insensitive' } },
+                            { email: { contains: pagination.search, mode: 'insensitive' } }
+                        ]
+                    })
+                },
+                orderBy: {
+                    [pagination.orderBy]: pagination.direction
+                },
+                skip: (pagination.page - 1) * pagination.limit,
+                take: pagination.limit
+            });
+
+            return users.map(user => UserMapper.toDomain(user));
+        } catch {
+            throw new InfrastructureError(
+                "DATABASE_UNAVAILABLE",
+                "Database is not reachable",
+                503
+            );
+        }
     }
 
-    find(_id: string): Promise<UserEntity | null> {
-        throw new Error("Method not implemented.");
+
+    async find(id: string): Promise<UserEntity | null> {
+        try {
+            const user = await this.prisma.user.findUnique({
+                where: { id, deletedAt: null }
+            });
+            return user ? UserMapper.toDomain(user) : null;
+        } catch (_error) {
+            throw new InfrastructureError("DATABASE_UNAVAILABLE", "Database is not reachable", 503);
+        }
     }
 
     async save(user: UserEntity): Promise<UserEntity> {
@@ -44,11 +79,27 @@ export class UserRepository implements IUserRepository {
         }
     }
 
-    update(_user: UserEntity): Promise<UserEntity> {
-        throw new Error("Method not implemented.");
+    async update(user: UserEntity): Promise<UserEntity> {
+        try {
+            const data = UserMapper.toPersistence(user);
+            const updated = await this.prisma.user.update({
+                where: { id: user.getId() },
+                data
+            });
+            return UserMapper.toDomain(updated);
+        } catch (_error) {
+            throw new InfrastructureError("DATABASE_UNAVAILABLE", "Database is not reachable", 503);
+        }
     }
 
-    delete(_id: string): Promise<void> {
-        throw new Error("Method not implemented.");
+    async delete(id: string): Promise<void> {
+        try {
+            await this.prisma.user.update({
+                where: { id, deletedAt: null },
+                data: { deletedAt: new Date() }
+            });
+        } catch (_error) {
+            throw new InfrastructureError("DATABASE_UNAVAILABLE", "Database is not reachable", 503);
+        }
     }
 }
