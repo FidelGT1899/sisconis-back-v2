@@ -1,6 +1,14 @@
 import { AppError } from "@shared-kernel/errors/app.error";
+import { UnexpectedError } from "@shared-kernel/errors/unexpected.error";
 import type { Request, Response, NextFunction } from "express";
 import { ZodError } from "zod";
+
+// TODO: Implement for the future
+// const isProd = process.env.NODE_ENV === "production";
+// const message = isProd
+//   ? "Internal Server Error"
+//   : error.message;
+
 
 export function globalErrorMiddleware(
     error: unknown,
@@ -40,12 +48,27 @@ export function globalErrorMiddleware(
     }
 
     // Generic Error
+    // if (error instanceof Error) {
+    //     return res.status(500).json({
+    //         status: "error",
+    //         error: {
+    //             code: "INTERNAL_ERROR",
+    //             message: error.message || "Internal Server Error",
+    //         },
+    //     });
+    // }
+
     if (error instanceof Error) {
-        return res.status(500).json({
+        const unexpected = new UnexpectedError(
+            "UNEXPECTED_ERROR",
+            error.message
+        );
+
+        return res.status(unexpected.statusCode).json({
             status: "error",
             error: {
-                code: "INTERNAL_ERROR",
-                message: error.message || "Internal Server Error",
+                code: unexpected.code,
+                message: unexpected.message,
             },
         });
     }

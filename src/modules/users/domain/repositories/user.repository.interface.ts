@@ -1,8 +1,9 @@
-import type { UserEntity } from "@modules/users/domain/entities/user.entity";
+import type { UserEntity } from "@users-domain/entities/user.entity";
+import type { PaginationUsersDto } from "@users-application/dtos/pagination-users.dto";
 
 export interface IUserRepository {
     existsByEmail(email: string): Promise<boolean>;
-    index(): Promise<UserEntity[]>;
+    index(params: PaginationUsersDto): Promise<UserEntity[]>;
     find(id: string): Promise<UserEntity | null>;
     save(user: UserEntity): Promise<UserEntity>;
     update(user: UserEntity): Promise<UserEntity>;
