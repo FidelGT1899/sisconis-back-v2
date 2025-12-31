@@ -9,7 +9,14 @@ import type { IUserRepository } from "@users-domain/repositories/user.repository
 
 import type { PaginationUsersDto } from "@users-application/dtos/pagination-users.dto";
 
-export type GetUsersResult = Result<UserEntity[], AppError>;
+export interface PaginatedUsers {
+    items: UserEntity[];
+    total: number;
+    page: number;
+    limit: number;
+}
+
+export type GetUsersResult = Result<PaginatedUsers, AppError>;
 
 @injectable()
 export class GetUsersUseCase {
@@ -20,14 +27,20 @@ export class GetUsersUseCase {
 
     async execute(dto: PaginationUsersDto): Promise<GetUsersResult> {
         const pagination = {
-            page: dto.page || 1,
-            limit: dto.limit || 10,
-            orderBy: dto.orderBy || 'createdAt',
-            direction: dto.direction || 'desc',
-            search: dto.search || ''
+            page: dto.page ?? 1,
+            limit: dto.limit ?? 10,
+            orderBy: dto.orderBy ?? 'createdAt',
+            direction: dto.direction ?? 'desc',
+            search: dto.search ?? ''
         };
 
-        const users = await this.userRepository.index(pagination);
-        return Result.ok(users);
+        const { items, total } = await this.userRepository.index(pagination);
+
+        return Result.ok({
+            items,
+            total,
+            page: pagination.page,
+            limit: pagination.limit
+        });
     }
 }

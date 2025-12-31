@@ -1,10 +1,14 @@
 import { injectable, inject } from "inversify";
+
 import { TYPES } from "@shared-kernel/ioc/types";
-import { CreateUserSchema } from "../requests/create-user.schema";
-import { CreateUserUseCase } from "@modules/users/application/use-cases/create-user.use-case";
-import type { Controller, HttpRequest, HttpResponse } from "@shared-infrastructure/http/ports/controller";
 import { BaseController } from "@shared-infrastructure/http/base/base.controller";
-import { UserResponseMapper } from "@modules/users/infrastructure/mappers/user-response.mapper";
+import type { Controller, HttpRequest, HttpResponse } from "@shared-infrastructure/http/ports/controller";
+
+import { CreateUserUseCase } from "@users-application/use-cases/create-user.use-case";
+
+import { UserResponseMapper } from "@users-infrastructure/mappers/user-response.mapper";
+
+import { CreateUserSchema } from "../requests/create-user.schema";
 
 @injectable()
 export class CreateUserController extends BaseController implements Controller {

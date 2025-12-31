@@ -1,9 +1,10 @@
 import type { UserEntity } from "@users-domain/entities/user.entity";
 import type { PaginationUsersDto } from "@users-application/dtos/pagination-users.dto";
+import type { PaginatedResult } from "@shared-kernel/utils/paginated-result";
 
 export interface IUserRepository {
     existsByEmail(email: string): Promise<boolean>;
-    index(params: PaginationUsersDto): Promise<UserEntity[]>;
+    index(params: PaginationUsersDto): Promise<PaginatedResult<UserEntity>>;
     find(id: string): Promise<UserEntity | null>;
     save(user: UserEntity): Promise<UserEntity>;
     update(user: UserEntity): Promise<UserEntity>;

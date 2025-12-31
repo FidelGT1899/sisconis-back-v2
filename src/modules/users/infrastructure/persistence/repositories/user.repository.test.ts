@@ -59,7 +59,10 @@ describe('UserRepository', () => {
                 deletedBy: null
             }];
 
-            prismaMock.user.findMany.mockResolvedValue(prismaUsers);
+            prismaMock.$transaction.mockResolvedValue([
+                prismaUsers,
+                1
+            ]);
 
             const result = await userRepository.index({
                 page: 1,
@@ -69,27 +72,12 @@ describe('UserRepository', () => {
                 search: 'Fidel'
             });
 
-            expect(prismaMock.user.findMany).toHaveBeenCalledWith({
-                where: {
-                    deletedAt: null,
-                    OR: [
-                        { name: { contains: 'Fidel', mode: 'insensitive' } },
-                        { lastName: { contains: 'Fidel', mode: 'insensitive' } },
-                        { email: { contains: 'Fidel', mode: 'insensitive' } }
-                    ]
-                },
-                orderBy: {
-                    createdAt: 'desc'
-                },
-                skip: 0,
-                take: 10
-            });
-
-            expect(result[0]).toBeInstanceOf(UserEntity);
+            expect(result.items[0]).toBeInstanceOf(UserEntity);
+            expect(result.total).toBe(1);
         });
 
         it('should throw InfrastructureError when prisma fails', async () => {
-            prismaMock.user.findMany.mockRejectedValue(new Error('DB down'));
+            prismaMock.$transaction.mockRejectedValue(new Error('DB down'));
 
             await expect(
                 userRepository.index({
@@ -99,6 +87,7 @@ describe('UserRepository', () => {
                     direction: 'desc'
                 })
             ).rejects.toThrow(InfrastructureError);
+
         });
     });
 

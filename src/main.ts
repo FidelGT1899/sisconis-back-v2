@@ -1,23 +1,20 @@
 import "dotenv/config";
 import "reflect-metadata";
 
-import { createApp } from "./app";
 import { container } from "@shared-kernel/ioc/container";
 import { TYPES } from "@shared-kernel/ioc/types";
-import type { CreateUserController } from "@modules/users/infrastructure/http/controllers/create-user.controller";
 
-console.log("ENV CHECK =>", {
-    DATABASE_URL: process.env.DATABASE_URL,
-    PORT: process.env.PORT,
-});
+import { createApp } from "./app";
+import type { UsersHttpControllers } from "@shared-kernel/ioc/modules/users.module";
 
 // eslint-disable-next-line @typescript-eslint/require-await
 async function bootstrap(): Promise<void> {
-    const userController = container.get<CreateUserController>(
-        TYPES.CreateUserController
-    );
+    const usersControllers = container.get<UsersHttpControllers>(TYPES.UsersControllers);
 
-    const app = createApp(userController);
+    const app = createApp({
+        users: usersControllers
+    });
+
     const PORT = process.env.PORT ?? 3000;
 
     app.listen(PORT, () => {
@@ -26,6 +23,6 @@ async function bootstrap(): Promise<void> {
 }
 
 bootstrap().catch((error) => {
-    console.error("Fatal error during bootstrap", error);
+    console.error("💥 Fatal error during bootstrap", error);
     process.exit(1);
 });

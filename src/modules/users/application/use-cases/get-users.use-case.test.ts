@@ -16,12 +16,22 @@ describe('GetUsersUseCase', () => {
 
     it('should return paginated users', async () => {
         const users: UserEntity[] = [];
-        mockUserRepository.index.mockResolvedValue(users);
+
+        mockUserRepository.index.mockResolvedValue({
+            items: users,
+            total: 0
+        });
 
         const result = await useCase.execute({ page: 1, limit: 10 });
 
         expect(result.isOk()).toBe(true);
-        expect(result.value()).toBe(users);
+
+        expect(result.value()).toEqual({
+            items: users,
+            total: 0,
+            page: 1,
+            limit: 10
+        });
 
         expect(mockUserRepository.index).toHaveBeenCalledWith(
             expect.objectContaining({
