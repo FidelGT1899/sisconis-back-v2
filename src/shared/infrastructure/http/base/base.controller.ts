@@ -1,14 +1,14 @@
 import { AppError } from "@shared-kernel/errors/app.error";
 import { HttpErrorMapper } from "../errors/error-mapper";
-import type { HttpResponse } from "../ports/controller";
+import type { HttpRequest, HttpResponse } from "../ports/controller";
 import type { Result } from "@shared-kernel/errors/result";
 import { HttpResponseBuilder } from "@shared-infrastructure/http/base/http-response.builder";
 
 export abstract class BaseController {
-    protected ok<T = unknown>(data?: T): HttpResponse {
+    protected ok<T = unknown>(data?: T, meta?: Record<string, unknown>): HttpResponse {
         return {
             statusCode: 200,
-            body: HttpResponseBuilder.success(data),
+            body: HttpResponseBuilder.success(data, meta),
         };
     }
 
@@ -35,6 +35,15 @@ export abstract class BaseController {
     protected fail(error: AppError): HttpResponse {
         return HttpErrorMapper.toResponse(error);
     }
+
+    protected getIdParam(req: HttpRequest): string | null {
+        return req.params?.id ?? null;
+    }
+
+    protected missingParam(param: string): HttpResponse {
+        return this.badRequest(`${param} is required`);
+    }
+
 
     protected handleResult<T>(
         result: Result<T, AppError>,

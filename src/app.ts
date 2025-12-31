@@ -1,10 +1,16 @@
 import express from "express";
-import { createUserRoutes } from "@modules/users/infrastructure/http/routes/user.routes";
-import { globalErrorMiddleware } from "@shared-infrastructure/http/middlewares/error.middleware";
-import type { CreateUserController } from "@modules/users/infrastructure/http/controllers/create-user.controller";
 import type { Express } from "express";
 
-export function createApp(userController: CreateUserController): Express {
+import { globalErrorMiddleware } from "@shared-infrastructure/http/middlewares/error.middleware";
+import { createUserRoutes } from "@users-infrastructure/http/routes/user.routes";
+
+import type { UsersHttpControllers } from "@shared-kernel/ioc/modules/users.module";
+
+export function createApp(
+    controllers: {
+        users: UsersHttpControllers;
+    }
+): Express {
     const app = express();
 
     app.use(express.json());
@@ -18,10 +24,10 @@ export function createApp(userController: CreateUserController): Express {
     });
 
     // routes
-    apiRouter.use("/users", createUserRoutes(userController));
+    apiRouter.use("/users", createUserRoutes(controllers.users));
 
     // mount api
-    app.use("/api", apiRouter);
+    app.use("/v1/api", apiRouter);
 
     // error middleware
     app.use(globalErrorMiddleware);

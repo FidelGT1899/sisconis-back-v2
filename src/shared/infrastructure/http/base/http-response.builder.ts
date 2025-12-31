@@ -1,9 +1,10 @@
 export class HttpResponseBuilder {
-    static success<T>(data?: T, code?: string) {
+    static success<T>(data?: T, meta?: Record<string, unknown>, code?: string) {
         return {
             status: "success" as const,
             ...(code && { code }),
             data,
+            ...(meta && { meta })
         };
     }
 

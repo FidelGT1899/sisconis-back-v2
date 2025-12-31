@@ -1,11 +1,15 @@
-import type { IUserRepository } from "@users-domain/repositories/user.repository.interface";
-import { UserMapper } from "@users-infrastructure/mappers/user-persistence.mapper";
-import { UserEntity } from "@users-domain/entities/user.entity";
-import { PrismaClient } from "@prisma-generated";
 import { injectable, inject } from "inversify";
+import { PrismaClient, Prisma } from "@prisma-generated";
+
 import { TYPES } from "@shared-kernel/ioc/types";
 import { InfrastructureError } from "@shared-kernel/errors/infrastructure.error";
-import type { PaginationUsersDto } from "@modules/users/application/dtos/pagination-users.dto";
+
+import type { IUserRepository } from "@users-domain/repositories/user.repository.interface";
+
+import type { PaginationUsersDto } from "@users-application/dtos/pagination-users.dto";
+
+import { UserMapper } from "@users-infrastructure/mappers/user-persistence.mapper";
+import { UserEntity } from "@users-domain/entities/user.entity";
 
 @injectable()
 export class UserRepository implements IUserRepository {
@@ -25,27 +29,41 @@ export class UserRepository implements IUserRepository {
         }
     }
 
-    async index(pagination: PaginationUsersDto): Promise<UserEntity[]> {
+    async index(
+        pagination: PaginationUsersDto
+    ): Promise<{ items: UserEntity[]; total: number }> {
         try {
-            const users = await this.prisma.user.findMany({
-                where: {
-                    deletedAt: null,
-                    ...(pagination.search && {
-                        OR: [
-                            { name: { contains: pagination.search, mode: 'insensitive' } },
-                            { lastName: { contains: pagination.search, mode: 'insensitive' } },
-                            { email: { contains: pagination.search, mode: 'insensitive' } }
-                        ]
-                    })
-                },
-                orderBy: {
-                    [pagination.orderBy]: pagination.direction
-                },
-                skip: (pagination.page - 1) * pagination.limit,
-                take: pagination.limit
-            });
+            const page = pagination.page ?? 1;
+            const limit = pagination.limit ?? 10;
 
-            return users.map(user => UserMapper.toDomain(user));
+            const where: Prisma.UserWhereInput = {
+                deletedAt: null
+            };
+
+            if (pagination.search) {
+                where.OR = [
+                    { name: { contains: pagination.search, mode: Prisma.QueryMode.insensitive } },
+                    { lastName: { contains: pagination.search, mode: Prisma.QueryMode.insensitive } },
+                    { email: { contains: pagination.search, mode: Prisma.QueryMode.insensitive } }
+                ];
+            }
+
+            const [users, total] = await this.prisma.$transaction([
+                this.prisma.user.findMany({
+                    where,
+                    orderBy: {
+                        [pagination.orderBy ?? 'createdAt']: pagination.direction ?? 'desc'
+                    },
+                    skip: (page - 1) * limit,
+                    take: limit
+                }),
+                this.prisma.user.count({ where })
+            ]);
+
+            return {
+                items: users.map(user => UserMapper.toDomain(user)),
+                total
+            };
         } catch {
             throw new InfrastructureError(
                 "DATABASE_UNAVAILABLE",

@@ -1,19 +1,25 @@
 import { createApp } from "./app";
 import request from "supertest";
-import type { CreateUserController } from "@users-infrastructure/http/controllers/create-user.controller";
-import type { Request, Response } from "express";
 
-const fakeUserController: CreateUserController = {
-    run(_req: Request, res: Response): Promise<Response> {
-        return Promise.resolve(res.status(501).json({ message: "Not implemented" }));
-    },
+const fakeController = {
+    handle: jest.fn()
+};
+
+const fakeUsersControllers = {
+    getUsersController: fakeController,
+    getUserController: fakeController,
+    createUserController: fakeController,
+    updateUserController: fakeController,
+    deleteUserController: fakeController
 };
 
 describe("App bootstrap", () => {
     it("should respond 200 on health check", async () => {
-        const app = createApp(fakeUserController);
+        const app = createApp({
+            users: fakeUsersControllers
+        });
 
-        const response = await request(app).get("/api/health");
+        const response = await request(app).get("/v1/api/health");
 
         expect(response.status).toBe(200);
         expect(response.body).toEqual({ status: "ok" });
