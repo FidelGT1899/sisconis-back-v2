@@ -21,7 +21,7 @@ export function createUserRoutes(controllers: {
     router.get("/", expressAdapter(controllers.getUsersController));
     router.get("/:id", expressAdapter(controllers.getUserController));
     router.post("/", expressAdapter(controllers.createUserController));
-    router.put("/:id", expressAdapter(controllers.updateUserController));
+    router.patch("/:id", expressAdapter(controllers.updateUserController));
     router.delete("/:id", expressAdapter(controllers.deleteUserController));
 
     return router;
