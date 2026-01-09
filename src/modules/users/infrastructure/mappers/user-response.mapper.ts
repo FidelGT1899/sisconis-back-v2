@@ -1,3 +1,4 @@
+import type { ReadUserDto } from "@modules/users/application/dtos/read-user.dto";
 import type { UserEntity } from "@modules/users/domain/entities/user.entity";
 
 export interface UserResponseDto {
@@ -10,14 +11,24 @@ export interface UserResponseDto {
 }
 
 export class UserResponseMapper {
-    static toResponse(entity: UserEntity): UserResponseDto {
+    static toResponse(user: UserEntity | ReadUserDto): UserResponseDto {
+        if ('getId' in user) {
+            return {
+                id: user.getId(),
+                name: user.getName(),
+                lastName: user.getLastName(),
+                email: user.getEmail(),
+                createdAt: user.getCreatedAt().toISOString(),
+                updatedAt: user.getUpdatedAt().toISOString()
+            };
+        }
         return {
-            id: entity.getId(),
-            name: entity.getName(),
-            lastName: entity.getLastName(),
-            email: entity.getEmail(),
-            createdAt: entity.getCreatedAt().toISOString(),
-            updatedAt: entity.getUpdatedAt().toISOString()
+            id: user.id,
+            name: user.name,
+            lastName: user.lastName,
+            email: user.email,
+            createdAt: user.createdAt.toISOString(),
+            updatedAt: user.createdAt.toISOString()
         };
     }
 }

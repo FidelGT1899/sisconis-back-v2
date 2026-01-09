@@ -39,9 +39,13 @@ export class CreateUserUseCase {
             this.idGenerator,
         );
 
-        await this.userRepository.save(user);
+        if (user.isErr()) {
+            return Result.fail(user.error());
+        }
 
-        return Result.ok(user);
+        await this.userRepository.save(user.value());
+
+        return Result.ok(user.value());
 
     }
 }

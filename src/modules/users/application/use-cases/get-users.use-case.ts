@@ -4,13 +4,13 @@ import { Result } from "@shared-kernel/errors/result";
 import type { AppError } from "@shared-kernel/errors/app.error";
 import { TYPES } from "@shared-kernel/ioc/types";
 
-import type { UserEntity } from "@users-domain/entities/user.entity";
 import type { IUserRepository } from "@users-domain/repositories/user.repository.interface";
 
 import type { PaginationUsersDto } from "@users-application/dtos/pagination-users.dto";
+import type { ReadUserDto } from "@users-application/dtos/read-user.dto";
 
 export interface PaginatedUsers {
-    items: UserEntity[];
+    items: ReadUserDto[];
     total: number;
     page: number;
     limit: number;

@@ -46,15 +46,14 @@ describe('CreateUserUseCase', () => {
         expect(savedUser.getId()).toBe('mock-uuid-12345');
     });
 
-    it('should throw InvalidEmailError if email is invalid', async () => {
+    it('should return InvalidEmailError if email is invalid', async () => {
         mockUserRepository.existsByEmail.mockResolvedValue(false);
-
         const invalidInput = { ...inputDto, email: 'invalid-email' };
 
-        await expect(useCase.execute(invalidInput))
-            .rejects
-            .toBeInstanceOf(InvalidEmailError);
+        const result = await useCase.execute(invalidInput);
 
+        expect(result.isErr()).toBe(true);
+        expect(result.error()).toBeInstanceOf(InvalidEmailError);
         expect(mockUserRepository.save).not.toHaveBeenCalled();
     });
 

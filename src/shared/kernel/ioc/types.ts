@@ -3,8 +3,24 @@ export const TYPES = {
     // ILogService: Symbol.for("ILogService"),
 
     // Shared
-    PrismaClient: Symbol.for("PrismaClient"),
+    PrismaService: Symbol.for("PrismaService"),
     IdGenerator: Symbol.for("IdGenerator"),
+
+    // System Application
+    HealthCheckUseCase: Symbol.for("HealthCheckUseCase"),
+    SystemInfoUseCase: Symbol.for("SystemInfoUseCase"),
+    ClockUseCase: Symbol.for("ClockUseCase"),
+    ReadinessStatusUseCase: Symbol.for("ReadinessCheckUseCase"),
+    // DatabaseHealthChecker: Symbol.for("DatabaseHealthChecker"),
+    FeatureFlagsUseCase: Symbol.for("FeatureFlagUseCase"),
+
+    // System Infrastructure
+    SystemControllers: Symbol.for("SystemControllers"),
+    HealthController: Symbol.for("HealthController"),
+    SystemInfoController: Symbol.for("SystemInfoController"),
+    ClockController: Symbol.for("ClockController"),
+    ReadinessController: Symbol.for("ReadinessController"),
+    FeatureFlagsController: Symbol.for("FeatureFlagsController"),
 
     // Users Domain
     UserRepository: Symbol.for("UserRepository"),

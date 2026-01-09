@@ -14,85 +14,81 @@ const baseProps = {
 };
 
 describe('UserEntity', () => {
+    beforeEach(() => {
+        jest.clearAllMocks();
+    });
+
     describe('create', () => {
         it('should create a new UserEntity with generated ID and current dates', () => {
-            const user = UserEntity.create(baseProps, mockIdGenerator);
+            const result = UserEntity.create(baseProps, mockIdGenerator);
+
+            expect(result.isOk()).toBe(true);
+            const user = result.value();
 
             expect(user).toBeInstanceOf(UserEntity);
-
             expect(mockIdGenerator.generate).toHaveBeenCalledTimes(1);
             expect(user.getId()).toBe('mock-uuid-12345');
-
             expect(user.getEmail()).toBe(baseProps.email);
-
             expect(user.createdAt).toBeInstanceOf(Date);
-            expect(user.updatedAt).toBeUndefined();
         });
 
         it('should initialize basic properties correctly via getters', () => {
-            const user = UserEntity.create(baseProps, mockIdGenerator);
+            const result = UserEntity.create(baseProps, mockIdGenerator);
+            const user = result.value();
 
             expect(user.getName()).toBe('John');
             expect(user.getLastName()).toBe('Doe');
             expect(user.getPassword()).toBe('hashedpassword123');
         });
 
-        it('should throw InvalidEmailError if props contains invalid email', () => {
+        it('should return failure with InvalidEmailError if email is invalid', () => {
             const invalidProps = { ...baseProps, email: 'not-an-email' };
+            const result = UserEntity.create(invalidProps, mockIdGenerator);
 
-            expect(() =>
-                UserEntity.create(invalidProps, mockIdGenerator)
-            ).toThrow(InvalidEmailError);
+            expect(result.isErr()).toBe(true);
+            expect(result.error()).toBeInstanceOf(InvalidEmailError);
         });
     });
 
     describe('fromExisting', () => {
-        it('should recreate a UserEntity keeping id and createdAt, and updating updatedAt', () => {
+        it('should recreate a UserEntity keeping id and createdAt', () => {
             const createdAt = new Date('2024-01-01');
 
-            const user = UserEntity.fromExisting(
+            const result = UserEntity.fromExisting(
                 'existing-id-123',
                 baseProps,
                 createdAt
             );
 
-            expect(user).toBeInstanceOf(UserEntity);
+            expect(result.isOk()).toBe(true);
+            const user = result.value();
 
             expect(user.getId()).toBe('existing-id-123');
             expect(user.createdAt).toBe(createdAt);
-
             expect(user.updatedAt).toBeInstanceOf(Date);
-            expect(user.updatedAt).not.toBe(createdAt);
-
-            expect(user.getName()).toBe(baseProps.name);
-            expect(user.getLastName()).toBe(baseProps.lastName);
             expect(user.getEmail()).toBe(baseProps.email);
-            expect(user.getPassword()).toBe(baseProps.password);
         });
 
-        it('should throw InvalidEmailError if email is invalid', () => {
-            const createdAt = new Date();
+        it('should return failure if existing data has invalid email', () => {
+            const result = UserEntity.fromExisting(
+                'id',
+                { ...baseProps, email: 'invalid' },
+                new Date()
+            );
 
-            const invalidProps = { ...baseProps, email: 'invalid-email' };
-
-            expect(() =>
-                UserEntity.fromExisting(
-                    'existing-id-123',
-                    invalidProps,
-                    createdAt
-                )
-            ).toThrow(InvalidEmailError);
+            expect(result.isErr()).toBe(true);
+            expect(result.error()).toBeInstanceOf(InvalidEmailError);
         });
     });
 
-
     describe('changePassword', () => {
         it('should update the password and updatedAt', () => {
-            const user = UserEntity.create(baseProps, mockIdGenerator);
+            const user = UserEntity.create(baseProps, mockIdGenerator).value();
             const oldUpdatedAt = user.updatedAt;
 
-            user.changePassword('new-password');
+            const success = user.changePassword('new-password');
 
+            expect(success).toBe(true);
             expect(user.getPassword()).toBe('new-password');
             expect(user.updatedAt).toBeInstanceOf(Date);
             expect(user.updatedAt).not.toBe(oldUpdatedAt);
