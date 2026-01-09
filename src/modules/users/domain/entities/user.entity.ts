@@ -1,5 +1,8 @@
 import type { IIdGenerator } from "@shared-domain/ports/id-generator";
 import { EntityBase, type BaseEntityProps } from "@shared-domain/entity.base";
+import { Result } from "@shared-kernel/errors/result";
+
+import type { InvalidEmailError } from "@users-domain/errors/invalid-email.error";
 import { EmailVO } from "@users-domain/value-objects/email.vo";
 
 interface UserProps extends BaseEntityProps<string> {
@@ -43,17 +46,25 @@ export class UserEntity extends EntityBase<string, UserProps> {
             password: string;
         },
         idGenerator: IIdGenerator
-    ): UserEntity {
+    ): Result<UserEntity, InvalidEmailError> {
+        const emailResult = EmailVO.create(payload.email);
+
+        if (emailResult.isErr()) {
+            return Result.fail(emailResult.error());
+        }
+
         const id = idGenerator.generate();
 
-        return new UserEntity({
+        const user = new UserEntity({
             id,
             name: payload.name,
             lastName: payload.lastName,
-            email: EmailVO.create(payload.email),
+            email: emailResult.value(),
             password: payload.password,
             createdAt: new Date(),
         });
+
+        return Result.ok(user);
     }
 
     public static fromExisting(
@@ -65,18 +76,25 @@ export class UserEntity extends EntityBase<string, UserProps> {
             password: string;
         },
         createdAt: Date
-    ): UserEntity {
-        return new UserEntity({
+    ): Result<UserEntity, InvalidEmailError> {
+        const emailResult = EmailVO.create(payload.email);
+
+        if (emailResult.isErr()) {
+            return Result.fail(emailResult.error());
+        }
+
+        const user = new UserEntity({
             id,
             name: payload.name,
             lastName: payload.lastName,
-            email: EmailVO.create(payload.email),
+            email: emailResult.value(),
             password: payload.password,
             createdAt,
             updatedAt: new Date(),
         });
-    }
 
+        return Result.ok(user);
+    }
 
     public static rehydrate(props: UserProps): UserEntity {
         return new UserEntity(props);

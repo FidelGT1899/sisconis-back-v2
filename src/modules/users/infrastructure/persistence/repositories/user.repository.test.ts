@@ -4,15 +4,21 @@ import { UserRepository } from "./user.repository";
 import { InfrastructureError } from "@shared-kernel/errors/infrastructure.error";
 import { UserEntity } from "@users-domain/entities/user.entity";
 import { EmailVO } from "@users-domain/value-objects/email.vo";
+import { PrismaService } from "@shared-infrastructure/database/prisma/prisma.service";
 
 describe('UserRepository', () => {
     let userRepository: UserRepository;
     let prismaMock: DeepMockProxy<PrismaClient>;
+    let prismaServiceMock: DeepMockProxy<PrismaService>;
 
     beforeEach(() => {
         prismaMock = mockDeep<PrismaClient>();
-        userRepository = new UserRepository(prismaMock);
-        jest.clearAllMocks();
+        prismaServiceMock = mockDeep<PrismaService>();
+
+        prismaServiceMock.isConnected.mockResolvedValue(true);
+        prismaServiceMock.getClient.mockReturnValue(prismaMock);
+
+        userRepository = new UserRepository(prismaServiceMock);
     });
 
     describe("existsByEmail", () => {
@@ -72,8 +78,17 @@ describe('UserRepository', () => {
                 search: 'Fidel'
             });
 
-            expect(result.items[0]).toBeInstanceOf(UserEntity);
+            expect(result.items[0]).toEqual(
+                expect.objectContaining({
+                    id: '1',
+                    name: 'Fidel',
+                    lastName: 'Garcia',
+                    email: 'fidel@test.com',
+                    createdAt: expect.any(Date) as unknown as Date,
+                })
+            );
             expect(result.total).toBe(1);
+
         });
 
         it('should throw InfrastructureError when prisma fails', async () => {
@@ -126,12 +141,14 @@ describe('UserRepository', () => {
 
     describe("save", () => {
         it("should create and return a user entity correctly", async () => {
-            const userEntity = UserEntity.create({
+            const userEntityResult = UserEntity.create({
                 name: "Fidel",
                 lastName: "Test",
                 email: "fidel@test.com",
                 password: "hashed_password"
             }, { generate: () => "id-123" });
+
+            const userEntity = userEntityResult.value();
 
             const prismaUser = {
                 id: "id-123",
@@ -140,15 +157,38 @@ describe('UserRepository', () => {
                 email: "fidel@test.com",
                 password: "hashed_password",
                 createdAt: new Date(),
-                updatedAt: new Date()
+                updatedAt: new Date(),
+                deletedAt: null,
+                createdBy: null,
+                updatedBy: null,
+                deletedBy: null
             };
+
             prismaMock.user.create.mockResolvedValue(prismaUser);
 
             const result = await userRepository.save(userEntity);
 
             expect(result).toBeInstanceOf(UserEntity);
             expect(result.getId()).toBe("id-123");
-            expect(prismaMock.user.create).toHaveBeenCalled();
+            expect(result.getName()).toBe("Fidel");
+            expect(result.getLastName()).toBe("Test");
+            expect(result.getEmail()).toBe("fidel@test.com");
+
+            expect(prismaMock.user.create).toHaveBeenCalledWith({
+                data: {
+                    id: "id-123",
+                    name: "Fidel",
+                    lastName: "Test",
+                    email: "fidel@test.com",
+                    password: "hashed_password",
+                    createdAt: expect.any(Date) as unknown as Date,
+                    updatedAt: expect.any(Date) as unknown as Date,
+                    deletedAt: null,
+                    createdBy: null,
+                    updatedBy: null,
+                    deletedBy: null
+                }
+            });
         });
 
         it("should throw InfrastructureError when create operation fails", async () => {
@@ -163,16 +203,22 @@ describe('UserRepository', () => {
 
             await expect(userRepository.save(userEntity))
                 .rejects.toThrow(InfrastructureError);
+
+            await expect(userRepository.save(userEntity))
+                .rejects.toThrow("Database is not reachable");
         });
     });
 
     describe('update', () => {
         it('should update and return the user', async () => {
+            const email = EmailVO.create('fidel@test.com');
+            if (email.isErr()) throw new Error('Invalid email');
+
             const user = UserEntity.rehydrate({
                 id: 'id-1',
                 name: 'Fidel',
                 lastName: 'Old',
-                email: EmailVO.create('fidel@test.com'),
+                email: email.value(),
                 password: 'hashed',
                 createdAt: new Date()
             });

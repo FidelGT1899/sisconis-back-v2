@@ -3,20 +3,26 @@ import { PrismaClient, Prisma } from "@prisma-generated";
 
 import { TYPES } from "@shared-kernel/ioc/types";
 import { InfrastructureError } from "@shared-kernel/errors/infrastructure.error";
+import type { PrismaService } from "@shared-infrastructure/database/prisma/prisma.service";
 
 import type { IUserRepository } from "@users-domain/repositories/user.repository.interface";
+import { UserEntity } from "@users-domain/entities/user.entity";
 
 import type { PaginationUsersDto } from "@users-application/dtos/pagination-users.dto";
+import type { ReadUserDto } from "@users-application/dtos/read-user.dto";
 
 import { UserMapper } from "@users-infrastructure/mappers/user-persistence.mapper";
-import { UserEntity } from "@users-domain/entities/user.entity";
 
 @injectable()
 export class UserRepository implements IUserRepository {
+    private readonly prisma: PrismaClient;
+
     constructor(
-        @inject(TYPES.PrismaClient)
-        private readonly prisma: PrismaClient
-    ) { }
+        @inject(TYPES.PrismaService)
+        prismaService: PrismaService
+    ) {
+        this.prisma = prismaService.getClient();
+    }
 
     async existsByEmail(email: string): Promise<boolean> {
         try {
@@ -31,7 +37,7 @@ export class UserRepository implements IUserRepository {
 
     async index(
         pagination: PaginationUsersDto
-    ): Promise<{ items: UserEntity[]; total: number }> {
+    ): Promise<{ items: ReadUserDto[]; total: number }> {
         try {
             const page = pagination.page ?? 1;
             const limit = pagination.limit ?? 10;
@@ -51,6 +57,13 @@ export class UserRepository implements IUserRepository {
             const [users, total] = await this.prisma.$transaction([
                 this.prisma.user.findMany({
                     where,
+                    select: {
+                        id: true,
+                        name: true,
+                        lastName: true,
+                        email: true,
+                        createdAt: true
+                    },
                     orderBy: {
                         [pagination.orderBy ?? 'createdAt']: pagination.direction ?? 'desc'
                     },
@@ -61,7 +74,13 @@ export class UserRepository implements IUserRepository {
             ]);
 
             return {
-                items: users.map(user => UserMapper.toDomain(user)),
+                items: users.map(user => ({
+                    id: user.id,
+                    name: user.name,
+                    lastName: user.lastName,
+                    email: user.email,
+                    createdAt: user.createdAt
+                })),
                 total
             };
         } catch {

@@ -26,12 +26,18 @@ export class UpdateUserUseCase {
             return Result.fail(new UserNotFoundError(dto.id));
         }
 
-        const updatedUser = UserEntity.fromExisting(user.getId(), {
+        const updatedUserResult = UserEntity.fromExisting(user.getId(), {
             name: dto.name ?? user.getName(),
             lastName: dto.lastName ?? user.getLastName(),
             email: dto.email ?? user.getEmail(),
             password: dto.password ?? user.getPassword(),
         }, user.createdAt);
+
+        if (updatedUserResult.isErr()) {
+            return Result.fail(updatedUserResult.error());
+        }
+
+        const updatedUser = updatedUserResult.value();
 
         await this.userRepository.update(updatedUser);
 

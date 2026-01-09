@@ -17,11 +17,17 @@ interface UserPersistenceModel {
 
 export class UserMapper {
     static toDomain(raw: UserPersistenceModel): UserEntity {
+        const emailResult = EmailVO.create(raw.email);
+
+        if (emailResult.isErr()) {
+            throw new Error(`Integrity Error: Database user ${raw.id} has an invalid email.`);
+        }
+
         return UserEntity.rehydrate({
             id: raw.id,
             name: raw.name,
             lastName: raw.lastName,
-            email: EmailVO.create(raw.email),
+            email: emailResult.value(),
             password: raw.password,
             createdAt: raw.createdAt,
             updatedAt: raw.updatedAt,
