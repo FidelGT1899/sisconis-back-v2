@@ -78,15 +78,17 @@ describe('UserRepository', () => {
                 search: 'Fidel'
             });
 
-            expect(result.items[0]).toEqual(
-                expect.objectContaining({
-                    id: '1',
-                    name: 'Fidel',
-                    lastName: 'Garcia',
-                    email: 'fidel@test.com',
-                    createdAt: expect.any(Date) as unknown as Date,
-                })
-            );
+            const user = result.items[0];
+            expect(user).toBeInstanceOf(UserEntity);
+
+            expect(user.getId()).toBe('1');
+            expect(user.getName()).toBe('Fidel');
+            expect(user.getLastName()).toBe('Garcia');
+
+            expect(user.getEmail()).toBe('fidel@test.com');
+
+            expect(user.getCreatedAt()).toBeInstanceOf(Date);
+
             expect(result.total).toBe(1);
 
         });

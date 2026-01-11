@@ -1,7 +1,7 @@
 import { injectable, inject } from "inversify";
 
-import { BaseController } from "@shared-infrastructure/http/base/base.controller";
 import { TYPES } from "@shared-kernel/ioc/types";
+import { BaseController } from "@shared-infrastructure/http/base/base.controller";
 import type { Controller, HttpRequest, HttpResponse } from "@shared-infrastructure/http/ports/controller";
 
 import { DeleteUserUseCase } from "@users-application/use-cases/delete-user.use-case";

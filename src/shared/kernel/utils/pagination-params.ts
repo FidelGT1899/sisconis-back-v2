@@ -1,4 +1,4 @@
-export interface PaginationUsersDto {
+export interface PaginationParams {
     page?: number;
     limit?: number;
     orderBy?: 'createdAt' | 'name';
