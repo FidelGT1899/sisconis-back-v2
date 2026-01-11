@@ -1,7 +1,9 @@
+import type { Request, Response, NextFunction } from "express";
+
 import { container } from "@shared-kernel/ioc/container";
 import { TYPES } from "@shared-kernel/ioc/types";
+
 import { FeatureFlagsUseCase } from "@system-application/use-cases/feature-flags.use-case";
-import type { Request, Response, NextFunction } from "express";
 
 export function requireFeatureFlag(flagName: string) {
     return async (_req: Request, res: Response, next: NextFunction) => {

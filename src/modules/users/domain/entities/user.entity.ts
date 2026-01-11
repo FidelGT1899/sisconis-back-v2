@@ -1,6 +1,6 @@
+import { Result } from "@shared-kernel/errors/result";
 import type { IIdGenerator } from "@shared-domain/ports/id-generator";
 import { EntityBase, type BaseEntityProps } from "@shared-domain/entity.base";
-import { Result } from "@shared-kernel/errors/result";
 
 import type { InvalidEmailError } from "@users-domain/errors/invalid-email.error";
 import { EmailVO } from "@users-domain/value-objects/email.vo";
@@ -20,7 +20,6 @@ export class UserEntity extends EntityBase<string, UserProps> {
         this.props = props;
     }
 
-    // Getters
     public getName(): string {
         return this.props.name;
     }

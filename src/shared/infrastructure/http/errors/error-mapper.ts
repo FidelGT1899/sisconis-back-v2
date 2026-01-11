@@ -1,6 +1,7 @@
 import { AppError } from "@shared-kernel/errors/app.error";
-import type { HttpResponse } from "../ports/controller";
 import { HttpResponseBuilder } from "@shared-infrastructure/http/base/http-response.builder";
+
+import type { HttpResponse } from "../ports/controller";
 
 export class HttpErrorMapper {
     static toResponse(error: AppError): HttpResponse {

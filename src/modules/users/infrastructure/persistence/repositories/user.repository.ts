@@ -2,13 +2,13 @@ import { injectable, inject } from "inversify";
 import { PrismaClient, Prisma } from "@prisma-generated";
 
 import { TYPES } from "@shared-kernel/ioc/types";
-import { InfrastructureError } from "@shared-kernel/errors/infrastructure.error";
 import type { PrismaService } from "@shared-infrastructure/database/prisma/prisma.service";
+import { PrismaErrorMapper } from "@shared-infrastructure/database/prisma/errors/prisma-error.mapper";
 
 import type { IUserRepository } from "@users-domain/repositories/user.repository.interface";
 import { UserEntity } from "@users-domain/entities/user.entity";
 
-import type { PaginationUsersDto } from "@users-application/dtos/pagination-users.dto";
+import type { PaginationUsersDto } from "@shared-kernel/utils/pagination-params";
 import type { ReadUserDto } from "@users-application/dtos/read-user.dto";
 
 import { UserMapper } from "@users-infrastructure/mappers/user-persistence.mapper";
@@ -30,8 +30,8 @@ export class UserRepository implements IUserRepository {
                 where: { email }
             });
             return user > 0;
-        } catch (_error) {
-            throw new InfrastructureError("DATABASE_UNAVAILABLE", "Database is not reachable", 503);
+        } catch (error) {
+            throw PrismaErrorMapper.mapError(error);
         }
     }
 
@@ -83,12 +83,8 @@ export class UserRepository implements IUserRepository {
                 })),
                 total
             };
-        } catch {
-            throw new InfrastructureError(
-                "DATABASE_UNAVAILABLE",
-                "Database is not reachable",
-                503
-            );
+        } catch (error) {
+            throw PrismaErrorMapper.mapError(error);
         }
     }
 
@@ -99,8 +95,8 @@ export class UserRepository implements IUserRepository {
                 where: { id, deletedAt: null }
             });
             return user ? UserMapper.toDomain(user) : null;
-        } catch (_error) {
-            throw new InfrastructureError("DATABASE_UNAVAILABLE", "Database is not reachable", 503);
+        } catch (error) {
+            throw PrismaErrorMapper.mapError(error);
         }
     }
 
@@ -111,8 +107,8 @@ export class UserRepository implements IUserRepository {
                 data
             });
             return UserMapper.toDomain(created);
-        } catch (_error) {
-            throw new InfrastructureError("DATABASE_UNAVAILABLE", "Database is not reachable", 503);
+        } catch (error) {
+            throw PrismaErrorMapper.mapError(error);
         }
     }
 
@@ -124,8 +120,8 @@ export class UserRepository implements IUserRepository {
                 data
             });
             return UserMapper.toDomain(updated);
-        } catch (_error) {
-            throw new InfrastructureError("DATABASE_UNAVAILABLE", "Database is not reachable", 503);
+        } catch (error) {
+            throw PrismaErrorMapper.mapError(error);
         }
     }
 
@@ -135,8 +131,8 @@ export class UserRepository implements IUserRepository {
                 where: { id, deletedAt: null },
                 data: { deletedAt: new Date() }
             });
-        } catch (_error) {
-            throw new InfrastructureError("DATABASE_UNAVAILABLE", "Database is not reachable", 503);
+        } catch (error) {
+            throw PrismaErrorMapper.mapError(error);
         }
     }
 }

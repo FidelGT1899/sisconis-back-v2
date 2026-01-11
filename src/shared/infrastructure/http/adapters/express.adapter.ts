@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import type { Controller, HttpRequest } from "../ports/controller";
+import type { Controller, HttpRequest } from "@shared-infrastructure/http/ports/controller";
 
 export function expressAdapter(controller: Controller) {
     return async (req: Request, res: Response) => {

@@ -1,7 +1,8 @@
-import { AppError } from "@shared-kernel/errors/app.error";
-import { UnexpectedError } from "@shared-kernel/errors/unexpected.error";
 import type { Request, Response, NextFunction } from "express";
 import { ZodError } from "zod";
+
+import { AppError } from "@shared-kernel/errors/app.error";
+import { UnexpectedError } from "@shared-kernel/errors/unexpected.error";
 
 // TODO: Implement for the future
 // const isProd = process.env.NODE_ENV === "production";

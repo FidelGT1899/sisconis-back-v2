@@ -1,8 +1,8 @@
 import { AppError } from "@shared-kernel/errors/app.error";
-import { HttpErrorMapper } from "../errors/error-mapper";
-import type { HttpRequest, HttpResponse } from "../ports/controller";
 import type { Result } from "@shared-kernel/errors/result";
 import { HttpResponseBuilder } from "@shared-infrastructure/http/base/http-response.builder";
+import type { HttpRequest, HttpResponse } from "@shared-infrastructure/http/ports/controller";
+import { HttpErrorMapper } from "@shared-infrastructure/http/errors/error-mapper";
 
 export abstract class BaseController {
     protected ok<T = unknown>(data?: T, meta?: Record<string, unknown>): HttpResponse {

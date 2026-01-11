@@ -1,9 +1,9 @@
 import { injectable } from "inversify";
 
 import { Result } from "@shared-kernel/errors/result";
+import type { AppError } from "@shared-kernel/errors/app.error";
 
 import { HealthStatus } from "@system-domain/health-status";
-import type { AppError } from "@shared-kernel/errors/app.error";
 
 export type HealthCheckResult = Result<HealthStatus, AppError>;
 

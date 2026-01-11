@@ -6,7 +6,7 @@ import { TYPES } from "@shared-kernel/ioc/types";
 
 import type { IUserRepository } from "@users-domain/repositories/user.repository.interface";
 
-import type { PaginationUsersDto } from "@users-application/dtos/pagination-users.dto";
+import type { PaginationUsersDto } from "@shared-kernel/utils/pagination-params";
 import type { ReadUserDto } from "@users-application/dtos/read-user.dto";
 
 export interface PaginatedUsers {

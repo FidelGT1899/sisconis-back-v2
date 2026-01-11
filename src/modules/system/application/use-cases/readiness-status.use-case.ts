@@ -3,9 +3,9 @@ import { inject, injectable } from "inversify";
 import { Result } from "@shared-kernel/errors/result";
 import type { AppError } from "@shared-kernel/errors/app.error";
 import { TYPES } from "@shared-kernel/ioc/types";
+import type { PrismaService } from "@shared-infrastructure/database/prisma/prisma.service";
 
 import { ReadinessStatus } from "@system-domain/readiness-status";
-import type { PrismaService } from "@shared-infrastructure/database/prisma/prisma.service";
 
 export type ReadinessCheckResult = Result<ReadinessStatus, AppError>;
 

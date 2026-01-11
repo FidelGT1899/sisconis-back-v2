@@ -1,5 +1,4 @@
 import { ContainerModule } from "inversify";
-import { TYPES } from "../types";
 
 import { HealthCheckUseCase } from "@system-application/use-cases/health-check.use-case";
 import { ClockUseCase } from "@system-application/use-cases/clock.use-case";
@@ -12,6 +11,8 @@ import { ClockController } from "@system-infrastructure/http/controllers/clock.c
 import { FeatureFlagsController } from "@system-infrastructure/http/controllers/feature-flags.controller";
 import { ReadinessController } from "@system-infrastructure/http/controllers/readiness.controller";
 import { SystemInfoController } from "@system-infrastructure/http/controllers/system-info.controller";
+
+import { TYPES } from "../types";
 
 export interface SystemHttpControllers {
     clockController: ClockController;
