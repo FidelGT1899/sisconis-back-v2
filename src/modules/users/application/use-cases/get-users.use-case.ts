@@ -1,12 +1,12 @@
 import { injectable, inject } from "inversify";
 
 import { Result } from "@shared-kernel/errors/result";
-import type { AppError } from "@shared-kernel/errors/app.error";
 import { TYPES } from "@shared-kernel/ioc/types";
+import type { AppError } from "@shared-kernel/errors/app.error";
+import type { PaginationParams } from "@shared-kernel/utils/pagination-params";
 
 import type { IUserRepository } from "@users-domain/repositories/user.repository.interface";
 
-import type { PaginationUsersDto } from "@shared-kernel/utils/pagination-params";
 import type { ReadUserDto } from "@users-application/dtos/read-user.dto";
 
 export interface PaginatedUsers {
@@ -25,7 +25,7 @@ export class GetUsersUseCase {
         private readonly userRepository: IUserRepository
     ) { }
 
-    async execute(dto: PaginationUsersDto): Promise<GetUsersResult> {
+    async execute(dto: PaginationParams): Promise<GetUsersResult> {
         const pagination = {
             page: dto.page ?? 1,
             limit: dto.limit ?? 10,
@@ -36,8 +36,16 @@ export class GetUsersUseCase {
 
         const { items, total } = await this.userRepository.index(pagination);
 
+        const userDtos: ReadUserDto[] = items.map(user => ({
+            id: user.getId(),
+            name: user.getName(),
+            lastName: user.getLastName(),
+            email: user.getEmail(),
+            createdAt: user.getCreatedAt()
+        }));
+
         return Result.ok({
-            items,
+            items: userDtos,
             total,
             page: pagination.page,
             limit: pagination.limit
