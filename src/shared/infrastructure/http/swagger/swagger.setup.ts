@@ -1,6 +1,6 @@
 import swaggerUi from "swagger-ui-express";
-import { swaggerSpec } from "./swagger.config";
 import type { Application } from "express";
+import { swaggerSpec } from "./swagger.config";
 
 export function setupSwagger(app: Application) {
     const SWAGGER_PATH = "/docs";

@@ -192,14 +192,18 @@ describe('UserRepository', () => {
         });
 
         it("should throw InfrastructureError when create operation fails", async () => {
-            const userEntity = UserEntity.create({
+            const userEntityResult = UserEntity.create({
                 name: "Error",
                 lastName: "Test",
                 email: "err@test.com",
                 password: "pass"
             }, { generate: () => "id-err" });
 
-            prismaMock.user.create.mockRejectedValue(new Error("DB Fallo"));
+            const userEntity = userEntityResult.value();
+
+            prismaMock.user.create.mockRejectedValue(
+                new Error("Database is not reachable")
+            );
 
             await expect(userRepository.save(userEntity))
                 .rejects.toThrow(InfrastructureError);

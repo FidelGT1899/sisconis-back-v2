@@ -1,5 +1,4 @@
 import { ContainerModule } from "inversify";
-import { TYPES } from "../types";
 
 import type { IUserRepository } from "@users-domain/repositories/user.repository.interface";
 
@@ -15,6 +14,8 @@ import { GetUserController } from "@users-infrastructure/http/controllers/get-us
 import { CreateUserController } from "@users-infrastructure/http/controllers/create-user.controller";
 import { UpdateUserController } from "@users-infrastructure/http/controllers/update-user.controller";
 import { DeleteUserController } from "@users-infrastructure/http/controllers/delete-user.controller";
+
+import { TYPES } from "../types";
 
 export interface UsersHttpControllers {
     createUserController: CreateUserController;

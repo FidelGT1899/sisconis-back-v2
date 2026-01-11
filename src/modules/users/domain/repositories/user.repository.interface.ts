@@ -1,6 +1,9 @@
-import type { UserEntity } from "@users-domain/entities/user.entity";
-import type { PaginationUsersDto } from "@users-application/dtos/pagination-users.dto";
 import type { PaginatedResult } from "@shared-kernel/utils/paginated-result";
+
+import type { PaginationUsersDto } from "@shared-kernel/utils/pagination-params";
+
+import type { UserEntity } from "@users-domain/entities/user.entity";
+
 import type { ReadUserDto } from "@users-application/dtos/read-user.dto";
 
 export interface IUserRepository {

@@ -1,4 +1,3 @@
-// @system-domain/feature-flag.ts
 export class FeatureFlag {
     constructor(
         public readonly name: string,
