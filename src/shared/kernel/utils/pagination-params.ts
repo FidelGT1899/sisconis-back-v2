@@ -1,7 +1,7 @@
-export interface PaginationParams {
+export interface PaginationParams<T = string> {
     page?: number;
     limit?: number;
-    orderBy?: 'createdAt' | 'name';
+    orderBy?: T;
     direction?: 'asc' | 'desc';
     search?: string;
 }

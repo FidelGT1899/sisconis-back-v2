@@ -5,7 +5,7 @@ import { TYPES } from "@shared-kernel/ioc/types";
 import type { AppError } from "@shared-kernel/errors/app.error";
 import type { PaginationParams } from "@shared-kernel/utils/pagination-params";
 
-import type { IUserRepository } from "@users-domain/repositories/user.repository.interface";
+import type { IUserRepository, UserOrderBy } from "@users-domain/repositories/user.repository.interface";
 
 import type { ReadUserDto } from "@users-application/dtos/read-user.dto";
 
@@ -25,7 +25,7 @@ export class GetUsersUseCase {
         private readonly userRepository: IUserRepository
     ) { }
 
-    async execute(dto: PaginationParams): Promise<GetUsersResult> {
+    async execute(dto: PaginationParams<UserOrderBy>): Promise<GetUsersResult> {
         const pagination = {
             page: dto.page ?? 1,
             limit: dto.limit ?? 10,
