@@ -1,7 +1,7 @@
 import { injectable, inject } from "inversify";
 
 import { Result } from "@shared-kernel/errors/result";
-import { TYPES } from "@shared-kernel/ioc/types";
+import { TYPES } from "@shared-infrastructure/ioc/types";
 import type { AppError } from "@shared-kernel/errors/app.error";
 import type { PaginationParams } from "@shared-kernel/utils/pagination-params";
 
@@ -41,6 +41,7 @@ export class GetUsersUseCase {
             name: user.getName(),
             lastName: user.getLastName(),
             email: user.getEmail(),
+            dni: user.getDni(),
             createdAt: user.getCreatedAt()
         }));
 

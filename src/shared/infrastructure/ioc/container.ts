@@ -1,7 +1,7 @@
 import { Container } from "inversify";
 
-import { usersModule } from "@shared-kernel/ioc/modules/users.module";
-import { systemModule } from "@shared-kernel/ioc/modules/system.module";
+import { usersModule } from "@shared-infrastructure/ioc/modules/users.module";
+import { systemModule } from "@shared-infrastructure/ioc/modules/system.module";
 
 import { PrismaService } from "@shared-infrastructure/database/prisma/prisma.service";
 import { UlidIdGenerator } from "@shared-infrastructure/id-generator/ulid-id-generator";

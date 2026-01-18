@@ -3,6 +3,8 @@ import { UserNotFoundError } from "../errors/user-not-found.error";
 import { IUserRepository } from "@users-domain/repositories/user.repository.interface";
 import { UserEntity } from "@users-domain/entities/user.entity";
 import { EmailVO } from "@users-domain/value-objects/email.vo";
+import { DniVO } from "@users-domain/value-objects/dni.vo";
+import { PasswordVO } from "@users-domain/value-objects/password.vo";
 
 
 const _user = UserEntity.rehydrate({
@@ -10,7 +12,8 @@ const _user = UserEntity.rehydrate({
     name: 'John',
     lastName: 'Doe',
     email: EmailVO.create('john@doe.com'),
-    password: 'hashed',
+    dni: DniVO.create('12345678'),
+    password: PasswordVO.fromHashed('hashed'),
     createdAt: new Date(),
 });
 
@@ -21,7 +24,7 @@ describe('UpdateUserUseCase', () => {
 
     beforeEach(() => {
         mockUserRepository = {
-            find: jest.fn(),
+            findById: jest.fn(),
             update: jest.fn(),
         } as unknown as jest.Mocked<IUserRepository>;
 
@@ -40,7 +43,7 @@ describe('UpdateUserUseCase', () => {
 
     it('should update a user when it exists', async () => {
         const userId = 'test-user-id';
-        mockUserRepository.find.mockResolvedValue(existingUser);
+        mockUserRepository.findById.mockResolvedValue(existingUser);
         mockUserRepository.update.mockResolvedValue(existingUser);
 
         const result = await useCase.execute({
@@ -61,7 +64,7 @@ describe('UpdateUserUseCase', () => {
 
     it('should return UserNotFoundError when user does not exist', async () => {
         const userId = 'non-existent-id';
-        mockUserRepository.find.mockResolvedValue(null);
+        mockUserRepository.findById.mockResolvedValue(null);
 
         const result = await useCase.execute({ id: userId, name: 'Jane' });
 

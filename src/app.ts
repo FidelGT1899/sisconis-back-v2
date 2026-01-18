@@ -1,8 +1,8 @@
 import express from "express";
 import type { Express } from "express";
 
-import type { UsersHttpControllers } from "@shared-kernel/ioc/modules/users.module";
-import type { SystemHttpControllers } from "@shared-kernel/ioc/modules/system.module";
+import type { UsersHttpControllers } from "@shared-infrastructure/ioc/modules/users.module";
+import type { SystemHttpControllers } from "@shared-infrastructure/ioc/modules/system.module";
 import { globalErrorMiddleware } from "@shared-infrastructure/http/middlewares/error.middleware";
 import { setupSwagger } from "@shared-infrastructure/http/swagger/swagger.setup";
 

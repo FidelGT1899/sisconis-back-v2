@@ -6,6 +6,7 @@ export interface UserResponseDto {
     name: string;
     lastName: string;
     email: string;
+    dni: string;
     createdAt: string;
     updatedAt: string;
 }
@@ -18,6 +19,7 @@ export class UserResponseMapper {
                 name: user.getName(),
                 lastName: user.getLastName(),
                 email: user.getEmail(),
+                dni: user.getDni(),
                 createdAt: user.getCreatedAt().toISOString(),
                 updatedAt: user.getUpdatedAt().toISOString()
             };
@@ -27,6 +29,7 @@ export class UserResponseMapper {
             name: user.name,
             lastName: user.lastName,
             email: user.email,
+            dni: user.dni,
             createdAt: user.createdAt.toISOString(),
             updatedAt: user.createdAt.toISOString()
         };

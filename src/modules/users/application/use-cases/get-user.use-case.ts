@@ -2,7 +2,7 @@ import { injectable, inject } from "inversify";
 
 import { Result } from "@shared-kernel/errors/result";
 import type { AppError } from "@shared-kernel/errors/app.error";
-import { TYPES } from "@shared-kernel/ioc/types";
+import { TYPES } from "@shared-infrastructure/ioc/types";
 
 import type { UserEntity } from "@users-domain/entities/user.entity";
 import type { IUserRepository } from "@users-domain/repositories/user.repository.interface";
@@ -19,7 +19,7 @@ export class GetUserUseCase {
     ) { }
 
     async execute(id: string): Promise<GetUserResult> {
-        const user = await this.userRepository.find(id);
+        const user = await this.userRepository.findById(id);
 
         if (!user) {
             return Result.fail(new UserNotFoundError(id));

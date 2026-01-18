@@ -31,6 +31,9 @@ export const TYPES = {
     CreateUserUseCase: Symbol.for("CreateUserUseCase"),
     UpdateUserUseCase: Symbol.for("UpdateUserUseCase"),
     DeleteUserUseCase: Symbol.for("DeleteUserUseCase"),
+    ResetUserPasswordUseCase: Symbol.for("ResetUserPasswordUseCase"),
+    ChangeUserPasswordUseCase: Symbol.for("ChangeUserPasswordUseCase"),
+    ChangeUserDniUseCase: Symbol.for("ChangeUserDniUseCase"),
 
     // Users Infrastructure
     UsersControllers: Symbol.for("UsersControllers"),
@@ -39,4 +42,7 @@ export const TYPES = {
     CreateUserController: Symbol.for("CreateUserController"),
     UpdateUserController: Symbol.for("UpdateUserController"),
     DeleteUserController: Symbol.for("DeleteUserController"),
+    ResetUserPasswordController: Symbol.for("ResetUserPasswordController"),
+    ChangeUserPasswordController: Symbol.for("ChangeUserPasswordController"),
+    ChangeUserDniController: Symbol.for("ChangeUserDniController"),
 };

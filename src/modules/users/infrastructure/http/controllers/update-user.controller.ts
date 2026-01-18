@@ -1,6 +1,6 @@
 import { injectable, inject } from "inversify";
 
-import { TYPES } from "@shared-kernel/ioc/types";
+import { TYPES } from "@shared-infrastructure/ioc/types";
 import { BaseController } from "@shared-infrastructure/http/base/base.controller";
 import type { Controller, HttpRequest, HttpResponse } from "@shared-infrastructure/http/ports/controller";
 
@@ -18,12 +18,12 @@ export class UpdateUserController extends BaseController implements Controller {
         super();
     }
 
-    async handle(req: HttpRequest<unknown>): Promise<HttpResponse> {
-        const id = this.getIdParam(req);
+    async handle(request: HttpRequest<unknown>): Promise<HttpResponse> {
+        const id = this.getIdParam(request);
 
         if (!id) return this.missingParam("id");
 
-        const parsed = UpdateUserSchema.parse(req.body);
+        const parsed = UpdateUserSchema.parse(request.body);
 
         const result = await this.useCase.execute({
             id,

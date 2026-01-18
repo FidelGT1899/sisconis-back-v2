@@ -7,13 +7,19 @@ import type { GetUsersController } from "@users-infrastructure/http/controllers/
 import type { GetUserController } from "@users-infrastructure/http/controllers/get-user.controller";
 import type { UpdateUserController } from "@users-infrastructure/http/controllers/update-user.controller";
 import type { DeleteUserController } from "@users-infrastructure/http/controllers/delete-user.controller";
+import type { ChangeUserDniController } from "@modules/users/infrastructure/http/controllers/change-user-dni.controller";
+import type { ChangeUserPasswordController } from "@modules/users/infrastructure/http/controllers/change-user-password.controller";
+import type { ResetUserPasswordController } from "@modules/users/infrastructure/http/controllers/reset-user-password.controller";
 
 export function createUserRoutes(controllers: {
     getUserController: GetUserController,
     getUsersController: GetUsersController,
     createUserController: CreateUserController,
     updateUserController: UpdateUserController,
-    deleteUserController: DeleteUserController
+    deleteUserController: DeleteUserController,
+    resetUserPasswordController: ResetUserPasswordController,
+    changeUserPasswordController: ChangeUserPasswordController,
+    changeUserDniController: ChangeUserDniController
 }
 ): Router {
     const router = Router();
@@ -23,6 +29,9 @@ export function createUserRoutes(controllers: {
     router.post("/", expressAdapter(controllers.createUserController));
     router.patch("/:id", expressAdapter(controllers.updateUserController));
     router.delete("/:id", expressAdapter(controllers.deleteUserController));
+    router.patch("/:id/change-dni", expressAdapter(controllers.changeUserDniController));
+    router.patch("/:id/change-password", expressAdapter(controllers.changeUserPasswordController));
+    router.post("/:id/reset-password", expressAdapter(controllers.resetUserPasswordController));
 
     return router;
 }

@@ -1,6 +1,7 @@
-import { ValueObjectBase } from '@shared-domain/value-object.base';
-import { InvalidEmailError } from '../errors/invalid-email.error';
 import { Result } from '@shared-kernel/errors/result';
+import { ValueObjectBase } from '@shared-domain/value-object.base';
+
+import { InvalidEmailError } from '@users-domain/errors/invalid-email.error';
 
 export class EmailVO extends ValueObjectBase {
     private readonly value: string;

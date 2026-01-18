@@ -3,5 +3,6 @@ export interface ReadUserDto {
     name: string;
     lastName: string;
     email: string;
+    dni: string;
     createdAt: Date;
 }

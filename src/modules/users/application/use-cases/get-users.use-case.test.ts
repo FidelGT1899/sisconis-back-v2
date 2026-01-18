@@ -2,6 +2,8 @@ import { GetUsersUseCase } from "./get-users.use-case";
 import { IUserRepository } from "@users-domain/repositories/user.repository.interface";
 import { UserEntity } from "@users-domain/entities/user.entity";
 import { EmailVO } from "@users-domain/value-objects/email.vo";
+import { DniVO } from "@users-domain/value-objects/dni.vo";
+import { PasswordVO } from "@users-domain/value-objects/password.vo";
 
 describe('GetUsersUseCase', () => {
     let useCase: GetUsersUseCase;
@@ -18,7 +20,8 @@ describe('GetUsersUseCase', () => {
             name: 'John',
             lastName: 'Doe',
             email: email,
-            password: 'hashed_password',
+            dni: DniVO.create('12345678').value(),
+            password: PasswordVO.fromHashed('hashed'),
             createdAt: new Date('2023-01-01T10:00:00Z'),
             updatedAt: new Date('2023-01-01T10:00:00Z')
         });
@@ -54,6 +57,7 @@ describe('GetUsersUseCase', () => {
             name: 'John',
             lastName: 'Doe',
             email: 'test@example.com',
+            dni: '12345678',
             createdAt: new Date('2023-01-01T10:00:00Z')
         });
     });

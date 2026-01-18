@@ -93,7 +93,7 @@ describe('BaseController', () => {
         const response = controller.handleResultPublic(result, "created");
 
         expect(response.statusCode).toBe(201);
-        expect(response.body).toBeDefined(); // success()
+        expect(response.body).toBeDefined();
     });
 
     it("should map AppError to HttpResponse when result is error", () => {

@@ -1,6 +1,6 @@
 import { injectable, inject } from "inversify";
 
-import { TYPES } from "@shared-kernel/ioc/types";
+import { TYPES } from "@shared-infrastructure/ioc/types";
 import type { AppError } from "@shared-kernel/errors/app.error";
 import { Result } from "@shared-kernel/errors/result";
 
@@ -20,27 +20,21 @@ export class UpdateUserUseCase {
     ) { }
 
     async execute(dto: UpdateUserDto): Promise<UpdateUserResult> {
-        const user = await this.userRepository.find(dto.id);
+        const user = await this.userRepository.findById(dto.id);
 
         if (!user) {
             return Result.fail(new UserNotFoundError(dto.id));
         }
 
-        const updatedUserResult = UserEntity.fromExisting(user.getId(), {
-            name: dto.name ?? user.getName(),
-            lastName: dto.lastName ?? user.getLastName(),
-            email: dto.email ?? user.getEmail(),
-            password: dto.password ?? user.getPassword(),
-        }, user.createdAt);
+        user.updateProfile({ name: dto.name, lastName: dto.lastName });
 
-        if (updatedUserResult.isErr()) {
-            return Result.fail(updatedUserResult.error());
+        if (dto.email) {
+            const res = user.updateEmail(dto.email);
+            if (res.isErr()) return Result.fail(res.error());
         }
 
-        const updatedUser = updatedUserResult.value();
+        await this.userRepository.update(user);
 
-        await this.userRepository.update(updatedUser);
-
-        return Result.ok(updatedUser);
+        return Result.ok(user);
     }
 }

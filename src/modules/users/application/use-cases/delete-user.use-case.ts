@@ -1,6 +1,6 @@
 import { injectable, inject } from "inversify";
 
-import { TYPES } from "@shared-kernel/ioc/types";
+import { TYPES } from "@shared-infrastructure/ioc/types";
 import type { AppError } from "@shared-kernel/errors/app.error";
 import { Result } from "@shared-kernel/errors/result";
 
@@ -18,7 +18,7 @@ export class DeleteUserUseCase {
     ) { }
 
     async execute(id: string): Promise<DeleteUserResult> {
-        const user = await this.userRepository.find(id);
+        const user = await this.userRepository.findById(id);
 
         if (!user) {
             return Result.fail(new UserNotFoundError(id));

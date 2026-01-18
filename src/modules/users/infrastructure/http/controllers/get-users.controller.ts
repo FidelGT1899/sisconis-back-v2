@@ -1,6 +1,6 @@
 import { injectable, inject } from "inversify";
 
-import { TYPES } from "@shared-kernel/ioc/types";
+import { TYPES } from "@shared-infrastructure/ioc/types";
 import type { Controller, HttpRequest, HttpResponse } from "@shared-infrastructure/http/ports/controller";
 import { BaseController } from "@shared-infrastructure/http/base/base.controller";
 

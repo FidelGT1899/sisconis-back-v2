@@ -1,13 +1,13 @@
 import { injectable, inject } from "inversify";
 import { PrismaClient, Prisma } from "@prisma-generated";
 
-import { TYPES } from "@shared-kernel/ioc/types";
+import { TYPES } from "@shared-infrastructure/ioc/types";
 import type { PaginatedResult } from "@shared-kernel/utils/paginated-result";
 import type { PaginationParams } from "@shared-kernel/utils/pagination-params";
 import type { PrismaService } from "@shared-infrastructure/database/prisma/prisma.service";
 import { PrismaErrorMapper } from "@shared-infrastructure/database/prisma/errors/prisma-error.mapper";
 
-import type { IUserRepository } from "@users-domain/repositories/user.repository.interface";
+import type { IUserRepository, UserOrderBy } from "@users-domain/repositories/user.repository.interface";
 import { UserEntity } from "@users-domain/entities/user.entity";
 
 import { UserMapper } from "@users-infrastructure/mappers/user-persistence.mapper";
@@ -24,32 +24,33 @@ export class UserRepository implements IUserRepository {
     }
 
     async existsByEmail(email: string): Promise<boolean> {
-        try {
-            const user = await this.prisma.user.count({
-                where: { email }
-            });
-            return user > 0;
-        } catch (error) {
-            throw PrismaErrorMapper.mapError(error);
-        }
+        return this.exists({ email });
+    }
+
+    async existsByDni(dni: string): Promise<boolean> {
+        return this.exists({ dni });
     }
 
     async index(
-        pagination: PaginationParams
+        pagination?: PaginationParams<UserOrderBy>
     ): Promise<PaginatedResult<UserEntity>> {
         try {
-            const page = pagination.page ?? 1;
-            const limit = pagination.limit ?? 10;
+            const page = pagination?.page ?? 1;
+            const limit = pagination?.limit ?? 10;
+            const search = pagination?.search;
+            const orderBy = pagination?.orderBy ?? 'createdAt';
+            const direction = pagination?.direction ?? 'desc';
 
             const where: Prisma.UserWhereInput = {
                 deletedAt: null
             };
 
-            if (pagination.search) {
+            if (search) {
                 where.OR = [
-                    { name: { contains: pagination.search, mode: Prisma.QueryMode.insensitive } },
-                    { lastName: { contains: pagination.search, mode: Prisma.QueryMode.insensitive } },
-                    { email: { contains: pagination.search, mode: Prisma.QueryMode.insensitive } }
+                    { name: { contains: search, mode: Prisma.QueryMode.insensitive } },
+                    { lastName: { contains: search, mode: Prisma.QueryMode.insensitive } },
+                    { email: { contains: search, mode: Prisma.QueryMode.insensitive } },
+                    { dni: { contains: search, mode: Prisma.QueryMode.insensitive } }
                 ];
             }
 
@@ -64,7 +65,7 @@ export class UserRepository implements IUserRepository {
                     //     createdAt: true
                     // },
                     orderBy: {
-                        [pagination.orderBy ?? 'createdAt']: pagination.direction ?? 'desc'
+                        [orderBy]: direction
                     },
                     skip: (page - 1) * limit,
                     take: limit
@@ -89,8 +90,7 @@ export class UserRepository implements IUserRepository {
         }
     }
 
-
-    async find(id: string): Promise<UserEntity | null> {
+    async findById(id: string): Promise<UserEntity | null> {
         try {
             const user = await this.prisma.user.findUnique({
                 where: { id, deletedAt: null }
@@ -132,6 +132,18 @@ export class UserRepository implements IUserRepository {
                 where: { id, deletedAt: null },
                 data: { deletedAt: new Date() }
             });
+        } catch (error) {
+            throw PrismaErrorMapper.mapError(error);
+        }
+    }
+
+    private async exists(where: Prisma.UserWhereInput): Promise<boolean> {
+        try {
+            const user = await this.prisma.user.findFirst({
+                where: { ...where, deletedAt: null },
+                select: { id: true }
+            });
+            return user !== null;
         } catch (error) {
             throw PrismaErrorMapper.mapError(error);
         }
