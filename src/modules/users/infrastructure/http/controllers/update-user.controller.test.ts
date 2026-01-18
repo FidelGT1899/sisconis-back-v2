@@ -28,6 +28,7 @@ describe("UpdateUserController", () => {
             getName: jest.fn().mockReturnValue("Fidel"),
             getLastName: jest.fn().mockReturnValue("García"),
             getEmail: jest.fn().mockReturnValue("fidel@test.com"),
+            getDni: jest.fn().mockReturnValue("12345678"),
             getCreatedAt: jest.fn().mockReturnValue(new Date()),
             getUpdatedAt: jest.fn().mockReturnValue(new Date()),
         } as unknown as UserEntity;
@@ -41,7 +42,7 @@ describe("UpdateUserController", () => {
                 { id: "user-id" },
                 {
                     name: "Nuevo Nombre",
-                    lastName: "Nuevo Apellido",
+                    lastName: "Nuevo Apellido"
                 }
             )
         );
@@ -49,7 +50,7 @@ describe("UpdateUserController", () => {
         expect(useCase.execute).toHaveBeenCalledWith({
             id: "user-id",
             name: "Nuevo Nombre",
-            lastName: "Nuevo Apellido",
+            lastName: "Nuevo Apellido"
         });
         expect(response.statusCode).toBe(200);
         expect(response.body?.status).toBe("success");

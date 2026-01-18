@@ -14,17 +14,22 @@ datasource db {
 }
 
 model User {
-    id        String    @id @map("id")
-    name      String
-    lastName  String
-    email     String    @unique
-    password  String
-    createdAt DateTime  @default(now())
-    updatedAt DateTime  @updatedAt
-    deletedAt DateTime?
-    createdBy String?
-    updatedBy String?
-    deletedBy String?
+    id                  String    @id @map("id")
+    name                String
+    lastName            String
+    email               String
+    dni                 String
+    password            String
+    isPasswordTemporary Boolean   @default(true)
+    createdAt           DateTime  @default(now())
+    updatedAt           DateTime  @updatedAt
+    deletedAt           DateTime?
+    createdBy           String?
+    updatedBy           String?
+    deletedBy           String?
+
+    @@index([email], map: "user_email_unique_idx")
+    @@index([dni], map: "user_dni_unique_idx")
 
     @@map("users")
 }

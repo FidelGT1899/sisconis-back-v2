@@ -1,11 +1,12 @@
-import { EntityBase } from "@shared-domain/entity.base";
-import type { BaseEntityProps } from "@shared-domain/entity.base";
-
-export interface IRepository<TId extends string,
-    T extends EntityBase<TId, BaseEntityProps<TId>>> {
+export interface IRepository<
+    TId extends string,
+    T extends { getId(): TId },
+    TQParams = unknown,
+    TResponse = T[]
+> {
     findById(id: TId): Promise<T | null>;
-    findAll(): Promise<T[]>;
-    save(entity: T): Promise<void>;
-    update(entity: T): Promise<void>;
+    index(params?: TQParams): Promise<TResponse>;
+    save(entity: T): Promise<T | void>;
+    update(entity: T): Promise<T | void>;
     delete(id: TId): Promise<void>;
 }

@@ -1,7 +1,7 @@
 import type { Request, Response, NextFunction } from "express";
 
-import { container } from "@shared-kernel/ioc/container";
-import { TYPES } from "@shared-kernel/ioc/types";
+import { container } from "@shared-infrastructure/ioc/container";
+import { TYPES } from "@shared-infrastructure/ioc/types";
 
 import { FeatureFlagsUseCase } from "@system-application/use-cases/feature-flags.use-case";
 

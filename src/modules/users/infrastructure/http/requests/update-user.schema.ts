@@ -4,7 +4,6 @@ export const UpdateUserSchema = z.object({
     name: z.string().min(3).max(50).trim().optional(),
     lastName: z.string().min(3).max(50).trim().optional(),
     email: z.string().email().trim().optional(),
-    password: z.string().min(8).max(50).trim().optional(),
 })
     .strict()
     .refine(

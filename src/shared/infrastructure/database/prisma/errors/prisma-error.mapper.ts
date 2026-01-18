@@ -116,11 +116,48 @@ export class PrismaErrorMapper {
         }
     }
 
-    private static formatUniqueConstraintMessage(error: Prisma.PrismaClientKnownRequestError): string {
-        type ErrorWithMeta = { meta?: { target?: string[] } };
+    private static formatUniqueConstraintMessage(
+        error: Prisma.PrismaClientKnownRequestError
+    ): string {
+        type ErrorWithMeta = {
+            meta?: {
+                target?: string[] | string;
+                modelName?: string;
+            }
+        };
 
         const meta = (error as unknown as ErrorWithMeta).meta;
-        const fields = meta?.target?.join(', ') || 'field';
-        return `A record with the same value already exists for: ${fields}`;
+
+        let fields: string[] = [];
+
+        if (meta?.target) {
+            if (Array.isArray(meta.target)) {
+                fields = meta.target;
+            } else {
+                fields = [String(meta.target)];
+            }
+        }
+
+        if (fields.length === 0) {
+            const message = (error as Error).message;
+
+            const match = message.match(/fields?: \(`(.+?)`\)/i);
+
+            if (match && match[1]) {
+                fields = match[1].split('`,`').map((field) => field.trim());
+            }
+        }
+
+        const fieldMessages: Record<string, string> = {
+            'dni': 'DNI',
+            'email': 'email',
+            'username': 'username',
+        };
+
+        const friendlyFields = fields
+            .map(field => fieldMessages[field.toLowerCase()] || field)
+            .join(', ');
+
+        return `A record with the same value already exists for: ${friendlyFields || 'this field'}`;
     }
 }

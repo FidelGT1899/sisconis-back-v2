@@ -1,12 +1,12 @@
 import "dotenv/config";
 import "reflect-metadata";
 
-import { container } from "@shared-kernel/ioc/container";
-import { TYPES } from "@shared-kernel/ioc/types";
+import { container } from "@shared-infrastructure/ioc/container";
+import { TYPES } from "@shared-infrastructure/ioc/types";
 
 import { createApp } from "./app";
-import type { UsersHttpControllers } from "@shared-kernel/ioc/modules/users.module";
-import type { SystemHttpControllers } from "@shared-kernel/ioc/modules/system.module";
+import type { UsersHttpControllers } from "@shared-infrastructure/ioc/modules/users.module";
+import type { SystemHttpControllers } from "@shared-infrastructure/ioc/modules/system.module";
 
 // eslint-disable-next-line @typescript-eslint/require-await
 async function bootstrap(): Promise<void> {

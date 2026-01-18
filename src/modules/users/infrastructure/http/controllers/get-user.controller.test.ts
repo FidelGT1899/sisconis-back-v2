@@ -24,6 +24,7 @@ describe("GetUserController", () => {
             getName: jest.fn().mockReturnValue("Fidel"),
             getLastName: jest.fn().mockReturnValue("García"),
             getEmail: jest.fn().mockReturnValue("fidel@test.com"),
+            getDni: jest.fn().mockReturnValue("12345678"),
             getCreatedAt: jest.fn().mockReturnValue(new Date()),
             getUpdatedAt: jest.fn().mockReturnValue(new Date()),
         } as unknown as UserEntity;

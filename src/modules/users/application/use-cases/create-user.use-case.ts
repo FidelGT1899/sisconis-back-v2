@@ -2,7 +2,7 @@ import { injectable, inject } from "inversify";
 
 import { Result } from "@shared-kernel/errors/result";
 import { AppError } from "@shared-kernel/errors/app.error";
-import { TYPES } from "@shared-kernel/ioc/types";
+import { TYPES } from "@shared-infrastructure/ioc/types";
 import type { IIdGenerator } from "@shared-domain/ports/id-generator";
 
 import { UserEntity } from "@users-domain/entities/user.entity";
@@ -24,9 +24,13 @@ export class CreateUserUseCase {
 
     async execute(dto: CreateUserDto): Promise<CreateUserResult> {
         const emailExists = await this.userRepository.existsByEmail(dto.email);
-
         if (emailExists) {
-            return Result.fail(new UserAlreadyExistsError(dto.email));
+            return Result.fail(new UserAlreadyExistsError('email', dto.email));
+        }
+
+        const dniExists = await this.userRepository.existsByDni(dto.dni);
+        if (dniExists) {
+            return Result.fail(new UserAlreadyExistsError('dni', dto.dni));
         }
 
         const user = UserEntity.create(
@@ -34,7 +38,7 @@ export class CreateUserUseCase {
                 name: dto.name,
                 lastName: dto.lastName,
                 email: dto.email,
-                password: dto.password,
+                dni: dto.dni,
             },
             this.idGenerator,
         );
