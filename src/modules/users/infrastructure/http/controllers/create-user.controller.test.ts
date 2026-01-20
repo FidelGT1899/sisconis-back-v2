@@ -2,7 +2,7 @@ import { CreateUserController } from "./create-user.controller";
 import type { CreateUserUseCase } from "@users-application/use-cases/create-user.use-case";
 import { Result } from "@shared-kernel/errors/result";
 import type { HttpRequest } from "@shared-infrastructure/http/ports/controller";
-import { UserEntity } from "@modules/users/domain/entities/user.entity";
+import { UserEntity } from "@users-domain/entities/user.entity";
 import { UserAlreadyExistsError } from "@users-application/errors/user-already-exists.error";
 
 const mockUseCase = (): jest.Mocked<CreateUserUseCase> =>

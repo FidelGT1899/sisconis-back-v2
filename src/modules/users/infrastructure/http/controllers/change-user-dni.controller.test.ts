@@ -2,7 +2,7 @@ import { ChangeUserDniController } from "./change-user-dni.controller";
 import type { ChangeUserDniUseCase } from "@users-application/use-cases/change-user-dni.use-case";
 import type { HttpRequest } from "@shared-infrastructure/http/ports/controller";
 import { Result } from "@shared-kernel/errors/result";
-import { UserEntity } from "@modules/users/domain/entities/user.entity";
+import { UserEntity } from "@users-domain/entities/user.entity";
 import { UserNotFoundError } from "@users-application/errors/user-not-found.error";
 
 const mockUseCase = (): jest.Mocked<ChangeUserDniUseCase> =>

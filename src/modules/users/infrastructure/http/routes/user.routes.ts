@@ -7,9 +7,9 @@ import type { GetUsersController } from "@users-infrastructure/http/controllers/
 import type { GetUserController } from "@users-infrastructure/http/controllers/get-user.controller";
 import type { UpdateUserController } from "@users-infrastructure/http/controllers/update-user.controller";
 import type { DeleteUserController } from "@users-infrastructure/http/controllers/delete-user.controller";
-import type { ChangeUserDniController } from "@modules/users/infrastructure/http/controllers/change-user-dni.controller";
-import type { ChangeUserPasswordController } from "@modules/users/infrastructure/http/controllers/change-user-password.controller";
-import type { ResetUserPasswordController } from "@modules/users/infrastructure/http/controllers/reset-user-password.controller";
+import type { ChangeUserDniController } from "@users-infrastructure/http/controllers/change-user-dni.controller";
+import type { ChangeUserPasswordController } from "@users-infrastructure/http/controllers/change-user-password.controller";
+import type { ResetUserPasswordController } from "@users-infrastructure/http/controllers/reset-user-password.controller";
 
 export function createUserRoutes(controllers: {
     getUserController: GetUserController,

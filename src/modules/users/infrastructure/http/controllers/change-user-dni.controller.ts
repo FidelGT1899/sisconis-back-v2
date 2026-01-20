@@ -4,9 +4,9 @@ import { TYPES } from "@shared-infrastructure/ioc/types";
 import { BaseController } from "@shared-infrastructure/http/base/base.controller";
 import type { Controller, HttpRequest, HttpResponse } from "@shared-infrastructure/http/ports/controller";
 
-import type { ChangeUserDniUseCase } from "@modules/users/application/use-cases/change-user-dni.use-case";
+import type { ChangeUserDniUseCase } from "@users-application/use-cases/change-user-dni.use-case";
 
-import { ChangeUserDniSchema } from "@modules/users/infrastructure/http/requests/change-user-dni.schema";
+import { ChangeUserDniSchema } from "@users-infrastructure/http/requests/change-user-dni.schema";
 
 @injectable()
 export class ChangeUserDniController extends BaseController implements Controller {

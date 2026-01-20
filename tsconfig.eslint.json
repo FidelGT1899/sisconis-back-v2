@@ -1,18 +1,17 @@
 {
-	"extends": "./tsconfig.json",
-	"compilerOptions": {
-		"rootDir": "."
-	},
-	"include": [
-		"src/**/*.ts",
-		"eslint.config.ts",
-		"jest.config.ts",
-		"setupTests.ts",
-		"prisma.config.ts",
-		"src/generated/prisma/**/*.ts"
-	],
-	"exclude": [
-		"node_modules",
-		"dist"
-	]
+    "extends": "./tsconfig.json",
+    "compilerOptions": {
+        "rootDir": "."
+    },
+    "include": [
+        "src/**/*.ts",
+        "docs/**/*",
+        "scripts/**/*",
+        "eslint.config.ts",
+        "jest.config.ts",
+        "setupTests.ts",
+        "prisma.config.ts",
+        "src/generated/prisma/**/*.ts"
+    ],
+    "exclude": ["node_modules", "dist"]
 }
