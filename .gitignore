@@ -30,5 +30,6 @@ Desktop.ini
 *.swo
 
 docs/comandos.md
+docs/openapi/openapi.json
 
 generated/

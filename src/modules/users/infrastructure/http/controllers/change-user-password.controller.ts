@@ -6,7 +6,7 @@ import type { Controller, HttpRequest, HttpResponse } from "@shared-infrastructu
 
 import { ChangeUserPasswordUseCase } from "@users-application/use-cases/change-user-password.use-case";
 
-import { ChangeUserPasswordSchema } from "@modules/users/infrastructure/http/requests/change-user-password.schema";
+import { ChangeUserPasswordSchema } from "@users-infrastructure/http/requests/change-user-password.schema";
 
 @injectable()
 export class ChangeUserPasswordController extends BaseController implements Controller {

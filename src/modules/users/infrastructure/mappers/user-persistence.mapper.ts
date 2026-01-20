@@ -1,6 +1,6 @@
-import { DniVO } from "@modules/users/domain/value-objects/dni.vo";
-import { PasswordVO } from "@modules/users/domain/value-objects/password.vo";
-import { TemporaryPasswordVO } from "@modules/users/domain/value-objects/temporary-password.vo";
+import { DniVO } from "@users-domain/value-objects/dni.vo";
+import { PasswordVO } from "@users-domain/value-objects/password.vo";
+import { TemporaryPasswordVO } from "@users-domain/value-objects/temporary-password.vo";
 import { UserEntity } from "@users-domain/entities/user.entity";
 import { EmailVO } from "@users-domain/value-objects/email.vo";
 

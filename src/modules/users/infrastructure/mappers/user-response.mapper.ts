@@ -1,5 +1,5 @@
-import type { ReadUserDto } from "@modules/users/application/dtos/read-user.dto";
-import type { UserEntity } from "@modules/users/domain/entities/user.entity";
+import type { ReadUserDto } from "@users-application/dtos/read-user.dto";
+import type { UserEntity } from "@users-domain/entities/user.entity";
 
 export interface UserResponseDto {
     id: string;

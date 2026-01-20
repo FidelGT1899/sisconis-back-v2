@@ -4,7 +4,6 @@ import type { Express } from "express";
 import type { UsersHttpControllers } from "@shared-infrastructure/ioc/modules/users.module";
 import type { SystemHttpControllers } from "@shared-infrastructure/ioc/modules/system.module";
 import { globalErrorMiddleware } from "@shared-infrastructure/http/middlewares/error.middleware";
-import { setupSwagger } from "@shared-infrastructure/http/swagger/swagger.setup";
 
 import { createUserRoutes } from "@users-infrastructure/http/routes/user.routes";
 import { createSystemRoutes } from "@system-infrastructure/http/routes/system.routes";
@@ -16,8 +15,6 @@ export function createApp(
     }
 ): Express {
     const app = express();
-
-    setupSwagger(app);
 
     app.use(express.json());
 

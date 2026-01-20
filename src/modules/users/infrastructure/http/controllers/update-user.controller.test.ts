@@ -2,7 +2,7 @@ import { UpdateUserController } from "./update-user.controller";
 import type { UpdateUserUseCase } from "@users-application/use-cases/update-user.use-case";
 import type { HttpRequest } from "@shared-infrastructure/http/ports/controller";
 import { Result } from "@shared-kernel/errors/result";
-import { UserEntity } from "@modules/users/domain/entities/user.entity";
+import { UserEntity } from "@users-domain/entities/user.entity";
 import { UserNotFoundError } from "@users-application/errors/user-not-found.error";
 
 const mockUseCase = (): jest.Mocked<UpdateUserUseCase> =>
