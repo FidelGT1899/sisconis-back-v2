@@ -22,10 +22,16 @@ describe('Users IoC module', () => {
         };
         container.bind(TYPES.PrismaService).toConstantValue(mockPrismaService);
 
-        const mockIdGenerator = {
+        const mockEntityIdGenerator = {
             generate: () => 'mock-uuid'
         };
-        container.bind(TYPES.IdGenerator).toConstantValue(mockIdGenerator);
+        container.bind(TYPES.EntityIdGenerator).toConstantValue(mockEntityIdGenerator);
+
+        const mockPasswordHasher = {
+            hash: jest.fn().mockResolvedValue('hashed-password'),
+            compare: jest.fn().mockResolvedValue(true)
+        };
+        container.bind(TYPES.PasswordHasher).toConstantValue(mockPasswordHasher);
 
         void container.load(usersModule);
 

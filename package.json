@@ -18,12 +18,13 @@
     },
     "keywords": [],
     "author": "Fidel García",
-    "license": "ISC",
+    "license": "MIT",
     "packageManager": "pnpm@10.22.0",
     "devDependencies": {
         "@apidevtools/swagger-parser": "^12.1.0",
         "@eslint/js": "^9.39.1",
         "@jest/globals": "^30.2.0",
+        "@types/bcrypt": "^6.0.0",
         "@types/express": "^5.0.6",
         "@types/jest": "^30.0.0",
         "@types/node": "^24.10.1",
@@ -45,6 +46,7 @@
     "dependencies": {
         "@prisma/adapter-pg": "^7.2.0",
         "@prisma/client": "^7.2.0",
+        "bcrypt": "^6.0.0",
         "dotenv": "^17.2.3",
         "express": "^5.2.1",
         "inversify": "^7.10.6",

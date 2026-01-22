@@ -3,7 +3,8 @@ import { CreateUserUseCase } from "./create-user.use-case";
 import { UserAlreadyExistsError } from "../errors/user-already-exists.error";
 import { InvalidEmailError } from "@users-domain/errors/invalid-email.error";
 import { IUserRepository } from "@users-domain/repositories/user.repository.interface";
-import { IIdGenerator } from "@shared-domain/ports/id-generator";
+import { IEntityIdGenerator } from "@shared-domain/ports/id-generator";
+import { IPasswordHasher } from "@shared-domain/ports/password-hasher";
 
 const mockUserRepository = {
     existsByEmail: jest.fn(),
@@ -11,8 +12,12 @@ const mockUserRepository = {
     save: jest.fn(),
 } as jest.Mocked<IUserRepository>;
 
-const mockIdGenerator: jest.Mocked<IIdGenerator> = {
+const mockEntityIdGenerator: jest.Mocked<IEntityIdGenerator> = {
     generate: jest.fn(),
+};
+
+const mockPasswordHasher: jest.Mocked<IPasswordHasher> = {
+    hash: jest.fn(),
 };
 
 const inputDto = {
@@ -28,12 +33,12 @@ describe('CreateUserUseCase', () => {
     beforeEach(() => {
         jest.restoreAllMocks();
         jest.clearAllMocks();
-        useCase = new CreateUserUseCase(mockUserRepository, mockIdGenerator);
+        useCase = new CreateUserUseCase(mockUserRepository, mockEntityIdGenerator, mockPasswordHasher);
     });
 
     it('should create and save a new user when email is unique', async () => {
         mockUserRepository.existsByEmail.mockResolvedValue(false);
-        mockIdGenerator.generate.mockReturnValue('mock-uuid-12345');
+        mockEntityIdGenerator.generate.mockReturnValue('mock-uuid-12345');
 
         const result = await useCase.execute(inputDto);
 
@@ -70,7 +75,7 @@ describe('CreateUserUseCase', () => {
 
     it('should throw error if repository save operation fails', async () => {
         mockUserRepository.existsByEmail.mockResolvedValue(false);
-        mockIdGenerator.generate.mockReturnValue('any-id');
+        mockEntityIdGenerator.generate.mockReturnValue('any-id');
 
         const dbError = new Error('Database connection failed');
         mockUserRepository.save.mockRejectedValue(dbError);
@@ -82,7 +87,7 @@ describe('CreateUserUseCase', () => {
 
     it('should create and save a new user with temporary password when data is valid', async () => {
         mockUserRepository.existsByEmail.mockResolvedValue(false);
-        mockIdGenerator.generate.mockReturnValue('mock-uuid-12345');
+        mockEntityIdGenerator.generate.mockReturnValue('mock-uuid-12345');
         mockUserRepository.save.mockImplementation((user: UserEntity) => Promise.resolve(user));
 
         const result = await useCase.execute(inputDto);
@@ -122,7 +127,7 @@ describe('CreateUserUseCase', () => {
 
     it('should bubble up repository errors', async () => {
         mockUserRepository.existsByEmail.mockResolvedValue(false);
-        mockIdGenerator.generate.mockReturnValue('any-id');
+        mockEntityIdGenerator.generate.mockReturnValue('any-id');
         mockUserRepository.save.mockRejectedValue(new Error('DB_FATAL_ERROR'));
 
         await expect(useCase.execute(inputDto)).rejects.toThrow('DB_FATAL_ERROR');

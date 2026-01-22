@@ -1,8 +1,9 @@
 import { IUserRepository } from "@users-domain/repositories/user.repository.interface";
-import { IIdGenerator } from "@shared-domain/ports/id-generator";
+import { IEntityIdGenerator } from "@shared-domain/ports/id-generator";
 import { ChangeUserDniUseCase } from "./change-user-dni.use-case";
 import { UserEntity } from "@users-domain/entities/user.entity";
 import { UserNotFoundError } from "../errors/user-not-found.error";
+import { IPasswordHasher } from "@shared-domain/ports/password-hasher";
 
 const mockUserRepository = {
     findById: jest.fn(),
@@ -10,8 +11,12 @@ const mockUserRepository = {
     update: jest.fn(),
 } as jest.Mocked<IUserRepository>;
 
-const mockIdGenerator: jest.Mocked<IIdGenerator> = {
+const mockIdGenerator: jest.Mocked<IEntityIdGenerator> = {
     generate: jest.fn(),
+};
+
+const mockPasswordHasher: jest.Mocked<IPasswordHasher> = {
+    hash: jest.fn(),
 };
 
 describe('ChangeUserDniUseCase', () => {
@@ -25,12 +30,12 @@ describe('ChangeUserDniUseCase', () => {
     it('should change user DNI', async () => {
         mockIdGenerator.generate.mockReturnValue('user-123');
 
-        const existingUser = UserEntity.create({
+        const existingUser = await UserEntity.create({
             name: 'John',
             lastName: 'Doe',
             email: 'john@test.com',
             dni: '12345678'
-        }, mockIdGenerator);
+        }, mockIdGenerator, mockPasswordHasher);
 
         if (existingUser.isErr()) throw new Error('Setup failed');
         const userEntity = existingUser.value();

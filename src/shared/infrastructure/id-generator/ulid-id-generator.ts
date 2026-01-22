@@ -1,12 +1,12 @@
 import { ulid } from "ulid";
-import type { IIdGenerator } from "@shared-domain/ports/id-generator";
+import type { IAuditIdGenerator } from "@shared-domain/ports/id-generator";
 
 /*
- * This class implements the IIdGenerator interface
- * and provides a method to generate a ULID 
+ * This class implements the IAuditIdGenerator interface
+ * and provides a method to generate a ULID
  * ONLY for audit logs and metrics.
 */
-export class UlidIdGenerator implements IIdGenerator {
+export class UlidIdGenerator implements IAuditIdGenerator {
     generate(): string {
         return ulid();
     }

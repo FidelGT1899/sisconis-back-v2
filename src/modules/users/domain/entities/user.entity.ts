@@ -1,20 +1,21 @@
 import { Result } from "@shared-kernel/errors/result";
 import { EntityBase, type BaseEntityProps } from "@shared-domain/entity.base";
-import type { IIdGenerator } from "@shared-domain/ports/id-generator";
+import type { IEntityIdGenerator } from "@shared-domain/ports/id-generator";
+import type { IPasswordHasher } from "@shared-domain/ports/password-hasher";
 
 import type { InvalidEmailError } from "@users-domain/errors/invalid-email.error";
 import type { InvalidDniError } from "@users-domain/errors/invalid-dni.error";
 import type { InvalidPasswordError } from "@users-domain/errors/invalid-password.error";
-import { TemporaryPasswordVO } from "@users-domain/value-objects/temporary-password.vo";
 import { EmailVO } from "@users-domain/value-objects/email.vo";
-import { PasswordVO } from "@users-domain/value-objects/password.vo";
 import { DniVO } from "@users-domain/value-objects/dni.vo";
+import { PasswordFactory, type PasswordType } from "@users-domain/factories/password.factory";
+import { TemporaryPasswordVO } from "@users-domain/value-objects/temporary-password.vo";
 
 interface UserProps extends BaseEntityProps<string> {
     name: string;
     lastName: string;
     email: EmailVO;
-    password: PasswordVO | TemporaryPasswordVO;
+    password: PasswordType;
     dni: DniVO;
 }
 
@@ -46,16 +47,21 @@ export class UserEntity extends EntityBase<string, UserProps> {
         return this.props.dni.getValue();
     }
 
+    public requiresPasswordChange(): boolean {
+        return this.isPasswordTemporary();
+    }
+
     // Factory method
-    public static create(
+    public static async create(
         payload: {
             name: string;
             lastName: string;
             email: string;
             dni: string;
         },
-        idGenerator: IIdGenerator
-    ): Result<UserEntity, InvalidEmailError> {
+        idGenerator: IEntityIdGenerator,
+        hasher: IPasswordHasher
+    ): Promise<Result<UserEntity, InvalidEmailError | InvalidDniError>> {
         const emailResult = EmailVO.create(payload.email);
         const dniResult = DniVO.create(payload.dni);
 
@@ -69,7 +75,10 @@ export class UserEntity extends EntityBase<string, UserProps> {
 
         const id = idGenerator.generate();
 
-        const tempPassword = TemporaryPasswordVO.fromDni(dniResult.value());
+        const tempPassword = await PasswordFactory.createTemporaryFromDni(
+            dniResult.value(),
+            hasher
+        );
 
         const user = new UserEntity({
             id,
@@ -92,9 +101,10 @@ export class UserEntity extends EntityBase<string, UserProps> {
             email: string;
             password: string;
             dni: string;
+            isTemporaryPassword: boolean;
         },
         createdAt: Date
-    ): Result<UserEntity, InvalidEmailError> {
+    ): Result<UserEntity, InvalidEmailError | InvalidDniError> {
         const emailResult = EmailVO.create(payload.email);
         const dniResult = DniVO.create(payload.dni);
 
@@ -106,7 +116,9 @@ export class UserEntity extends EntityBase<string, UserProps> {
             return Result.fail(dniResult.error());
         }
 
-        const passwordVO = PasswordVO.fromHashed(payload.password);
+        const passwordVO = payload.isTemporaryPassword
+            ? PasswordFactory.rehydrateTemporary(payload.password)
+            : PasswordFactory.rehydratePermanent(payload.password);
 
         const user = new UserEntity({
             id,
@@ -131,8 +143,11 @@ export class UserEntity extends EntityBase<string, UserProps> {
     }
 
     // Behavior Method
-    public changePassword(newPasswordRaw: string): Result<void, InvalidPasswordError> {
-        const passwordResult = PasswordVO.create(newPasswordRaw);
+    public async changePassword(
+        newPasswordRaw: string,
+        hasher: IPasswordHasher
+    ): Promise<Result<void, InvalidPasswordError>> {
+        const passwordResult = await PasswordFactory.createPermanent(newPasswordRaw, hasher);
 
         if (passwordResult.isErr()) {
             return Result.fail(passwordResult.error());
@@ -143,8 +158,11 @@ export class UserEntity extends EntityBase<string, UserProps> {
         return Result.ok(undefined);
     }
 
-    public resetToTemporaryPassword(): void {
-        this.props.password = TemporaryPasswordVO.fromDni(this.props.dni);
+    public async resetToTemporaryPassword(hasher: IPasswordHasher): Promise<void> {
+        this.props.password = await PasswordFactory.createTemporaryFromDni(
+            this.props.dni,
+            hasher
+        );
         this.updatedAt = new Date();
     }
 
@@ -175,5 +193,12 @@ export class UserEntity extends EntityBase<string, UserProps> {
         this.props.dni = dniRes.value();
         this.updatedAt = new Date();
         return Result.ok(undefined);
+    }
+
+    public async verifyPassword(
+        plainPassword: string,
+        hasher: IPasswordHasher
+    ): Promise<boolean> {
+        return this.props.password.matches(plainPassword, hasher);
     }
 }

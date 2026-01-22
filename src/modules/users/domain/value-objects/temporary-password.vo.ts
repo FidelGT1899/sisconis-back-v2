@@ -1,4 +1,5 @@
 import { ValueObjectBase } from "@shared-domain/value-object.base";
+import type { IPasswordHasher } from "@shared-domain/ports/password-hasher";
 
 import type { DniVO } from "@users-domain/value-objects/dni.vo";
 
@@ -18,8 +19,13 @@ export class TemporaryPasswordVO extends ValueObjectBase {
         return this.value;
     }
 
-    public static fromDni(dni: DniVO): TemporaryPasswordVO {
-        return new TemporaryPasswordVO(dni.getValue());
+    public async matches(plainPassword: string, hasher: IPasswordHasher): Promise<boolean> {
+        return hasher.compare(plainPassword, this.value);
+    }
+
+    public static async fromDni(dni: DniVO, hasher: IPasswordHasher): Promise<TemporaryPasswordVO> {
+        const hashedDni = await hasher.hash(dni.getValue());
+        return new TemporaryPasswordVO(hashedDni);
     }
 
     public static fromHashed(hashedValue: string): TemporaryPasswordVO {

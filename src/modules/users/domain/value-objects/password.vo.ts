@@ -2,6 +2,7 @@ import { Result } from "@shared-kernel/errors/result";
 import { ValueObjectBase } from "@shared-domain/value-object.base";
 
 import { InvalidPasswordError } from "@users-domain/errors/invalid-password.error";
+import type { IPasswordHasher } from "@shared-domain/ports/password-hasher";
 
 export class PasswordVO extends ValueObjectBase {
     private readonly value: string;
@@ -19,16 +20,21 @@ export class PasswordVO extends ValueObjectBase {
         return this.value;
     }
 
-    public static create(raw: string): Result<PasswordVO, InvalidPasswordError> {
+    public static async create(raw: string, hasher: IPasswordHasher): Promise<Result<PasswordVO, InvalidPasswordError>> {
         if (!this.isValid(raw)) {
             return Result.fail(new InvalidPasswordError());
         }
 
-        return Result.ok(new PasswordVO(raw));
+        const hashed = await hasher.hash(raw);
+        return Result.ok(new PasswordVO(hashed));
     }
 
     public static fromHashed(hash: string): PasswordVO {
         return new PasswordVO(hash);
+    }
+
+    public async matches(plainPassword: string, hasher: IPasswordHasher): Promise<boolean> {
+        return hasher.compare(plainPassword, this.value);
     }
 
     private static isValid(value: string): boolean {

@@ -4,7 +4,9 @@ export const TYPES = {
 
     // Shared
     PrismaService: Symbol.for("PrismaService"),
-    IdGenerator: Symbol.for("IdGenerator"),
+    EntityIdGenerator: Symbol.for("EntityIdGenerator"),
+    AuditIdGenerator: Symbol.for("AuditIdGenerator"),
+    PasswordHasher: Symbol.for("PasswordHasher"),
 
     // System Application
     HealthCheckUseCase: Symbol.for("HealthCheckUseCase"),

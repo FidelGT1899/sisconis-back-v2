@@ -1,3 +1,8 @@
-export interface IIdGenerator {
+export interface IEntityIdGenerator {
     generate(): string;
 }
+
+export interface IAuditIdGenerator {
+    generate(): string;
+}
+

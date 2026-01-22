@@ -25,6 +25,10 @@ export class ChangeUserDniUseCase {
             return Result.fail(new UserNotFoundError(dto.id));
         }
 
+        if (user.getDni() === dto.newDni) {
+            return Result.ok(user);
+        }
+
         const dniExists = await this.userRepository.existsByDni(dto.newDni);
         if (dniExists) {
             return Result.fail(new UserAlreadyExistsError('dni', dto.newDni));

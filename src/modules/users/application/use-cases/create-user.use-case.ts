@@ -3,7 +3,8 @@ import { injectable, inject } from "inversify";
 import { Result } from "@shared-kernel/errors/result";
 import { AppError } from "@shared-kernel/errors/app.error";
 import { TYPES } from "@shared-infrastructure/ioc/types";
-import type { IIdGenerator } from "@shared-domain/ports/id-generator";
+import type { IEntityIdGenerator } from "@shared-domain/ports/id-generator";
+import type { IPasswordHasher } from "@shared-domain/ports/password-hasher";
 
 import { UserEntity } from "@users-domain/entities/user.entity";
 import type { IUserRepository } from "@users-domain/repositories/user.repository.interface";
@@ -18,8 +19,10 @@ export class CreateUserUseCase {
     constructor(
         @inject(TYPES.UserRepository)
         private readonly userRepository: IUserRepository,
-        @inject(TYPES.IdGenerator)
-        private readonly idGenerator: IIdGenerator,
+        @inject(TYPES.EntityIdGenerator)
+        private readonly idGenerator: IEntityIdGenerator,
+        @inject(TYPES.PasswordHasher)
+        private readonly hasher: IPasswordHasher,
     ) { }
 
     async execute(dto: CreateUserDto): Promise<CreateUserResult> {
@@ -33,7 +36,7 @@ export class CreateUserUseCase {
             return Result.fail(new UserAlreadyExistsError('dni', dto.dni));
         }
 
-        const user = UserEntity.create(
+        const user = await UserEntity.create(
             {
                 name: dto.name,
                 lastName: dto.lastName,
@@ -41,6 +44,7 @@ export class CreateUserUseCase {
                 dni: dto.dni,
             },
             this.idGenerator,
+            this.hasher
         );
 
         if (user.isErr()) {

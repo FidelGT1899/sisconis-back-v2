@@ -1,8 +1,9 @@
 import { injectable, inject } from "inversify";
 
-import { TYPES } from "@shared-infrastructure/ioc/types";
 import type { AppError } from "@shared-kernel/errors/app.error";
 import { Result } from "@shared-kernel/errors/result";
+import { TYPES } from "@shared-infrastructure/ioc/types";
+import type { IPasswordHasher } from "@shared-domain/ports/password-hasher";
 
 import type { IUserRepository } from "@users-domain/repositories/user.repository.interface";
 import { UserEntity } from "@users-domain/entities/user.entity";
@@ -14,7 +15,9 @@ import type { ChangeUserPasswordDto } from "@users-application/dtos/change-user-
 export class ChangeUserPasswordUseCase {
     constructor(
         @inject(TYPES.UserRepository)
-        private readonly userRepository: IUserRepository
+        private readonly userRepository: IUserRepository,
+        @inject(TYPES.PasswordHasher)
+        private readonly hasher: IPasswordHasher,
     ) { }
 
     async execute(dto: ChangeUserPasswordDto): Promise<Result<UserEntity, AppError>> {
@@ -24,7 +27,7 @@ export class ChangeUserPasswordUseCase {
             return Result.fail(new UserNotFoundError(dto.id));
         }
 
-        const result = user.changePassword(dto.newPassword);
+        const result = await user.changePassword(dto.newPassword, this.hasher);
 
         if (result.isErr()) {
             return Result.fail(result.error());
