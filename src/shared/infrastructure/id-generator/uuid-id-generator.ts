@@ -1,7 +1,7 @@
 import { randomUUID } from "crypto";
-import type { IIdGenerator } from "@shared-domain/ports/id-generator";
+import type { IEntityIdGenerator } from "@shared-domain/ports/id-generator";
 
-export class UuidIdGenerator implements IIdGenerator {
+export class UuidIdGenerator implements IEntityIdGenerator {
     generate(): string {
         return randomUUID();
     }

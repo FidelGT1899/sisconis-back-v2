@@ -8,26 +8,26 @@ Este proyecto fue iniciado previamente, pero ha sido retomado y modernizado con 
 
 ## 🚀 Características principales
 
-* Gestión completa de permisos de ingreso y salida.
-* Registro y autenticación de usuarios.
-* Roles y permisos con diferentes niveles de acceso.
-* API RESTful documentada y modular.
-* Arquitectura limpia con alta cohesión y bajo acoplamiento.
-* Pruebas unitarias y de integración con Jest + Supertest.
-* Dockerización lista para despliegue.
+- Gestión completa de permisos de ingreso y salida.
+- Registro y autenticación de usuarios.
+- Roles y permisos con diferentes niveles de acceso.
+- API RESTful documentada y modular.
+- Arquitectura limpia con alta cohesión y bajo acoplamiento.
+- Pruebas unitarias y de integración con Jest + Supertest.
+- Dockerización lista para despliegue.
 
 ---
 
 ## 🧩 Tecnologías Utilizadas
 
-* **Node.js**: Entorno de ejecución.
-* **Express.js**: Framework HTTP principal.
-* **TypeScript**: Tipado estático y mejor mantenimiento.
-* **Arquitectura Limpia + DDD**: Separación por capas `presentation`, `domain`, `application` e `infrastructure`.
-* **PostgreSQL**: Base de datos SQL.
-* **Docker**: Contenedorización para entornos consistentes.
-* **Jest / Supertest**: Frameworks de testing.
-* **pnpm**: Gestor de paquetes rápido y eficiente.
+- **Node.js**: Entorno de ejecución.
+- **Express.js**: Framework HTTP principal.
+- **TypeScript**: Tipado estático y mejor mantenimiento.
+- **Arquitectura Limpia + DDD**: Separación por capas `presentation`, `domain`, `application` e `infrastructure`.
+- **PostgreSQL**: Base de datos SQL.
+- **Docker**: Contenedorización para entornos consistentes.
+- **Jest / Supertest**: Frameworks de testing.
+- **pnpm**: Gestor de paquetes rápido y eficiente.
 
 ---
 
@@ -128,9 +128,9 @@ pnpm test:coverage # Reporte de cobertura
 
 **Reglas:**
 
-* Merge solo mediante Pull Request.
-* `main` siempre debe pasar CI.
-* Las ramas `feature` y `fix` deben tener vida corta.
+- Merge solo mediante Pull Request.
+- `main` siempre debe pasar CI.
+- Las ramas `feature` y `fix` deben tener vida corta.
 
 ---
 
@@ -155,15 +155,15 @@ docs: update contributing guide
 
 Actualmente, el proyecto se encuentra en desarrollo activo. Próximos pasos:
 
-* Completar implementación de módulos de permisos y usuarios.
-* Integrar documentación con Swagger/Postman.
-* Preparar entorno de despliegue en producción.
+- Completar implementación de módulos de permisos y usuarios.
+- Integrar documentación con Swagger/Postman.
+- Preparar entorno de despliegue en producción.
 
 ---
 
 ## 📄 Licencia
 
-Este proyecto está bajo la **Licencia MIT**. Consulta el archivo `LICENSE` para más detalles.
+Este proyecto está bajo la Licencia MIT - mira el archivo [LICENSE](LICENSE) para detalles.
 
 ---
 

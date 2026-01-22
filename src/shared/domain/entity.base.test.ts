@@ -1,5 +1,5 @@
 import { EntityBase, BaseEntityProps } from './entity.base';
-import type { IIdGenerator } from '@shared-domain/ports/id-generator';
+import type { IEntityIdGenerator } from '@shared-domain/ports/id-generator';
 
 class TestEntity extends EntityBase<string, BaseEntityProps<string>> {
     constructor(props: BaseEntityProps<string>) {
@@ -16,7 +16,7 @@ describe('EntityBase', () => {
     });
 
     it('should create entity using idGenerator when id is not provided', () => {
-        const idGenerator: IIdGenerator = {
+        const idGenerator: IEntityIdGenerator = {
             generate: () => 'generated-id'
         };
 

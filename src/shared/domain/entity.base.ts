@@ -1,8 +1,8 @@
-import type { IIdGenerator } from "@shared-domain/ports/id-generator";
+import type { IEntityIdGenerator } from "@shared-domain/ports/id-generator";
 
 export interface BaseEntityProps<TId> {
     id?: TId;
-    idGenerator?: IIdGenerator;
+    idGenerator?: IEntityIdGenerator;
     createdAt?: Date;
     updatedAt?: Date;
     deletedAt?: Date | undefined;
@@ -52,15 +52,15 @@ export abstract class EntityBase<TId extends string, Props extends BaseEntityPro
     // public getDeletedAt(): Date | undefined {
     //     return this.deletedAt;
     // }
-    // 
+    //
     // public getCreatedBy(): string | undefined {
     //     return this.createdBy;
     // }
-    // 
+    //
     // public getUpdatedBy(): string | undefined {
     //     return this.updatedBy;
     // }
-    // 
+    //
     // public getDeletedBy(): string | undefined {
     //     return this.deletedBy;
     // }
@@ -77,7 +77,7 @@ export abstract class EntityBase<TId extends string, Props extends BaseEntityPro
         return this.id === entity.id;
     }
 
-    private safeGeneratedId(idGenerator: IIdGenerator): TId {
+    private safeGeneratedId(idGenerator: IEntityIdGenerator): TId {
         const id = idGenerator.generate();
         if (typeof id === 'string' || typeof id === 'number') {
             return id as TId;

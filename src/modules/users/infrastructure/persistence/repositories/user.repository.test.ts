@@ -7,20 +7,23 @@ import { EmailVO } from "@users-domain/value-objects/email.vo";
 import { DniVO } from "@users-domain/value-objects/dni.vo";
 import { PasswordVO } from "@users-domain/value-objects/password.vo";
 import { PrismaService } from "@shared-infrastructure/database/prisma/prisma.service";
+import { IPasswordHasher } from "@shared-domain/ports/password-hasher";
 
 describe('UserRepository', () => {
     let userRepository: UserRepository;
     let prismaMock: DeepMockProxy<PrismaClient>;
     let prismaServiceMock: DeepMockProxy<PrismaService>;
+    let passwordHasherMock: DeepMockProxy<IPasswordHasher>;
 
     beforeEach(() => {
         prismaMock = mockDeep<PrismaClient>();
         prismaServiceMock = mockDeep<PrismaService>();
+        passwordHasherMock = mockDeep<IPasswordHasher>();
 
         prismaServiceMock.isConnected.mockResolvedValue(true);
         prismaServiceMock.getClient.mockReturnValue(prismaMock);
 
-        userRepository = new UserRepository(prismaServiceMock);
+        userRepository = new UserRepository(prismaServiceMock, passwordHasherMock);
     });
 
     describe("existsByEmail", () => {
@@ -195,12 +198,14 @@ describe('UserRepository', () => {
 
     describe("save", () => {
         it("should create and return a user entity correctly", async () => {
-            const userEntityResult = UserEntity.create({
+            passwordHasherMock.hash.mockResolvedValue("12345678");
+
+            const userEntityResult = await UserEntity.create({
                 name: "Fidel",
                 lastName: "Test",
                 email: "fidel@test.com",
                 dni: "12345678"
-            }, { generate: () => "id-123" });
+            }, { generate: () => "id-123" }, passwordHasherMock);
 
             const userEntity = userEntityResult.value();
 
@@ -250,13 +255,15 @@ describe('UserRepository', () => {
         });
 
         it("should throw InfrastructureError when create operation fails", async () => {
-            const userEntityResult = UserEntity.create({
+            passwordHasherMock.hash.mockResolvedValue("pass");
+
+            const userEntityResult = await UserEntity.create({
                 name: "Error",
                 lastName: "Test",
                 email: "err@test.com",
                 dni: "87654321",
                 password: "pass"
-            }, { generate: () => "id-err" });
+            }, { generate: () => "id-err" }, passwordHasherMock);
 
             const userEntity = userEntityResult.value();
 
