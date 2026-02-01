@@ -33,3 +33,4 @@ docs/comandos.md
 docs/openapi/openapi.json
 
 generated/
+.clinic/

@@ -1,5 +1,5 @@
 import { DeleteUserController } from "./delete-user.controller";
-import type { DeleteUserUseCase } from "@users-application/use-cases/delete-user.use-case";
+import type { DeleteUserUseCase } from "@users-application/use-cases/user/delete-user.use-case";
 import type { HttpRequest } from "@shared-infrastructure/http/ports/controller";
 import { Result } from "@shared-kernel/errors/result";
 import { UserNotFoundError } from "@users-application/errors/user-not-found.error";

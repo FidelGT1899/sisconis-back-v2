@@ -1,6 +1,6 @@
 import { UserEntity } from "@users-domain/entities/user.entity";
 import { CreateUserUseCase } from "./create-user.use-case";
-import { UserAlreadyExistsError } from "../errors/user-already-exists.error";
+import { UserAlreadyExistsError } from "../../errors/user-already-exists.error";
 import { InvalidEmailError } from "@users-domain/errors/invalid-email.error";
 import { IUserRepository } from "@users-domain/repositories/user.repository.interface";
 import { IEntityIdGenerator } from "@shared-domain/ports/id-generator";

@@ -1,5 +1,5 @@
 import { UpdateUserUseCase } from "./update-user.use-case";
-import { UserNotFoundError } from "../errors/user-not-found.error";
+import { UserNotFoundError } from "../../errors/user-not-found.error";
 import { IUserRepository } from "@users-domain/repositories/user.repository.interface";
 import { UserEntity } from "@users-domain/entities/user.entity";
 import { EmailVO } from "@users-domain/value-objects/email.vo";

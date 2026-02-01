@@ -2,6 +2,7 @@ import { Container } from "inversify";
 
 import { usersModule } from "@shared-infrastructure/ioc/modules/users.module";
 import { systemModule } from "@shared-infrastructure/ioc/modules/system.module";
+import { rolesModule } from "@shared-infrastructure/ioc/modules/roles.module";
 
 import { PrismaService } from "@shared-infrastructure/database/prisma/prisma.service";
 import { UlidIdGenerator } from "@shared-infrastructure/id-generator/ulid-id-generator";
@@ -25,6 +26,6 @@ container.bind<IAuditIdGenerator>(TYPES.AuditIdGenerator).to(UlidIdGenerator);
 container.bind<IPasswordHasher>(TYPES.PasswordHasher).to(BCryptPasswordHasher);
 
 // Modules
-void container.load(usersModule, systemModule);
+void container.load(usersModule, systemModule, rolesModule);
 
 export { container };

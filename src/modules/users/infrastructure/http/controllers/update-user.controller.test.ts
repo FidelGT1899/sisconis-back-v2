@@ -1,5 +1,5 @@
 import { UpdateUserController } from "./update-user.controller";
-import type { UpdateUserUseCase } from "@users-application/use-cases/update-user.use-case";
+import type { UpdateUserUseCase } from "@users-application/use-cases/user/update-user.use-case";
 import type { HttpRequest } from "@shared-infrastructure/http/ports/controller";
 import { Result } from "@shared-kernel/errors/result";
 import { UserEntity } from "@users-domain/entities/user.entity";

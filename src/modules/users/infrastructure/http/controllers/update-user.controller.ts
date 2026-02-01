@@ -4,7 +4,7 @@ import { TYPES } from "@shared-infrastructure/ioc/types";
 import { BaseController } from "@shared-infrastructure/http/base/base.controller";
 import type { Controller, HttpRequest, HttpResponse } from "@shared-infrastructure/http/ports/controller";
 
-import { UpdateUserUseCase } from "@users-application/use-cases/update-user.use-case";
+import { UpdateUserUseCase } from "@users-application/use-cases/user/update-user.use-case";
 
 import { UpdateUserSchema } from "@users-infrastructure/http/requests/update-user.schema";
 import { UserResponseMapper } from "@users-infrastructure/mappers/user-response.mapper";

@@ -4,7 +4,7 @@ import { TYPES } from "@shared-infrastructure/ioc/types";
 import { BaseController } from "@shared-infrastructure/http/base/base.controller";
 import type { Controller, HttpRequest, HttpResponse } from "@shared-infrastructure/http/ports/controller";
 
-import { ResetUserPasswordUseCase } from "@users-application/use-cases/reset-user-password.use-case";
+import { ResetUserPasswordUseCase } from "@users-application/use-cases/user/reset-user-password.use-case";
 
 @injectable()
 export class ResetUserPasswordController extends BaseController implements Controller {

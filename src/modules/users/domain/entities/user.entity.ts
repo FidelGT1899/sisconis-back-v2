@@ -17,6 +17,7 @@ interface UserProps extends BaseEntityProps<string> {
     email: EmailVO;
     password: PasswordType;
     dni: DniVO;
+    roleId: string;
 }
 
 export class UserEntity extends EntityBase<string, UserProps> {
@@ -27,37 +28,31 @@ export class UserEntity extends EntityBase<string, UserProps> {
         this.props = props;
     }
 
-    public getName(): string {
-        return this.props.name;
-    }
+    // --- Getters ---
+    public getName(): string { return this.props.name; }
+    public getLastName(): string { return this.props.lastName; }
+    public getEmail(): string { return this.props.email.getValue(); }
+    public getPassword(): string { return this.props.password.getValue(); }
+    public getDni(): string { return this.props.dni.getValue(); }
+    public getRoleId(): string { return this.props.roleId; }
 
-    public getLastName(): string {
-        return this.props.lastName;
-    }
-
-    public getEmail(): string {
-        return this.props.email.getValue();
-    }
-
-    public getPassword(): string {
-        return this.props.password.getValue();
-    }
-
-    public getDni(): string {
-        return this.props.dni.getValue();
-    }
-
+    // --- Business Logic of Password ---
     public requiresPasswordChange(): boolean {
         return this.isPasswordTemporary();
     }
 
-    // Factory method
+    public isPasswordTemporary(): boolean {
+        return this.props.password instanceof TemporaryPasswordVO;
+    }
+
+    // --- Factory Method from New User ---
     public static async create(
         payload: {
             name: string;
             lastName: string;
             email: string;
             dni: string;
+            roleId: string;
         },
         idGenerator: IEntityIdGenerator,
         hasher: IPasswordHasher
@@ -87,12 +82,14 @@ export class UserEntity extends EntityBase<string, UserProps> {
             email: emailResult.value(),
             dni: dniResult.value(),
             password: tempPassword,
+            roleId: payload.roleId,
             createdAt: new Date(),
         });
 
         return Result.ok(user);
     }
 
+    // --- Factory Method from Existing User(DB/Prisma) ---
     public static fromExisting(
         id: string,
         payload: {
@@ -101,6 +98,7 @@ export class UserEntity extends EntityBase<string, UserProps> {
             email: string;
             password: string;
             dni: string;
+            roleId: string;
             isTemporaryPassword: boolean;
         },
         createdAt: Date
@@ -127,6 +125,7 @@ export class UserEntity extends EntityBase<string, UserProps> {
             email: emailResult.value(),
             dni: dniResult.value(),
             password: passwordVO,
+            roleId: payload.roleId,
             createdAt,
             updatedAt: new Date(),
         });
@@ -138,11 +137,7 @@ export class UserEntity extends EntityBase<string, UserProps> {
         return new UserEntity(props);
     }
 
-    public isPasswordTemporary(): boolean {
-        return this.props.password instanceof TemporaryPasswordVO;
-    }
-
-    // Behavior Method
+    // --- Behavior Methods ---
     public async changePassword(
         newPasswordRaw: string,
         hasher: IPasswordHasher
@@ -158,6 +153,12 @@ export class UserEntity extends EntityBase<string, UserProps> {
         return Result.ok(undefined);
     }
 
+    public changeRole(newRoleId: string): void {
+        this.props.roleId = newRoleId;
+        this.updatedAt = new Date();
+    }
+
+    // --- Other Methods ---
     public async resetToTemporaryPassword(hasher: IPasswordHasher): Promise<void> {
         this.props.password = await PasswordFactory.createTemporaryFromDni(
             this.props.dni,

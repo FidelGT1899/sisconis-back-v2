@@ -1,5 +1,5 @@
 import { ChangeUserPasswordController } from "./change-user-password.controller";
-import type { ChangeUserPasswordUseCase } from "@users-application/use-cases/change-user-password.use-case";
+import type { ChangeUserPasswordUseCase } from "@users-application/use-cases/user/change-user-password.use-case";
 import type { HttpRequest } from "@shared-infrastructure/http/ports/controller";
 import { Result } from "@shared-kernel/errors/result";
 import { UserEntity } from "@users-domain/entities/user.entity";

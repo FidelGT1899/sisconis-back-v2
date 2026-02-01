@@ -1,5 +1,5 @@
-import { DeepMockProxy, mockDeep } from "jest-mock-extended";
-import { PrismaClient, User } from "@prisma-generated";
+import { type DeepMockProxy, mockDeep } from "jest-mock-extended";
+import { PrismaClient, type User } from "@prisma/client";
 import { UserRepository } from "./user.repository";
 import { InfrastructureError } from "@shared-kernel/errors/infrastructure.error";
 import { UserEntity } from "@users-domain/entities/user.entity";
@@ -7,7 +7,7 @@ import { EmailVO } from "@users-domain/value-objects/email.vo";
 import { DniVO } from "@users-domain/value-objects/dni.vo";
 import { PasswordVO } from "@users-domain/value-objects/password.vo";
 import { PrismaService } from "@shared-infrastructure/database/prisma/prisma.service";
-import { IPasswordHasher } from "@shared-domain/ports/password-hasher";
+import { type IPasswordHasher } from "@shared-domain/ports/password-hasher";
 
 describe('UserRepository', () => {
     let userRepository: UserRepository;
@@ -23,7 +23,7 @@ describe('UserRepository', () => {
         prismaServiceMock.isConnected.mockResolvedValue(true);
         prismaServiceMock.getClient.mockReturnValue(prismaMock);
 
-        userRepository = new UserRepository(prismaServiceMock, passwordHasherMock);
+        userRepository = new UserRepository(prismaServiceMock);
     });
 
     describe("existsByEmail", () => {

@@ -2,7 +2,7 @@ import { IUserRepository } from "@users-domain/repositories/user.repository.inte
 import { IEntityIdGenerator } from "@shared-domain/ports/id-generator";
 import { ChangeUserDniUseCase } from "./change-user-dni.use-case";
 import { UserEntity } from "@users-domain/entities/user.entity";
-import { UserNotFoundError } from "../errors/user-not-found.error";
+import { UserNotFoundError } from "../../errors/user-not-found.error";
 import { IPasswordHasher } from "@shared-domain/ports/password-hasher";
 
 const mockUserRepository = {

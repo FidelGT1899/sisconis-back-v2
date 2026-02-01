@@ -1,5 +1,5 @@
 import { ChangeUserPasswordUseCase } from "./change-user-password.use-case";
-import { UserNotFoundError } from "../errors/user-not-found.error";
+import { UserNotFoundError } from "../../errors/user-not-found.error";
 import { UserEntity } from "@users-domain/entities/user.entity";
 import { IUserRepository } from "@users-domain/repositories/user.repository.interface";
 import { IEntityIdGenerator } from "@shared-domain/ports/id-generator";

@@ -33,9 +33,6 @@ const config = {
             '<rootDir>/src/modules/system/application/$1',
         '^@system-infrastructure/(.*)$':
             '<rootDir>/src/modules/system/infrastructure/$1',
-
-        '^@prisma-generated$': '<rootDir>/generated/prisma/index.js',
-        '^@prisma-generated/(.*)$': '<rootDir>/generated/prisma/$1',
     },
     transform: {
         '^.+\\.tsx?$': [

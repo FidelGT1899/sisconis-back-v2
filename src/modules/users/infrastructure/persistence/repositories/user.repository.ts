@@ -1,5 +1,5 @@
 import { injectable, inject } from "inversify";
-import { PrismaClient, Prisma } from "@prisma-generated";
+import { PrismaClient, Prisma } from "@prisma/client";
 
 import { TYPES } from "@shared-infrastructure/ioc/types";
 import type { PaginatedResult } from "@shared-kernel/utils/paginated-result";

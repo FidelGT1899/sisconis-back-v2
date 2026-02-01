@@ -1,6 +1,6 @@
 import { ResetUserPasswordUseCase } from "./reset-user-password.use-case";
 import { UserEntity } from "@users-domain/entities/user.entity";
-import { UserNotFoundError } from "../errors/user-not-found.error";
+import { UserNotFoundError } from "../../errors/user-not-found.error";
 import { EmailVO } from "@users-domain/value-objects/email.vo";
 import { DniVO } from "@users-domain/value-objects/dni.vo";
 import { PasswordVO } from "@users-domain/value-objects/password.vo";

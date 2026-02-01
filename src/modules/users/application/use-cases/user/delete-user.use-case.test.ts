@@ -1,5 +1,5 @@
-import { GetUserUseCase } from "./get-user.use-case";
-import { UserNotFoundError } from "../errors/user-not-found.error";
+import { DeleteUserUseCase } from "./delete-user.use-case";
+import { UserNotFoundError } from "../../errors/user-not-found.error";
 import { IUserRepository } from "@users-domain/repositories/user.repository.interface";
 import { UserEntity } from "@users-domain/entities/user.entity";
 import { EmailVO } from "@users-domain/value-objects/email.vo";
@@ -16,27 +16,29 @@ const user = UserEntity.rehydrate({
     createdAt: new Date(),
 });
 
-describe('GetUserUseCase', () => {
-    let useCase: GetUserUseCase;
+describe('DeleteUserUseCase', () => {
+    let useCase: DeleteUserUseCase;
     let mockUserRepository: jest.Mocked<IUserRepository>;
 
     beforeEach(() => {
         mockUserRepository = {
             findById: jest.fn(),
+            delete: jest.fn(),
         } as jest.Mocked<IUserRepository>;
 
-        useCase = new GetUserUseCase(mockUserRepository);
+        useCase = new DeleteUserUseCase(mockUserRepository);
     });
 
-    it('should return a user when it exists', async () => {
+    it('should delete a user when it exists', async () => {
         const userId = 'test-user-id';
         mockUserRepository.findById.mockResolvedValue(user);
 
         const result = await useCase.execute(userId);
 
         expect(result.isOk()).toBe(true);
-        expect(result.value()).toBe(user);
+        expect(mockUserRepository.delete).toHaveBeenCalledWith(userId);
         expect(mockUserRepository.findById).toHaveBeenCalledWith(userId);
+        expect(mockUserRepository.delete).toHaveBeenCalledTimes(1);
     });
 
     it('should return UserNotFoundError when user does not exist', async () => {
@@ -47,6 +49,6 @@ describe('GetUserUseCase', () => {
 
         expect(result.isErr()).toBe(true);
         expect(result.error()).toBeInstanceOf(UserNotFoundError);
-        expect(mockUserRepository.findById).toHaveBeenCalledWith(userId);
+        expect(mockUserRepository.delete).not.toHaveBeenCalled();
     });
 });

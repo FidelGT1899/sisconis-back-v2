@@ -1,5 +1,5 @@
 import { GetUsersController } from "./get-users.controller";
-import type { GetUsersUseCase } from "@users-application/use-cases/get-users.use-case";
+import type { GetUsersUseCase } from "@users-application/use-cases/user/get-users.use-case";
 import type { HttpRequest } from "@shared-infrastructure/http/ports/controller";
 import { Result } from "@shared-kernel/errors/result";
 import { UserEntity } from "@users-domain/entities/user.entity";

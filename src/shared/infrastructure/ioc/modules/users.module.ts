@@ -2,14 +2,14 @@ import { ContainerModule } from "inversify";
 
 import type { IUserRepository } from "@users-domain/repositories/user.repository.interface";
 
-import { CreateUserUseCase } from "@users-application/use-cases/create-user.use-case";
-import { GetUsersUseCase } from "@users-application/use-cases/get-users.use-case";
-import { GetUserUseCase } from "@users-application/use-cases/get-user.use-case";
-import { UpdateUserUseCase } from "@users-application/use-cases/update-user.use-case";
-import { DeleteUserUseCase } from "@users-application/use-cases/delete-user.use-case";
-import { ResetUserPasswordUseCase } from "@users-application/use-cases/reset-user-password.use-case";
-import { ChangeUserPasswordUseCase } from "@users-application/use-cases/change-user-password.use-case";
-import { ChangeUserDniUseCase } from "@users-application/use-cases/change-user-dni.use-case";
+import { CreateUserUseCase } from "@users-application/use-cases/user/create-user.use-case";
+import { GetUsersUseCase } from "@users-application/use-cases/user/get-users.use-case";
+import { GetUserUseCase } from "@users-application/use-cases/user/get-user.use-case";
+import { UpdateUserUseCase } from "@users-application/use-cases/user/update-user.use-case";
+import { DeleteUserUseCase } from "@users-application/use-cases/user/delete-user.use-case";
+import { ResetUserPasswordUseCase } from "@users-application/use-cases/user/reset-user-password.use-case";
+import { ChangeUserPasswordUseCase } from "@users-application/use-cases/user/change-user-password.use-case";
+import { ChangeUserDniUseCase } from "@users-application/use-cases/user/change-user-dni.use-case";
 
 import { UserRepository } from "@users-infrastructure/persistence/repositories/user.repository";
 import { GetUsersController } from "@users-infrastructure/http/controllers/get-users.controller";

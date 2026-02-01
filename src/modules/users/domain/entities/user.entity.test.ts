@@ -1,3 +1,4 @@
+import { mock } from 'jest-mock-extended';
 import type { IEntityIdGenerator } from "@shared-domain/ports/id-generator";
 import { UserEntity } from "./user.entity";
 import { InvalidEmailError } from "@users-domain/errors/invalid-email.error";
@@ -6,15 +7,10 @@ import { InvalidDniError } from "@users-domain/errors/invalid-dni.error";
 import { EmailVO } from "@users-domain/value-objects/email.vo";
 import { PasswordVO } from "@users-domain/value-objects/password.vo";
 import { DniVO } from "@users-domain/value-objects/dni.vo";
-import { IPasswordHasher } from "@shared-domain/ports/password-hasher";
+import type { IPasswordHasher } from "@shared-domain/ports/password-hasher";
 
-const mockIdGenerator: IEntityIdGenerator = {
-    generate: jest.fn(() => 'mock-uuid-12345'),
-};
-
-const mockPasswordHasher: jest.Mocked<IPasswordHasher> = {
-    hash: jest.fn(),
-};
+const mockIdGenerator = mock<IEntityIdGenerator>();
+const mockPasswordHasher: jest.Mocked<IPasswordHasher> = mock<IPasswordHasher>();
 
 const baseProps = {
     name: 'John',
@@ -26,11 +22,13 @@ const baseProps = {
 const basePropsWithPassword = {
     ...baseProps,
     password: 'hashedpassword123',
+    isTemporaryPassword: false,
 };
 
 describe('UserEntity', () => {
     beforeEach(() => {
         jest.clearAllMocks();
+        mockIdGenerator.generate.mockReturnValue('mock-uuid-12345');
         mockPasswordHasher.hash.mockResolvedValue('hashed_12345678');
     });
 

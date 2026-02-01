@@ -13,25 +13,18 @@ export interface UserResponseDto {
 
 export class UserResponseMapper {
     static toResponse(user: UserEntity | ReadUserDto): UserResponseDto {
-        if ('getId' in user) {
-            return {
-                id: user.getId(),
-                name: user.getName(),
-                lastName: user.getLastName(),
-                email: user.getEmail(),
-                dni: user.getDni(),
-                createdAt: user.getCreatedAt().toISOString(),
-                updatedAt: user.getUpdatedAt().toISOString()
-            };
-        }
-        return {
-            id: user.id,
-            name: user.name,
-            lastName: user.lastName,
-            email: user.email,
-            dni: user.dni,
-            createdAt: user.createdAt.toISOString(),
-            updatedAt: user.createdAt.toISOString()
+        const isEntity = 'getId' in user;
+
+        const response: UserResponseDto = {
+            id: isEntity ? user.getId() : user.id,
+            name: isEntity ? user.getName() : user.name,
+            lastName: isEntity ? user.getLastName() : user.lastName,
+            email: isEntity ? user.getEmail() : user.email,
+            dni: isEntity ? user.getDni() : user.dni,
+            createdAt: (isEntity ? user.getCreatedAt() : user.createdAt).toISOString(),
+            updatedAt: (isEntity ? user.getUpdatedAt() : (user.updatedAt ?? user.createdAt)).toISOString()
         };
+
+        return response;
     }
 }

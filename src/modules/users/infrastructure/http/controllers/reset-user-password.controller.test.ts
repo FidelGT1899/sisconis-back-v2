@@ -1,5 +1,5 @@
 import { ResetUserPasswordController } from "./reset-user-password.controller";
-import type { ResetUserPasswordUseCase } from "@users-application/use-cases/reset-user-password.use-case";
+import type { ResetUserPasswordUseCase } from "@users-application/use-cases/user/reset-user-password.use-case";
 import type { HttpRequest } from "@shared-infrastructure/http/ports/controller";
 import { Result } from "@shared-kernel/errors/result";
 import { UserEntity } from "@users-domain/entities/user.entity";

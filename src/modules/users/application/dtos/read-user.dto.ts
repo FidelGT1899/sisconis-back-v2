@@ -5,4 +5,5 @@ export interface ReadUserDto {
     email: string;
     dni: string;
     createdAt: Date;
+    updatedAt?: Date;
 }

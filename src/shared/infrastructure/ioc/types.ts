@@ -27,6 +27,9 @@ export const TYPES = {
     // Users Domain
     UserRepository: Symbol.for("UserRepository"),
 
+    // Roles Domain
+    RoleRepository: Symbol.for("RoleRepository"),
+
     // Users Application
     GetUsersUseCase: Symbol.for("GetUsersUseCase"),
     GetUserUseCase: Symbol.for("GetUserUseCase"),
@@ -36,6 +39,13 @@ export const TYPES = {
     ResetUserPasswordUseCase: Symbol.for("ResetUserPasswordUseCase"),
     ChangeUserPasswordUseCase: Symbol.for("ChangeUserPasswordUseCase"),
     ChangeUserDniUseCase: Symbol.for("ChangeUserDniUseCase"),
+
+    // Roles Application
+    GetRolesUseCase: Symbol.for("GetRolesUseCase"),
+    GetRoleUseCase: Symbol.for("GetRoleUseCase"),
+    CreateRoleUseCase: Symbol.for("CreateRoleUseCase"),
+    UpdateRoleUseCase: Symbol.for("UpdateRoleUseCase"),
+    DeleteRoleUseCase: Symbol.for("DeleteRoleUseCase"),
 
     // Users Infrastructure
     UsersControllers: Symbol.for("UsersControllers"),
@@ -47,4 +57,12 @@ export const TYPES = {
     ResetUserPasswordController: Symbol.for("ResetUserPasswordController"),
     ChangeUserPasswordController: Symbol.for("ChangeUserPasswordController"),
     ChangeUserDniController: Symbol.for("ChangeUserDniController"),
+
+    // Roles Infrastructure
+    RolesControllers: Symbol.for("RolesControllers"),
+    GetRolesController: Symbol.for("GetRolesController"),
+    GetRoleController: Symbol.for("GetRoleController"),
+    CreateRoleController: Symbol.for("CreateRoleController"),
+    UpdateRoleController: Symbol.for("UpdateRoleController"),
+    DeleteRoleController: Symbol.for("DeleteRoleController"),
 };
