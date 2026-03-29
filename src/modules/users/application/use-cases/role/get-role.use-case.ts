@@ -4,12 +4,13 @@ import { Result } from "@shared-kernel/errors/result";
 import type { AppError } from "@shared-kernel/errors/app.error";
 import { TYPES } from "@shared-infrastructure/ioc/types";
 
-import type { RoleEntity } from "@users-domain/entities/role.entity";
 import type { IRoleRepository } from "@users-domain/repositories/role.repository.interface";
 
+import type { ReadRoleDto } from "@users-application/dtos/role/read-role.dto";
 import { RoleNotFoundError } from "@users-application/errors/role/role-not-found.error";
+import { RoleResponseMapper } from "@users-application/mappers/role-response.mapper";
 
-export type GetRoleResult = Result<RoleEntity, AppError>;
+export type GetRoleResult = Result<ReadRoleDto, AppError>;
 
 @injectable()
 export class GetRoleUseCase {
@@ -25,6 +26,6 @@ export class GetRoleUseCase {
             return Result.fail(new RoleNotFoundError(id));
         }
 
-        return Result.ok(role);
+        return Result.ok(RoleResponseMapper.toDto(role));
     }
 }

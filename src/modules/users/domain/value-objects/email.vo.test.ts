@@ -1,5 +1,6 @@
 import { EmailVO } from './email.vo';
 import { InvalidEmailError } from '../errors/invalid-email.error';
+import { DniVO } from '@users-domain/value-objects/dni.vo';
 
 describe('EmailVO', () => {
     it('should create a valid EmailVO instance', () => {
@@ -35,12 +36,20 @@ describe('EmailVO', () => {
         expect(email1.equals(email2)).toBe(false);
     });
 
-    it('should return false when comparing with a non-EmailVO object', () => {
+    it('should return false when comparing with undefined', () => {
         const email = EmailVO.create('test@domain.com').value();
+        expect(email.equals(undefined)).toBe(false);
+    });
 
-        expect(email.equals("hola" as unknown)).toBe(false);
-        expect(email.equals(123 as unknown)).toBe(false);
-        expect(email.equals({ value: 'test@domain.com' } as unknown)).toBe(false);
+    it('should return false when comparing with a different VO type', () => {
+        const email = EmailVO.create('test@domain.com').value();
+        const dni = DniVO.create('12345678').value();
+        expect(email.equals(dni)).toBe(false);
+    });
+
+    it('should return true when comparing with itself', () => {
+        const email = EmailVO.create('test@domain.com').value();
+        expect(email.equals(email)).toBe(true);
     });
 
     it('should normalize email to lowercase and trim spaces', () => {

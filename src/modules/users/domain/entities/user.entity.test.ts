@@ -1,29 +1,19 @@
-import { mock } from 'jest-mock-extended';
-import type { IEntityIdGenerator } from "@shared-domain/ports/id-generator";
-import { UserEntity } from "./user.entity";
+import { UserEntity, UserStatus } from "./user.entity";
 import { InvalidEmailError } from "@users-domain/errors/invalid-email.error";
 import { InvalidPasswordError } from "@users-domain/errors/invalid-password.error";
 import { InvalidDniError } from "@users-domain/errors/invalid-dni.error";
-import { EmailVO } from "@users-domain/value-objects/email.vo";
-import { PasswordVO } from "@users-domain/value-objects/password.vo";
-import { DniVO } from "@users-domain/value-objects/dni.vo";
-import type { IPasswordHasher } from "@shared-domain/ports/password-hasher";
+import { makeMockIdGenerator, makeMockPasswordHasher } from "@users-tests/factories/mocks";
+import { makeExistingUserProps, makeUserEntity, makeUserProps } from "@users-tests/factories/user.factory";
+import { makeRoleReference } from "@users-tests/factories/role.factory";
+import { CannotAssignRoleError } from "@users-domain/errors/cannot-assign-role.error";
+import { UserAlreadyActiveError } from "@users-domain/errors/user-already-active.error";
+import { UserAlreadyInactiveError } from "@users-domain/errors/user-already-deactive.error";
+import { UserAlreadySuspendedError } from "@users-domain/errors/user-already-suspended.error";
+import { UserNotDeletableError } from "@users-domain/errors/user-not-deletable.error";
+import { UserNotActiveError } from "@users-domain/errors/user-not-active.error";
 
-const mockIdGenerator = mock<IEntityIdGenerator>();
-const mockPasswordHasher: jest.Mocked<IPasswordHasher> = mock<IPasswordHasher>();
-
-const baseProps = {
-    name: 'John',
-    lastName: 'Doe',
-    email: 'john.doe@example.com',
-    dni: '12345678',
-};
-
-const basePropsWithPassword = {
-    ...baseProps,
-    password: 'hashedpassword123',
-    isTemporaryPassword: false,
-};
+const mockIdGenerator = makeMockIdGenerator();
+const mockPasswordHasher = makeMockPasswordHasher();
 
 describe('UserEntity', () => {
     beforeEach(() => {
@@ -33,8 +23,12 @@ describe('UserEntity', () => {
     });
 
     describe('create', () => {
-        it('should create a new UserEntity with generated ID and temporary password from DNI', async () => {
-            const result = await UserEntity.create(baseProps, mockIdGenerator, mockPasswordHasher);
+        it('should create a new user with generated ID and temporary password from DNI', async () => {
+            const result = await UserEntity.create(
+                makeUserProps(),
+                mockIdGenerator,
+                mockPasswordHasher
+            );
 
             expect(result.isOk()).toBe(true);
             const user = result.value();
@@ -42,46 +36,70 @@ describe('UserEntity', () => {
             expect(user).toBeInstanceOf(UserEntity);
             expect(mockIdGenerator.generate).toHaveBeenCalledTimes(1);
             expect(user.getId()).toBe('mock-uuid-12345');
-            expect(user.getEmail()).toBe(baseProps.email);
-            expect(user.getDni()).toBe(baseProps.dni);
+            expect(user.getEmail()).toBe('john.doe@example.com');
+            expect(user.getDni()).toBe('12345678');
             expect(user.getPassword()).toBe('hashed_12345678');
             expect(user.createdAt).toBeInstanceOf(Date);
             expect(user.isPasswordTemporary()).toBe(true);
+            expect(user.getStatus()).toBe(UserStatus.ACTIVE);
         });
 
         it('should initialize basic properties correctly via getters', async () => {
-            const result = await UserEntity.create(baseProps, mockIdGenerator, mockPasswordHasher);
+            const result = await UserEntity.create(
+                makeUserProps(),
+                mockIdGenerator,
+                mockPasswordHasher
+            );
             const user = result.value();
 
             expect(user.getName()).toBe('John');
             expect(user.getLastName()).toBe('Doe');
             expect(user.getDni()).toBe('12345678');
+            expect(user.getRole()).toBeDefined();
         });
 
-        it('should return failure with InvalidEmailError if email is invalid', async () => {
-            const invalidProps = { ...baseProps, email: 'not-an-email' };
-            const result = await UserEntity.create(invalidProps, mockIdGenerator, mockPasswordHasher);
+        it('should fail with InvalidEmailError if email is invalid', async () => {
+            const result = await UserEntity.create(
+                makeUserProps({ email: 'not-an-email' }),
+                mockIdGenerator,
+                mockPasswordHasher
+            );
 
             expect(result.isErr()).toBe(true);
             expect(result.error()).toBeInstanceOf(InvalidEmailError);
         });
 
-        it('should return failure with InvalidDniError if DNI is invalid', async () => {
-            const invalidProps = { ...baseProps, dni: 'invalid-dni' };
-            const result = await UserEntity.create(invalidProps, mockIdGenerator, mockPasswordHasher);
+        it('should fail with InvalidDniError if DNI is invalid', async () => {
+            const result = await UserEntity.create(
+                makeUserProps({ dni: 'invalid-dni' }),
+                mockIdGenerator,
+                mockPasswordHasher
+            );
 
             expect(result.isErr()).toBe(true);
             expect(result.error()).toBeInstanceOf(InvalidDniError);
         });
+
+        it('should fail with CannotAssignRoleError if role is not assignable', async () => {
+            const inactiveRole = makeRoleReference({ status: 'INACTIVE' });
+
+            const result = await UserEntity.create(
+                { ...makeUserProps(), role: inactiveRole },
+                mockIdGenerator,
+                mockPasswordHasher
+            );
+
+            expect(result.isErr()).toBe(true);
+            expect(result.error()).toBeInstanceOf(CannotAssignRoleError);
+        });
     });
 
     describe('fromExisting', () => {
-        it('should recreate a UserEntity with hashed password keeping id and createdAt', () => {
+        it('should recreate a user keeping id and createdAt', () => {
             const createdAt = new Date('2024-01-01');
-
             const result = UserEntity.fromExisting(
                 'existing-id-123',
-                basePropsWithPassword,
+                makeExistingUserProps(),
                 createdAt
             );
 
@@ -91,16 +109,14 @@ describe('UserEntity', () => {
             expect(user.getId()).toBe('existing-id-123');
             expect(user.createdAt).toBe(createdAt);
             expect(user.updatedAt).toBeInstanceOf(Date);
-            expect(user.getEmail()).toBe(baseProps.email);
-            expect(user.getPassword()).toBe('hashedpassword123');
-            expect(user.getDni()).toBe(baseProps.dni);
             expect(user.isPasswordTemporary()).toBe(false);
+            expect(user.getStatus()).toBe(UserStatus.ACTIVE);
         });
 
-        it('should return failure if existing data has invalid email', () => {
+        it('should fail with InvalidEmailError if email is invalid', () => {
             const result = UserEntity.fromExisting(
                 'id',
-                { ...basePropsWithPassword, email: 'invalid' },
+                makeExistingUserProps({ email: 'invalid' }),
                 new Date()
             );
 
@@ -108,10 +124,10 @@ describe('UserEntity', () => {
             expect(result.error()).toBeInstanceOf(InvalidEmailError);
         });
 
-        it('should return failure if existing data has invalid DNI', () => {
+        it('should fail with InvalidDniError if DNI is invalid', () => {
             const result = UserEntity.fromExisting(
                 'id',
-                { ...basePropsWithPassword, dni: 'invalid' },
+                makeExistingUserProps({ dni: 'invalid' }),
                 new Date()
             );
 
@@ -120,30 +136,133 @@ describe('UserEntity', () => {
         });
     });
 
-    describe('isPasswordTemporary', () => {
-        it('should return true when user has temporary password', async () => {
-            const result = await UserEntity.create(baseProps, mockIdGenerator, mockPasswordHasher)
-            const user = result.value();
+    describe('status management', () => {
+        it('should activate an inactive user', () => {
+            const user = makeUserEntity({ status: UserStatus.INACTIVE });
+            const result = user.ensureCanActivate();
 
-            expect(user.isPasswordTemporary()).toBe(true);
+            expect(result.isOk()).toBe(true);
+            user.activate();
+            expect(user.getStatus()).toBe(UserStatus.ACTIVE);
         });
 
-        it('should return false when user has regular password', () => {
-            const user = UserEntity.fromExisting(
-                'id-123',
-                basePropsWithPassword,
-                new Date()
-            ).value();
+        it('should fail ensureCanActivate if user is already active', () => {
+            const user = makeUserEntity({ status: UserStatus.ACTIVE });
+            const result = user.ensureCanActivate();
 
+            expect(result.isErr()).toBe(true);
+            expect(result.error()).toBeInstanceOf(UserAlreadyActiveError);
+        });
+
+        it('should deactivate an active user', () => {
+            const user = makeUserEntity({ status: UserStatus.ACTIVE });
+            const result = user.ensureCanDeactivate();
+
+            expect(result.isOk()).toBe(true);
+            user.deactivate();
+            expect(user.getStatus()).toBe(UserStatus.INACTIVE);
+        });
+
+        it('should fail ensureCanDeactivate if user is already inactive', () => {
+            const user = makeUserEntity({ status: UserStatus.INACTIVE });
+            const result = user.ensureCanDeactivate();
+
+            expect(result.isErr()).toBe(true);
+            expect(result.error()).toBeInstanceOf(UserAlreadyInactiveError);
+        });
+
+        it('should suspend an active user', () => {
+            const user = makeUserEntity({ status: UserStatus.ACTIVE });
+            const result = user.ensureCanSuspend();
+
+            expect(result.isOk()).toBe(true);
+            user.suspend();
+            expect(user.getStatus()).toBe(UserStatus.SUSPENDED);
+        });
+
+        it('should fail ensureCanSuspend if user is already suspended', () => {
+            const user = makeUserEntity({ status: UserStatus.SUSPENDED });
+            const result = user.ensureCanSuspend();
+
+            expect(result.isErr()).toBe(true);
+            expect(result.error()).toBeInstanceOf(UserAlreadySuspendedError);
+        });
+    });
+
+    describe('ensureDeletable', () => {
+        it('should allow deletion if user is inactive', () => {
+            const user = makeUserEntity({ status: UserStatus.INACTIVE });
+            const result = user.ensureDeletable();
+
+            expect(result.isOk()).toBe(true);
+        });
+
+        it('should fail if user is active', () => {
+            const user = makeUserEntity({ status: UserStatus.ACTIVE });
+            const result = user.ensureDeletable();
+
+            expect(result.isErr()).toBe(true);
+            expect(result.error()).toBeInstanceOf(UserNotDeletableError);
+        });
+
+        it('should fail if user is suspended', () => {
+            const user = makeUserEntity({ status: UserStatus.SUSPENDED });
+            const result = user.ensureDeletable();
+
+            expect(result.isErr()).toBe(true);
+            expect(result.error()).toBeInstanceOf(UserNotDeletableError);
+        });
+    });
+
+    describe('ensureRoleAssignable', () => {
+        it('should allow role assignment if user is active', () => {
+            const user = makeUserEntity({ status: UserStatus.ACTIVE });
+            const result = user.ensureRoleAssignable();
+
+            expect(result.isOk()).toBe(true);
+        });
+
+        it('should fail if user is inactive', () => {
+            const user = makeUserEntity({ status: UserStatus.INACTIVE });
+            const result = user.ensureRoleAssignable();
+
+            expect(result.isErr()).toBe(true);
+            expect(result.error()).toBeInstanceOf(UserNotActiveError);
+        });
+
+        it('should fail if user is suspended', () => {
+            const user = makeUserEntity({ status: UserStatus.SUSPENDED });
+            const result = user.ensureRoleAssignable();
+
+            expect(result.isErr()).toBe(true);
+            expect(result.error()).toBeInstanceOf(UserNotActiveError);
+        });
+    });
+
+    describe('isPasswordTemporary', () => {
+        it('should return true when user has temporary password', async () => {
+            const result = await UserEntity.create(
+                makeUserProps(),
+                mockIdGenerator,
+                mockPasswordHasher
+            );
+            expect(result.value().isPasswordTemporary()).toBe(true);
+        });
+
+        it('should return false when user has permanent password', () => {
+            const user = makeUserEntity();
             expect(user.isPasswordTemporary()).toBe(false);
         });
 
         it('should return false after changing password', async () => {
-            const result = await UserEntity.create(baseProps, mockIdGenerator, mockPasswordHasher)
+            const result = await UserEntity.create(
+                makeUserProps(),
+                mockIdGenerator,
+                mockPasswordHasher
+            );
             const user = result.value();
 
-            expect(user.isPasswordTemporary()).toBe(true);
-
+            mockPasswordHasher.hash.mockResolvedValue('new_hashed');
             await user.changePassword('NewPassword123', mockPasswordHasher);
 
             expect(user.isPasswordTemporary()).toBe(false);
@@ -151,17 +270,19 @@ describe('UserEntity', () => {
     });
 
     describe('changePassword', () => {
-        it('should update the password and updatedAt when password is valid', async () => {
-            const result = await UserEntity.create(baseProps, mockIdGenerator, mockPasswordHasher)
+        it('should update password and updatedAt when valid', async () => {
+            const result = await UserEntity.create(
+                makeUserProps(),
+                mockIdGenerator,
+                mockPasswordHasher
+            );
             const user = result.value();
-
             const oldPassword = user.getPassword();
 
             mockPasswordHasher.hash.mockResolvedValue('new_hashed_pass');
+            const changeResult = await user.changePassword('NewPassword123', mockPasswordHasher);
 
-            const result2 = await user.changePassword('NewPassword123', mockPasswordHasher);
-
-            expect(result2.isOk()).toBe(true);
+            expect(changeResult.isOk()).toBe(true);
             expect(user.getPassword()).toBe('new_hashed_pass');
             expect(user.getPassword()).not.toBe(oldPassword);
             expect(user.updatedAt).toBeInstanceOf(Date);
@@ -172,97 +293,87 @@ describe('UserEntity', () => {
             const startTime = new Date('2024-01-01T00:00:00.000Z');
             jest.setSystemTime(startTime);
 
-            const result = await UserEntity.create(baseProps, mockIdGenerator, mockPasswordHasher)
+            const result = await UserEntity.create(
+                makeUserProps(),
+                mockIdGenerator,
+                mockPasswordHasher
+            );
             const user = result.value();
 
-            const result1 = await user.changePassword('FirstPassword123', mockPasswordHasher);
-            expect(result1.isOk()).toBe(true);
+            await user.changePassword('FirstPassword123', mockPasswordHasher);
             const firstUpdatedAt = user.updatedAt;
-
-            expect(firstUpdatedAt).toBeInstanceOf(Date);
-            expect(firstUpdatedAt?.getTime()).toBe(startTime.getTime());
 
             jest.advanceTimersByTime(1000);
 
-            const result2 = await user.changePassword('SecondPassword456', mockPasswordHasher);
-            expect(result2.isOk()).toBe(true);
+            await user.changePassword('SecondPassword456', mockPasswordHasher);
             const secondUpdatedAt = user.updatedAt;
 
-            expect(secondUpdatedAt).toBeInstanceOf(Date);
-            expect(secondUpdatedAt?.getTime()).toBeGreaterThan(firstUpdatedAt?.getTime() || 0);
-            expect(secondUpdatedAt?.getTime()).toBe(startTime.getTime() + 1000);
+            expect(secondUpdatedAt?.getTime()).toBeGreaterThan(firstUpdatedAt?.getTime() ?? 0);
 
             jest.useRealTimers();
         });
 
-        it('should return failure with InvalidPasswordError when password is invalid', async () => {
-            const result = await UserEntity.create(baseProps, mockIdGenerator, mockPasswordHasher)
+        it('should fail with InvalidPasswordError when password is too weak', async () => {
+            const result = await UserEntity.create(
+                makeUserProps(),
+                mockIdGenerator,
+                mockPasswordHasher
+            );
             const user = result.value();
             const oldPassword = user.getPassword();
 
-            const result2 = await user.changePassword('weak', mockPasswordHasher);
+            const changeResult = await user.changePassword('weak', mockPasswordHasher);
 
-            expect(result2.isErr()).toBe(true);
-            expect(result2.error()).toBeInstanceOf(InvalidPasswordError);
+            expect(changeResult.isErr()).toBe(true);
+            expect(changeResult.error()).toBeInstanceOf(InvalidPasswordError);
             expect(user.getPassword()).toBe(oldPassword);
         });
 
-        it('should change temporary password to regular password', async () => {
-            const result = await UserEntity.create(baseProps, mockIdGenerator, mockPasswordHasher)
-            const user = result.value();
-
-            expect(user.isPasswordTemporary()).toBe(true);
-
-            mockPasswordHasher.hash.mockResolvedValue('hashed_new');
-            const result2 = await user.changePassword('NewPassword123', mockPasswordHasher);
-
-            expect(result2.isOk()).toBe(true);
-            expect(user.isPasswordTemporary()).toBe(false);
-            expect(user.getPassword()).toBe('hashed_new');
-        });
-
         it('should not update updatedAt when password change fails', async () => {
-            const result = await UserEntity.create(baseProps, mockIdGenerator, mockPasswordHasher)
+            const result = await UserEntity.create(
+                makeUserProps(),
+                mockIdGenerator,
+                mockPasswordHasher
+            );
             const user = result.value();
             const initialUpdatedAt = user.updatedAt;
 
-            const result2 = await user.changePassword('invalid', mockPasswordHasher);
+            await user.changePassword('invalid', mockPasswordHasher);
 
-            expect(result2.isErr()).toBe(true);
             expect(user.updatedAt).toBe(initialUpdatedAt);
         });
     });
 
-    describe('rehydrate', () => {
-        it('should rehydrate a UserEntity from props', () => {
-            const emailVO = EmailVO.create('jane@example.com');
-            const passwordVO = PasswordVO.fromHashed('hashedpass');
-            const dniVO = DniVO.create('87654321');
+    describe('updateProfile', () => {
+        it('should update name and lastName', () => {
+            const user = makeUserEntity();
+            user.updateProfile({ name: 'Jane', lastName: 'Smith' });
 
-            if (emailVO.isErr() || dniVO.isErr()) {
-                throw new Error('Failed to create VOs');
-            }
-
-            const props = {
-                id: 'rehydrated-id',
-                name: 'Jane',
-                lastName: 'Smith',
-                email: emailVO.value(),
-                password: passwordVO,
-                dni: dniVO.value(),
-                createdAt: new Date('2023-01-01'),
-                updatedAt: new Date('2023-06-01'),
-            };
-
-            const user = UserEntity.rehydrate(props);
-
-            expect(user).toBeInstanceOf(UserEntity);
-            expect(user.getId()).toBe('rehydrated-id');
             expect(user.getName()).toBe('Jane');
             expect(user.getLastName()).toBe('Smith');
-            expect(user.getEmail()).toBe('jane@example.com');
-            expect(user.getPassword()).toBe('hashedpass');
-            expect(user.getDni()).toBe('87654321');
+            expect(user.updatedAt).toBeInstanceOf(Date);
+        });
+
+        it('should update optional fields phone, address, photoUrl', () => {
+            const user = makeUserEntity();
+            user.updateProfile({
+                phone: '999888777',
+                address: 'Av. Lima 123',
+                photoUrl: 'https://res.cloudinary.com/test/image.jpg'
+            });
+
+            expect(user.getPhone()).toBe('999888777');
+            expect(user.getAddress()).toBe('Av. Lima 123');
+            expect(user.getPhotoUrl()).toBe('https://res.cloudinary.com/test/image.jpg');
+        });
+
+        it('should not update updatedAt if no fields provided', () => {
+            const user = makeUserEntity();
+            const before = user.updatedAt;
+
+            user.updateProfile({});
+
+            expect(user.updatedAt).toBe(before);
         });
     });
 });

@@ -24,6 +24,9 @@ export class DeleteUserUseCase {
             return Result.fail(new UserNotFoundError(id));
         }
 
+        const deletable = user.ensureDeletable();
+        if (deletable.isErr()) return Result.fail(deletable.error());
+
         await this.userRepository.delete(id);
 
         return Result.ok(undefined);

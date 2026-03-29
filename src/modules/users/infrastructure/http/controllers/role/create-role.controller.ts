@@ -6,7 +6,7 @@ import type { Controller, HttpRequest, HttpResponse } from "@shared-infrastructu
 
 import { CreateRoleUseCase } from "@users-application/use-cases/role/create-role.use-case";
 
-import { RoleResponseMapper } from "@users-infrastructure/mappers/role-response.mapper";
+import { RoleHttpMapper } from "@users-infrastructure/mappers/role-http.mapper";
 
 import { CreateRoleSchema } from "@users-infrastructure/http/requests/role/create-role.schema";
 
@@ -28,6 +28,6 @@ export class CreateRoleController extends BaseController implements Controller {
             return this.fail(result.error());
         }
 
-        return this.created(RoleResponseMapper.toResponse(result.value()));
+        return this.created(RoleHttpMapper.toResponse(result.value()));
     }
 }

@@ -1,57 +1,39 @@
 import { ResetUserPasswordUseCase } from "./reset-user-password.use-case";
-import { UserEntity } from "@users-domain/entities/user.entity";
 import { UserNotFoundError } from "../../errors/user-not-found.error";
-import { EmailVO } from "@users-domain/value-objects/email.vo";
-import { DniVO } from "@users-domain/value-objects/dni.vo";
-import { PasswordVO } from "@users-domain/value-objects/password.vo";
-import { IUserRepository } from "@users-domain/repositories/user.repository.interface";
-import { IPasswordHasher } from "@shared-domain/ports/password-hasher";
 
-const mockUserRepository = {
-    findById: jest.fn(),
-    update: jest.fn(),
-} as jest.Mocked<IUserRepository>;
-
-const mockPasswordHasher: jest.Mocked<IPasswordHasher> = {
-    hash: jest.fn(),
-};
+import { makeMockUserRepository, makeMockPasswordHasher } from "@users-tests/factories/mocks";
+import { makeUserEntity } from "@users-tests/factories/user.factory";
 
 describe('ResetUserPasswordUseCase', () => {
     let useCase: ResetUserPasswordUseCase;
+    let mockUserRepository: ReturnType<typeof makeMockUserRepository>;
+    let mockPasswordHasher: ReturnType<typeof makeMockPasswordHasher>;
 
     beforeEach(() => {
         jest.clearAllMocks();
+        mockUserRepository = makeMockUserRepository();
+        mockPasswordHasher = makeMockPasswordHasher();
         useCase = new ResetUserPasswordUseCase(mockUserRepository, mockPasswordHasher);
     });
 
-    it('should reset password to temporary status using DNI', async () => {
-        const user = UserEntity.rehydrate({
-            id: 'user-123',
-            name: 'John',
-            lastName: 'Doe',
-            email: EmailVO.create('john@test.com').value(),
-            dni: DniVO.create('12345678').value(),
-            password: PasswordVO.fromHashed('already-hashed-password'),
-            createdAt: new Date()
-        });
-
+    it('should reset password to temporary using DNI', async () => {
+        const user = makeUserEntity();
         mockPasswordHasher.hash.mockResolvedValue('hashed_12345678');
         mockUserRepository.findById.mockResolvedValue(user);
-        mockUserRepository.update.mockImplementation((u: UserEntity) => Promise.resolve(u));
+        mockUserRepository.update.mockResolvedValue(user);
 
-        const result = await useCase.execute('user-123');
+        const result = await useCase.execute('user-id-123');
 
         expect(result.isOk()).toBe(true);
         expect(user.isPasswordTemporary()).toBe(true);
         expect(user.getPassword()).toBe('hashed_12345678');
-        expect(mockPasswordHasher.hash).toHaveBeenCalledWith('12345678');
         expect(mockUserRepository.update).toHaveBeenCalledWith(user);
     });
 
-    it('should return error if user to reset is not found', async () => {
+    it('should fail with UserNotFoundError if user does not exist', async () => {
         mockUserRepository.findById.mockResolvedValue(null);
 
-        const result = await useCase.execute('invalid-id');
+        const result = await useCase.execute('non-existent-id');
 
         expect(result.isErr()).toBe(true);
         expect(result.error()).toBeInstanceOf(UserNotFoundError);

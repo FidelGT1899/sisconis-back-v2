@@ -8,6 +8,7 @@ import type { PaginationParams } from "@shared-kernel/utils/pagination-params";
 import type { IUserRepository, UserOrderBy } from "@users-domain/repositories/user.repository.interface";
 
 import type { ReadUserDto } from "@users-application/dtos/read-user.dto";
+import { UserResponseMapper } from "@users-application/mappers/user-response.mapper";
 
 export interface PaginatedUsers {
     items: ReadUserDto[];
@@ -36,14 +37,7 @@ export class GetUsersUseCase {
 
         const { items, total } = await this.userRepository.index(pagination);
 
-        const userDtos: ReadUserDto[] = items.map(user => ({
-            id: user.getId(),
-            name: user.getName(),
-            lastName: user.getLastName(),
-            email: user.getEmail(),
-            dni: user.getDni(),
-            createdAt: user.getCreatedAt()
-        }));
+        const userDtos = items.map(user => UserResponseMapper.toDto(user));
 
         return Result.ok({
             items: userDtos,

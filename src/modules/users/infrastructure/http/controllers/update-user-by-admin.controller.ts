@@ -4,16 +4,16 @@ import { TYPES } from "@shared-infrastructure/ioc/types";
 import { BaseController } from "@shared-infrastructure/http/base/base.controller";
 import type { Controller, HttpRequest, HttpResponse } from "@shared-infrastructure/http/ports/controller";
 
-import { UpdateUserUseCase } from "@users-application/use-cases/user/update-user.use-case";
+import { UpdateUserByAdminUseCase } from "@users-application/use-cases/user/update-user-by-admin.use-case";
 
-import { UpdateUserSchema } from "@users-infrastructure/http/requests/update-user.schema";
-import { UserResponseMapper } from "@users-infrastructure/mappers/user-response.mapper";
+import { UpdateUserByAdminSchema } from "@users-infrastructure/http/requests/update-user-by-admin.schema";
+import { UserHttpMapper } from "@users-infrastructure/mappers/user-http.mapper";
 
 @injectable()
-export class UpdateUserController extends BaseController implements Controller {
+export class UpdateUserByAdminController extends BaseController implements Controller {
     constructor(
-        @inject(TYPES.UpdateUserUseCase)
-        private readonly useCase: UpdateUserUseCase
+        @inject(TYPES.UpdateUserByAdminUseCase)
+        private readonly useCase: UpdateUserByAdminUseCase
     ) {
         super();
     }
@@ -23,7 +23,7 @@ export class UpdateUserController extends BaseController implements Controller {
 
         if (!id) return this.missingParam("id");
 
-        const parsed = UpdateUserSchema.parse(request.body);
+        const parsed = UpdateUserByAdminSchema.parse(request.body);
 
         const result = await this.useCase.execute({
             id,
@@ -34,6 +34,6 @@ export class UpdateUserController extends BaseController implements Controller {
             return this.fail(result.error());
         }
 
-        return this.ok(UserResponseMapper.toResponse(result.value()));
+        return this.ok(UserHttpMapper.toResponse(result.value()));
     }
 }

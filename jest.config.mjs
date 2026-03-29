@@ -27,6 +27,7 @@ const config = {
             '<rootDir>/src/modules/users/application/$1',
         '^@users-infrastructure/(.*)$':
             '<rootDir>/src/modules/users/infrastructure/$1',
+        '^@users-tests/(.*)$': '<rootDir>/src/modules/users/__tests__/$1',
 
         '^@system-domain/(.*)$': '<rootDir>/src/modules/system/domain/$1',
         '^@system-application/(.*)$':
@@ -45,7 +46,7 @@ const config = {
     roots: ['<rootDir>/src'],
     // setupFiles: ['<rootDir>/setupTests.ts'],
     testEnvironment: 'node',
-    testMatch: ['**/__tests__/**/*.ts', '**/?(*.)+(spec|test).ts'],
+    testMatch: ['**/?(*.)+(spec|test).ts'],
 };
 
 export default config;

@@ -20,6 +20,13 @@ enum RoleStatus {
     @@schema("users")
 }
 
+enum UserStatus {
+    SUSPENDED
+    ACTIVE
+    INACTIVE
+    @@schema("users")
+}
+
 /// User authentication and authorization model
 ///
 /// Security:
@@ -51,6 +58,12 @@ model User {
     roleId              String    @map("role_id")
     role                Role      @relation(fields: [roleId], references: [id], onDelete: Restrict)
 
+    status              UserStatus @default(ACTIVE)
+
+    phone               String?   @map("phone")
+    address             String?   @map("address")
+    photoUrl            String?   @map("photo_url")
+
     createdAt           DateTime  @default(now()) @map("created_at")
     updatedAt           DateTime  @updatedAt @map("updated_at")
     deletedAt           DateTime? @map("deleted_at")
@@ -71,7 +84,7 @@ model Role {
     name        String
     description String?
     status      RoleStatus @default(PENDING)
-    level       Int @unique
+    level       Int
 
     users       User[]
 
@@ -83,7 +96,7 @@ model Role {
     deletedBy   String?   @map("deleted_by")
 
     @@index([deletedAt, name], map: "role_name_unique_idx")
-    @@index([level], map: "role_level_idx")
+    @@index([deletedAt, level], map: "role_level_idx")
 
     @@map("roles")
     @@schema("users")

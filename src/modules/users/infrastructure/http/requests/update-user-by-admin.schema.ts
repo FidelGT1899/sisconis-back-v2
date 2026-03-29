@@ -1,9 +1,13 @@
 import { z } from "zod";
 
-export const UpdateUserSchema = z.object({
+export const UpdateUserByAdminSchema = z.object({
     name: z.string().min(3).max(50).trim().optional(),
     lastName: z.string().min(3).max(50).trim().optional(),
     email: z.string().email().trim().optional(),
+    dni: z.string().min(8).max(8).trim().optional(),
+    phone: z.string().min(3).max(20).trim().optional(),
+    address: z.string().min(3).max(100).trim().optional(),
+    photoUrl: z.string().regex(/^https:\/\/res\.cloudinary\.com\/.+/).optional(),
 })
     .strict()
     .refine(
@@ -16,4 +20,4 @@ export const UpdateUserSchema = z.object({
         ) as { [K in keyof typeof data]: Exclude<(typeof data)[K], undefined> };
     });
 
-export type UpdateUserRequest = z.output<typeof UpdateUserSchema>;
+export type UpdateUserByAdminRequest = z.output<typeof UpdateUserByAdminSchema>;

@@ -5,12 +5,13 @@ import type { AppError } from "@shared-kernel/errors/app.error";
 import { Result } from "@shared-kernel/errors/result";
 
 import type { IRoleRepository } from "@users-domain/repositories/role.repository.interface";
-import { RoleEntity } from "@users-domain/entities/role.entity";
 
 import type { UpdateRoleDto } from "@users-application/dtos/role/update-role.dto";
+import type { ReadRoleDto } from "@users-application/dtos/role/read-role.dto";
 import { RoleNotFoundError } from "@users-application/errors/role/role-not-found.error";
+import { RoleResponseMapper } from "@users-application/mappers/role-response.mapper";
 
-export type UpdateRoleResult = Result<RoleEntity, AppError>
+export type UpdateRoleResult = Result<ReadRoleDto, AppError>
 
 @injectable()
 export class UpdateRoleUseCase {
@@ -33,6 +34,6 @@ export class UpdateRoleUseCase {
 
         await this.roleRepository.update(role);
 
-        return Result.ok(role);
+        return Result.ok(RoleResponseMapper.toDto(role));
     }
 }

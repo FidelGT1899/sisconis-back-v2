@@ -2,6 +2,8 @@ import { Result } from "@shared-kernel/errors/result";
 import { EntityBase, type BaseEntityProps } from "@shared-domain/entity.base";
 import type { IEntityIdGenerator } from "@shared-domain/ports/id-generator";
 import { InvalidRoleLevelError } from "@users-domain/errors/invalid-role-level.error";
+import { InvalidRoleStatus } from "@users-domain/errors/invalid-role-status.error";
+import { RoleActiveError } from "@users-domain/errors/role-active.error";
 
 export enum RoleStatus {
     PENDING = 'PENDING',
@@ -84,6 +86,13 @@ export class RoleEntity extends EntityBase<string, RoleProps> {
     }
 
     // --- Behavior Methods ---
+    public ensureAssignable(): Result<void, InvalidRoleStatus> {
+        if (this.props.status !== RoleStatus.ACTIVE) {
+            return Result.fail(new InvalidRoleStatus());
+        }
+        return Result.ok(undefined);
+    }
+
     public deactivate(): void {
         this.props.status = RoleStatus.INACTIVE;
         this.updatedAt = new Date();
@@ -92,6 +101,13 @@ export class RoleEntity extends EntityBase<string, RoleProps> {
     public activate(): void {
         this.props.status = RoleStatus.ACTIVE;
         this.updatedAt = new Date();
+    }
+
+    public ensureDeletable(): Result<void, RoleActiveError> {
+        if (this.props.status === RoleStatus.ACTIVE) {
+            return Result.fail(new RoleActiveError(this.id));
+        }
+        return Result.ok(undefined);
     }
 
     public updateDetails(name: string, description: string | null): void {

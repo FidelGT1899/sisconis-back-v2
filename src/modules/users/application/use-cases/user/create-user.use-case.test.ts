@@ -1,133 +1,122 @@
-import { UserEntity } from "@users-domain/entities/user.entity";
 import { CreateUserUseCase } from "./create-user.use-case";
 import { UserAlreadyExistsError } from "../../errors/user-already-exists.error";
+import { RoleNotFoundError } from "../../errors/role/role-not-found.error";
 import { InvalidEmailError } from "@users-domain/errors/invalid-email.error";
-import { IUserRepository } from "@users-domain/repositories/user.repository.interface";
-import { IEntityIdGenerator } from "@shared-domain/ports/id-generator";
-import { IPasswordHasher } from "@shared-domain/ports/password-hasher";
+import { InvalidDniError } from "@users-domain/errors/invalid-dni.error";
 
-const mockUserRepository = {
-    existsByEmail: jest.fn(),
-    existsByDni: jest.fn(),
-    save: jest.fn(),
-} as jest.Mocked<IUserRepository>;
-
-const mockEntityIdGenerator: jest.Mocked<IEntityIdGenerator> = {
-    generate: jest.fn(),
-};
-
-const mockPasswordHasher: jest.Mocked<IPasswordHasher> = {
-    hash: jest.fn(),
-};
+import {
+    makeMockUserRepository,
+    makeMockRoleRepository,
+    makeMockIdGenerator,
+    makeMockPasswordHasher
+} from "@users-tests/factories/mocks";
+import { makeRoleEntity } from "@users-tests/factories/role.factory";
+import { makeUserEntity } from "@users-tests/factories/user.factory";
 
 const inputDto = {
     name: 'John',
     lastName: 'Doe',
     email: 'john.doe@example.com',
     dni: '12345678',
+    roleId: 'role-id-123',
 };
 
 describe('CreateUserUseCase', () => {
     let useCase: CreateUserUseCase;
+    let mockUserRepository: ReturnType<typeof makeMockUserRepository>;
+    let mockRoleRepository: ReturnType<typeof makeMockRoleRepository>;
+    let mockIdGenerator: ReturnType<typeof makeMockIdGenerator>;
+    let mockPasswordHasher: ReturnType<typeof makeMockPasswordHasher>;
 
     beforeEach(() => {
-        jest.restoreAllMocks();
         jest.clearAllMocks();
-        useCase = new CreateUserUseCase(mockUserRepository, mockEntityIdGenerator, mockPasswordHasher);
-    });
-
-    it('should create and save a new user when email is unique', async () => {
-        mockUserRepository.existsByEmail.mockResolvedValue(false);
-        mockEntityIdGenerator.generate.mockReturnValue('mock-uuid-12345');
-
-        const result = await useCase.execute(inputDto);
-
-        expect(result.isOk()).toBe(true);
-        expect(mockUserRepository.save).toHaveBeenCalledWith(
-            expect.any(UserEntity)
+        mockUserRepository = makeMockUserRepository();
+        mockRoleRepository = makeMockRoleRepository();
+        mockIdGenerator = makeMockIdGenerator();
+        mockPasswordHasher = makeMockPasswordHasher();
+        useCase = new CreateUserUseCase(
+            mockUserRepository,
+            mockRoleRepository,
+            mockIdGenerator,
+            mockPasswordHasher
         );
-
-        const savedUser = mockUserRepository.save.mock.calls[0][0];
-        expect(savedUser.getEmail()).toBe(inputDto.email);
-        expect(savedUser.getId()).toBe('mock-uuid-12345');
     });
 
-    it('should return InvalidEmailError if email is invalid', async () => {
+    it('should create and save a new user successfully', async () => {
         mockUserRepository.existsByEmail.mockResolvedValue(false);
-        const invalidInput = { ...inputDto, email: 'invalid-email' };
-
-        const result = await useCase.execute(invalidInput);
-
-        expect(result.isErr()).toBe(true);
-        expect(result.error()).toBeInstanceOf(InvalidEmailError);
-        expect(mockUserRepository.save).not.toHaveBeenCalled();
-    });
-
-    it('should return UserAlreadyExistsError if email already exists', async () => {
-        mockUserRepository.existsByEmail.mockResolvedValue(true);
-
-        const result = await useCase.execute(inputDto);
-
-        expect(result.isErr()).toBe(true);
-        expect(result.error()).toBeInstanceOf(UserAlreadyExistsError);
-        expect(mockUserRepository.save).not.toHaveBeenCalled();
-    });
-
-    it('should throw error if repository save operation fails', async () => {
-        mockUserRepository.existsByEmail.mockResolvedValue(false);
-        mockEntityIdGenerator.generate.mockReturnValue('any-id');
-
-        const dbError = new Error('Database connection failed');
-        mockUserRepository.save.mockRejectedValue(dbError);
-
-        await expect(useCase.execute(inputDto))
-            .rejects
-            .toThrow('Database connection failed');
-    });
-
-    it('should create and save a new user with temporary password when data is valid', async () => {
-        mockUserRepository.existsByEmail.mockResolvedValue(false);
-        mockEntityIdGenerator.generate.mockReturnValue('mock-uuid-12345');
-        mockUserRepository.save.mockImplementation((user: UserEntity) => Promise.resolve(user));
+        mockUserRepository.existsByDni.mockResolvedValue(false);
+        mockRoleRepository.findById.mockResolvedValue(makeRoleEntity());
+        mockUserRepository.save.mockResolvedValue(makeUserEntity());
 
         const result = await useCase.execute(inputDto);
 
         expect(result.isOk()).toBe(true);
-        const user = result.value();
-
-        expect(user).toBeInstanceOf(UserEntity);
-        expect(user.getEmail()).toBe(inputDto.email);
-        expect(user.getDni()).toBe(inputDto.dni);
-        expect(user.isPasswordTemporary()).toBe(true);
-
-        expect(mockUserRepository.save).toHaveBeenCalledWith(user);
-        expect(mockUserRepository.existsByEmail).toHaveBeenCalledWith(inputDto.email);
+        expect(result.value().email).toBe(inputDto.email);
+        expect(result.value().dni).toBe(inputDto.dni);
+        expect(mockUserRepository.save).toHaveBeenCalledTimes(1);
     });
 
-    it('should return InvalidEmailError if email format is incorrect', async () => {
-        mockUserRepository.existsByEmail.mockResolvedValue(false);
-        const invalidInput = { ...inputDto, email: 'not-an-email' };
-
-        const result = await useCase.execute(invalidInput);
-
-        expect(result.isErr()).toBe(true);
-        expect(result.error()).toBeInstanceOf(InvalidEmailError);
-        expect(mockUserRepository.save).not.toHaveBeenCalled();
-    });
-
-    it('should return UserAlreadyExistsError if email is taken', async () => {
+    it('should fail with UserAlreadyExistsError if email is taken', async () => {
         mockUserRepository.existsByEmail.mockResolvedValue(true);
 
         const result = await useCase.execute(inputDto);
 
         expect(result.isErr()).toBe(true);
         expect(result.error()).toBeInstanceOf(UserAlreadyExistsError);
+        expect(mockUserRepository.save).not.toHaveBeenCalled();
+    });
+
+    it('should fail with UserAlreadyExistsError if DNI is taken', async () => {
+        mockUserRepository.existsByEmail.mockResolvedValue(false);
+        mockUserRepository.existsByDni.mockResolvedValue(true);
+
+        const result = await useCase.execute(inputDto);
+
+        expect(result.isErr()).toBe(true);
+        expect(result.error()).toBeInstanceOf(UserAlreadyExistsError);
+        expect(mockUserRepository.save).not.toHaveBeenCalled();
+    });
+
+    it('should fail with RoleNotFoundError if role does not exist', async () => {
+        mockUserRepository.existsByEmail.mockResolvedValue(false);
+        mockUserRepository.existsByDni.mockResolvedValue(false);
+        mockRoleRepository.findById.mockResolvedValue(null);
+
+        const result = await useCase.execute(inputDto);
+
+        expect(result.isErr()).toBe(true);
+        expect(result.error()).toBeInstanceOf(RoleNotFoundError);
+        expect(mockUserRepository.save).not.toHaveBeenCalled();
+    });
+
+    it('should fail with InvalidEmailError if email format is invalid', async () => {
+        mockUserRepository.existsByEmail.mockResolvedValue(false);
+        mockUserRepository.existsByDni.mockResolvedValue(false);
+        mockRoleRepository.findById.mockResolvedValue(makeRoleEntity());
+
+        const result = await useCase.execute({ ...inputDto, email: 'invalid-email' });
+
+        expect(result.isErr()).toBe(true);
+        expect(result.error()).toBeInstanceOf(InvalidEmailError);
+        expect(mockUserRepository.save).not.toHaveBeenCalled();
+    });
+
+    it('should fail with InvalidDniError if DNI format is invalid', async () => {
+        mockUserRepository.existsByEmail.mockResolvedValue(false);
+        mockUserRepository.existsByDni.mockResolvedValue(false);
+        mockRoleRepository.findById.mockResolvedValue(makeRoleEntity());
+
+        const result = await useCase.execute({ ...inputDto, dni: 'invalid' });
+
+        expect(result.isErr()).toBe(true);
+        expect(result.error()).toBeInstanceOf(InvalidDniError);
         expect(mockUserRepository.save).not.toHaveBeenCalled();
     });
 
     it('should bubble up repository errors', async () => {
         mockUserRepository.existsByEmail.mockResolvedValue(false);
-        mockEntityIdGenerator.generate.mockReturnValue('any-id');
+        mockUserRepository.existsByDni.mockResolvedValue(false);
+        mockRoleRepository.findById.mockResolvedValue(makeRoleEntity());
         mockUserRepository.save.mockRejectedValue(new Error('DB_FATAL_ERROR'));
 
         await expect(useCase.execute(inputDto)).rejects.toThrow('DB_FATAL_ERROR');

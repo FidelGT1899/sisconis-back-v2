@@ -1,7 +1,13 @@
 import { globalErrorMiddleware } from "./error.middleware";
 import { ZodError, z } from "zod";
 import { AppError } from "@shared-kernel/errors/app.error";
-import { Request, Response, NextFunction } from "express";
+import type { Request, Response, NextFunction } from "express";
+
+class TestError extends AppError {
+    constructor(code: string, message: string, statusCode?: number) {
+        super(code, message, statusCode);
+    }
+}
 
 describe("globalErrorMiddleware", () => {
     const req = {} as Request;
@@ -39,7 +45,7 @@ describe("globalErrorMiddleware", () => {
     });
 
     it("should handle AppError", () => {
-        const error = new AppError("TEST_ERROR", "Boom", 418) as AppError;
+        const error = new TestError("TEST_ERROR", "Boom", 418);
 
         globalErrorMiddleware(error, req, res, next);
 

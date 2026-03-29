@@ -7,7 +7,7 @@ import { BaseController } from "@shared-infrastructure/http/base/base.controller
 import { GetRolesUseCase } from "@users-application/use-cases/role/get-roles.use-case";
 
 import { PaginationRoleSchema } from "@users-infrastructure/http/requests/role/pagination-role.schema";
-import { RoleResponseMapper } from "@users-infrastructure/mappers/role-response.mapper";
+import { RoleHttpMapper } from "@users-infrastructure/mappers/role-http.mapper";
 
 @injectable()
 export class GetRolesController extends BaseController implements Controller {
@@ -30,7 +30,7 @@ export class GetRolesController extends BaseController implements Controller {
         const { items, total, page, limit } = result.value();
 
         return this.ok(
-            items.map(role => RoleResponseMapper.toResponse(role)),
+            items.map(role => RoleHttpMapper.toResponse(role)),
             {
                 page,
                 limit,

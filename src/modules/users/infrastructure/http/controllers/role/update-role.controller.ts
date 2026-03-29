@@ -7,7 +7,7 @@ import type { Controller, HttpRequest, HttpResponse } from "@shared-infrastructu
 import { UpdateRoleUseCase } from "@users-application/use-cases/role/update-role.use-case";
 
 import { UpdateRoleSchema } from "@users-infrastructure/http/requests/role/update-role.schema";
-import { RoleResponseMapper } from "@users-infrastructure/mappers/role-response.mapper";
+import { RoleHttpMapper } from "@users-infrastructure/mappers/role-http.mapper";
 
 @injectable()
 export class UpdateRoleController extends BaseController implements Controller {
@@ -34,6 +34,6 @@ export class UpdateRoleController extends BaseController implements Controller {
             return this.fail(result.error());
         }
 
-        return this.ok(RoleResponseMapper.toResponse(result.value()));
+        return this.ok(RoleHttpMapper.toResponse(result.value()));
     }
 }

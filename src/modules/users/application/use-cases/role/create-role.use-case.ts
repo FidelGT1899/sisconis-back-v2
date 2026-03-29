@@ -8,11 +8,13 @@ import type { IEntityIdGenerator } from "@shared-domain/ports/id-generator";
 import { RoleEntity } from "@users-domain/entities/role.entity";
 import type { IRoleRepository } from "@users-domain/repositories/role.repository.interface";
 
-import { RoleAlreadyExistsError } from "@users-application/errors/role/role-already-exists.error";
 import type { CreateRoleDto } from "@users-application/dtos/role/create-role.dto";
+import type { ReadRoleDto } from "@users-application/dtos/role/read-role.dto";
+import { RoleAlreadyExistsError } from "@users-application/errors/role/role-already-exists.error";
 import { RoleLevelAlreadyExistsError } from "@users-application/errors/role/role-level-already-exists.error";
+import { RoleResponseMapper } from "@users-application/mappers/role-response.mapper";
 
-export type CreateRoleResult = Result<RoleEntity, AppError>;
+export type CreateRoleResult = Result<ReadRoleDto, AppError>;
 
 @injectable()
 export class CreateRoleUseCase {
@@ -34,18 +36,20 @@ export class CreateRoleUseCase {
             return Result.fail(new RoleLevelAlreadyExistsError(dto.level));
         }
 
-        const role = RoleEntity.create({
+        const roleResult = RoleEntity.create({
             name: dto.name,
             description: dto.description,
             level: dto.level,
         }, this.idGenerator);
 
-        if (role.isErr()) {
-            return Result.fail(role.error());
+        if (roleResult.isErr()) {
+            return Result.fail(roleResult.error());
         }
 
-        await this.roleRepository.save(role.value());
+        const role = roleResult.value();
 
-        return Result.ok(role.value());
+        await this.roleRepository.save(role);
+
+        return Result.ok(RoleResponseMapper.toDto(role));
     }
 }

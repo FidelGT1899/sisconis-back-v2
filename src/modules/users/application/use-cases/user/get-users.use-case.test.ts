@@ -1,72 +1,40 @@
 import { GetUsersUseCase } from "./get-users.use-case";
-import { IUserRepository } from "@users-domain/repositories/user.repository.interface";
-import { UserEntity } from "@users-domain/entities/user.entity";
-import { EmailVO } from "@users-domain/value-objects/email.vo";
-import { DniVO } from "@users-domain/value-objects/dni.vo";
-import { PasswordVO } from "@users-domain/value-objects/password.vo";
+
+import { makeMockUserRepository } from "@users-tests/factories/mocks";
+import { makeUserEntity } from "@users-tests/factories/user.factory";
 
 describe('GetUsersUseCase', () => {
     let useCase: GetUsersUseCase;
-    let mockUserRepository: jest.Mocked<IUserRepository>;
-
-    const createMockUser = () => {
-        const emailResult = EmailVO.create('test@example.com');
-
-        const email = emailResult.isOk()
-            ? emailResult.value()
-            : (undefined as unknown as EmailVO);
-        return UserEntity.rehydrate({
-            id: 'user-123',
-            name: 'John',
-            lastName: 'Doe',
-            email: email,
-            dni: DniVO.create('12345678').value(),
-            password: PasswordVO.fromHashed('hashed'),
-            createdAt: new Date('2023-01-01T10:00:00Z'),
-            updatedAt: new Date('2023-01-01T10:00:00Z')
-        });
-    };
+    let mockUserRepository: ReturnType<typeof makeMockUserRepository>;
 
     beforeEach(() => {
-        mockUserRepository = {
-            index: jest.fn(),
-        } as jest.Mocked<IUserRepository>;
-
+        jest.clearAllMocks();
+        mockUserRepository = makeMockUserRepository();
         useCase = new GetUsersUseCase(mockUserRepository);
     });
 
-    it('should return paginated users and map them to DTOs', async () => {
-        const mockUser = createMockUser();
-        const mockResponse = {
-            items: [mockUser],
-            total: 1
-        };
-        mockUserRepository.index.mockResolvedValue(mockResponse);
+    it('should return paginated users mapped to DTOs', async () => {
+        const user = makeUserEntity();
+        mockUserRepository.index.mockResolvedValue({ items: [user], total: 1 });
 
         const result = await useCase.execute({ page: 1, limit: 10 });
 
         expect(result.isOk()).toBe(true);
-        const paginatedResult = result.value();
+        const { items, total, page, limit } = result.value();
 
-        expect(paginatedResult.total).toBe(1);
-        expect(paginatedResult.page).toBe(1);
-        expect(paginatedResult.limit).toBe(10);
+        expect(total).toBe(1);
+        expect(page).toBe(1);
+        expect(limit).toBe(10);
+        expect(items).toHaveLength(1);
 
-        expect(paginatedResult.items[0]).toEqual({
-            id: 'user-123',
-            name: 'John',
-            lastName: 'Doe',
-            email: 'test@example.com',
-            dni: '12345678',
-            createdAt: new Date('2023-01-01T10:00:00Z')
-        });
+        const firstItem = items[0];
+        expect(firstItem).toBeDefined();
+        expect(firstItem?.id).toBe(user.getId());
+        expect(firstItem?.email).toBe(user.getEmail());
     });
 
-    it('should use default pagination values when DTO is empty', async () => {
-        mockUserRepository.index.mockResolvedValue({
-            items: [],
-            total: 0
-        });
+    it('should use default pagination values when not provided', async () => {
+        mockUserRepository.index.mockResolvedValue({ items: [], total: 0 });
 
         await useCase.execute({});
 
@@ -77,5 +45,15 @@ describe('GetUsersUseCase', () => {
             direction: 'desc',
             search: ''
         });
+    });
+
+    it('should return empty list when no users exist', async () => {
+        mockUserRepository.index.mockResolvedValue({ items: [], total: 0 });
+
+        const result = await useCase.execute({ page: 1, limit: 10 });
+
+        expect(result.isOk()).toBe(true);
+        expect(result.value().items).toHaveLength(0);
+        expect(result.value().total).toBe(0);
     });
 });

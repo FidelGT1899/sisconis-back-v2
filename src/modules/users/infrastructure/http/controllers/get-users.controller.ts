@@ -7,7 +7,7 @@ import { BaseController } from "@shared-infrastructure/http/base/base.controller
 import { GetUsersUseCase } from "@users-application/use-cases/user/get-users.use-case";
 
 import { PaginationUserSchema } from "@users-infrastructure/http/requests/pagination-user.schema";
-import { UserResponseMapper } from "@users-infrastructure/mappers/user-response.mapper";
+import { UserHttpMapper } from "@users-infrastructure/mappers/user-http.mapper";
 
 @injectable()
 export class GetUsersController extends BaseController implements Controller {
@@ -30,7 +30,7 @@ export class GetUsersController extends BaseController implements Controller {
         const { items, total, page, limit } = result.value();
 
         return this.ok(
-            items.map(user => UserResponseMapper.toResponse(user)),
+            items.map(user => UserHttpMapper.toResponse(user)),
             {
                 page,
                 limit,

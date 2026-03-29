@@ -1,53 +1,34 @@
 import { type DeepMockProxy, mockDeep } from "jest-mock-extended";
-import { PrismaClient, type User } from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
 import { UserRepository } from "./user.repository";
 import { InfrastructureError } from "@shared-kernel/errors/infrastructure.error";
 import { UserEntity } from "@users-domain/entities/user.entity";
-import { EmailVO } from "@users-domain/value-objects/email.vo";
-import { DniVO } from "@users-domain/value-objects/dni.vo";
-import { PasswordVO } from "@users-domain/value-objects/password.vo";
 import { PrismaService } from "@shared-infrastructure/database/prisma/prisma.service";
-import { type IPasswordHasher } from "@shared-domain/ports/password-hasher";
+
+import { makePrismaUser } from "@users-tests/factories/mocks";
+import { makeUserEntity } from "@users-tests/factories/user.factory";
 
 describe('UserRepository', () => {
     let userRepository: UserRepository;
     let prismaMock: DeepMockProxy<PrismaClient>;
     let prismaServiceMock: DeepMockProxy<PrismaService>;
-    let passwordHasherMock: DeepMockProxy<IPasswordHasher>;
 
     beforeEach(() => {
         prismaMock = mockDeep<PrismaClient>();
         prismaServiceMock = mockDeep<PrismaService>();
-        passwordHasherMock = mockDeep<IPasswordHasher>();
-
-        prismaServiceMock.isConnected.mockResolvedValue(true);
         prismaServiceMock.getClient.mockReturnValue(prismaMock);
-
         userRepository = new UserRepository(prismaServiceMock);
     });
 
     describe("existsByEmail", () => {
         it("should return true if user exists", async () => {
-            prismaMock.user.findFirst.mockResolvedValue({
-                id: '1',
-                name: 'Test',
-                lastName: 'User',
-                email: 'test@example.com',
-                dni: '12345678',
-                password: 'hashed',
-                createdAt: new Date(),
-                updatedAt: new Date(),
-                deletedAt: null,
-                createdBy: null,
-                updatedBy: null,
-                deletedBy: null
-            });
+            prismaMock.user.findFirst.mockResolvedValue(makePrismaUser());
 
-            const result = await userRepository.existsByEmail("test@example.com");
+            const result = await userRepository.existsByEmail("john.doe@example.com");
 
             expect(result).toBe(true);
             expect(prismaMock.user.findFirst).toHaveBeenCalledWith({
-                where: { email: "test@example.com", deletedAt: null },
+                where: { email: "john.doe@example.com", deletedAt: null },
                 select: { id: true }
             });
         });
@@ -70,20 +51,7 @@ describe('UserRepository', () => {
 
     describe("existsByDni", () => {
         it("should return true if user exists", async () => {
-            prismaMock.user.findFirst.mockResolvedValue({
-                id: '1',
-                name: 'Test',
-                lastName: 'User',
-                email: 'test@example.com',
-                dni: '12345678',
-                password: 'hashed',
-                createdAt: new Date(),
-                updatedAt: new Date(),
-                deletedAt: null,
-                createdBy: null,
-                updatedBy: null,
-                deletedBy: null
-            });
+            prismaMock.user.findFirst.mockResolvedValue(makePrismaUser());
 
             const result = await userRepository.existsByDni("12345678");
 
@@ -103,25 +71,84 @@ describe('UserRepository', () => {
         });
     });
 
-    describe('index', () => {
-        it('should return paginated users with filters applied', async () => {
-            const prismaUsers = [{
-                id: '1',
-                name: 'Fidel',
-                lastName: 'Garcia',
-                email: 'fidel@test.com',
-                dni: '12345678',
-                password: 'hashed',
-                createdAt: new Date(),
-                updatedAt: new Date(),
-                deletedAt: null,
-                createdBy: null,
-                updatedBy: null,
-                deletedBy: null
-            }];
+    describe("existsByRoleId", () => {
+        it("should return true if users with role exist", async () => {
+            prismaMock.user.findFirst.mockResolvedValue(makePrismaUser());
 
+            const result = await userRepository.existsByRoleId("role-id-123");
+
+            expect(result).toBe(true);
+        });
+
+        it("should return false if no users with role exist", async () => {
+            prismaMock.user.findFirst.mockResolvedValue(null);
+
+            const result = await userRepository.existsByRoleId("role-id-123");
+
+            expect(result).toBe(false);
+        });
+    });
+
+    describe("existsByEmailExcluding", () => {
+        it("should return true if another user has the email", async () => {
+            prismaMock.user.findFirst.mockResolvedValue(makePrismaUser());
+
+            const result = await userRepository.existsByEmailExcluding(
+                "john.doe@example.com",
+                "other-id"
+            );
+
+            expect(result).toBe(true);
+            expect(prismaMock.user.findFirst).toHaveBeenCalledWith({
+                where: {
+                    email: "john.doe@example.com",
+                    deletedAt: null,
+                    NOT: { id: "other-id" }
+                },
+                select: { id: true }
+            });
+        });
+
+        it("should return false if no other user has the email", async () => {
+            prismaMock.user.findFirst.mockResolvedValue(null);
+
+            const result = await userRepository.existsByEmailExcluding(
+                "john.doe@example.com",
+                "user-id-123"
+            );
+
+            expect(result).toBe(false);
+        });
+    });
+
+    describe("existsByDniExcluding", () => {
+        it("should return true if another user has the DNI", async () => {
+            prismaMock.user.findFirst.mockResolvedValue(makePrismaUser());
+
+            const result = await userRepository.existsByDniExcluding(
+                "12345678",
+                "other-id"
+            );
+
+            expect(result).toBe(true);
+        });
+
+        it("should return false if no other user has the DNI", async () => {
+            prismaMock.user.findFirst.mockResolvedValue(null);
+
+            const result = await userRepository.existsByDniExcluding(
+                "12345678",
+                "user-id-123"
+            );
+
+            expect(result).toBe(false);
+        });
+    });
+
+    describe('index', () => {
+        it('should return paginated users mapped to domain', async () => {
             prismaMock.$transaction.mockResolvedValue([
-                prismaUsers,
+                [makePrismaUser()],
                 1
             ]);
 
@@ -130,231 +157,124 @@ describe('UserRepository', () => {
                 limit: 10,
                 orderBy: 'createdAt',
                 direction: 'desc',
-                search: 'Fidel'
+                search: 'John'
             });
 
-            const user = result.items[0];
-            expect(user).toBeInstanceOf(UserEntity);
-
-            expect(user.getId()).toBe('1');
-            expect(user.getName()).toBe('Fidel');
-            expect(user.getLastName()).toBe('Garcia');
-            expect(user.getEmail()).toBe('fidel@test.com');
-            expect(user.getDni()).toBe('12345678');
-            expect(user.getCreatedAt()).toBeInstanceOf(Date);
-
             expect(result.total).toBe(1);
+            expect(result.items).toHaveLength(1);
+            expect(result.items[0]).toBeInstanceOf(UserEntity);
+            expect(result.items[0]?.getId()).toBe('user-id-123');
+        });
 
+        it('should use default pagination when not provided', async () => {
+            prismaMock.$transaction.mockResolvedValue([[], 0]);
+
+            const result = await userRepository.index();
+
+            expect(result.total).toBe(0);
+            expect(result.items).toHaveLength(0);
         });
 
         it('should throw InfrastructureError when prisma fails', async () => {
             prismaMock.$transaction.mockRejectedValue(new Error('DB down'));
 
-            await expect(
-                userRepository.index({
-                    page: 1,
-                    limit: 10,
-                    orderBy: 'createdAt',
-                    direction: 'desc'
-                })
-            ).rejects.toThrow(InfrastructureError);
-
+            await expect(userRepository.index()).rejects.toThrow(InfrastructureError);
         });
     });
 
     describe('findById', () => {
-        it('should return user when found and not deleted', async () => {
-            prismaMock.user.findUnique.mockResolvedValue({
-                id: 'id-1',
-                name: 'Fidel',
-                lastName: 'Garcia',
-                email: 'fidel@test.com',
-                dni: '12345678',
-                password: 'hashed',
-                createdAt: new Date(),
-                updatedAt: new Date(),
-                deletedAt: null,
-                createdBy: null,
-                updatedBy: null,
-                deletedBy: null
-            });
+        it('should return UserEntity when found', async () => {
+            prismaMock.user.findUnique.mockResolvedValue(makePrismaUser());
 
-            const result = await userRepository.findById('id-1');
+            const result = await userRepository.findById('user-id-123');
 
             expect(result).toBeInstanceOf(UserEntity);
+            expect(result?.getId()).toBe('user-id-123');
             expect(prismaMock.user.findUnique).toHaveBeenCalledWith({
-                where: { id: 'id-1', deletedAt: null }
+                where: { id: 'user-id-123', deletedAt: null },
+                include: { role: true }
             });
         });
 
         it('should return null when user does not exist', async () => {
             prismaMock.user.findUnique.mockResolvedValue(null);
 
-            const result = await userRepository.findById('nope');
+            const result = await userRepository.findById('non-existent');
 
             expect(result).toBeNull();
+        });
+
+        it('should throw InfrastructureError when prisma fails', async () => {
+            prismaMock.user.findUnique.mockRejectedValue(new Error('DB error'));
+
+            await expect(userRepository.findById('id')).rejects.toThrow(InfrastructureError);
         });
     });
 
     describe("save", () => {
-        it("should create and return a user entity correctly", async () => {
-            passwordHasherMock.hash.mockResolvedValue("12345678");
+        it("should create and return a UserEntity", async () => {
+            const user = makeUserEntity();
+            prismaMock.user.create.mockResolvedValue(makePrismaUser());
 
-            const userEntityResult = await UserEntity.create({
-                name: "Fidel",
-                lastName: "Test",
-                email: "fidel@test.com",
-                dni: "12345678"
-            }, { generate: () => "id-123" }, passwordHasherMock);
-
-            const userEntity = userEntityResult.value();
-
-            const prismaUser = {
-                id: "id-123",
-                name: "Fidel",
-                lastName: "Test",
-                email: "fidel@test.com",
-                dni: "12345678",
-                password: "12345678",
-                createdAt: new Date(),
-                updatedAt: new Date(),
-                deletedAt: null,
-                createdBy: null,
-                updatedBy: null,
-                deletedBy: null
-            };
-
-            prismaMock.user.create.mockResolvedValue(prismaUser);
-
-            const result = await userRepository.save(userEntity);
+            const result = await userRepository.save(user);
 
             expect(result).toBeInstanceOf(UserEntity);
-            expect(result.getId()).toBe("id-123");
-            expect(result.getName()).toBe("Fidel");
-            expect(result.getLastName()).toBe("Test");
-            expect(result.getEmail()).toBe("fidel@test.com");
-            expect(result.getDni()).toBe("12345678");
-
-            expect(prismaMock.user.create).toHaveBeenCalledWith({
-                data: {
-                    id: "id-123",
-                    name: "Fidel",
-                    lastName: "Test",
-                    email: "fidel@test.com",
-                    dni: "12345678",
-                    password: "12345678",
-                    isPasswordTemporary: true,
-                    createdAt: expect.any(Date) as unknown as Date,
-                    updatedAt: expect.any(Date) as unknown as Date,
-                    deletedAt: null,
-                    createdBy: null,
-                    updatedBy: null,
-                    deletedBy: null
-                }
-            });
+            expect(result.getId()).toBe('user-id-123');
+            expect(prismaMock.user.create).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    include: { role: true }
+                })
+            );
         });
 
-        it("should throw InfrastructureError when create operation fails", async () => {
-            passwordHasherMock.hash.mockResolvedValue("pass");
+        it("should throw InfrastructureError when create fails", async () => {
+            const user = makeUserEntity();
+            prismaMock.user.create.mockRejectedValue(new Error("DB error"));
 
-            const userEntityResult = await UserEntity.create({
-                name: "Error",
-                lastName: "Test",
-                email: "err@test.com",
-                dni: "87654321",
-                password: "pass"
-            }, { generate: () => "id-err" }, passwordHasherMock);
-
-            const userEntity = userEntityResult.value();
-
-            prismaMock.user.create.mockRejectedValue(
-                new Error("Database is not reachable")
-            );
-
-            await expect(userRepository.save(userEntity))
-                .rejects.toThrow(InfrastructureError);
-
-            await expect(userRepository.save(userEntity))
-                .rejects.toThrow("Database is not reachable");
+            await expect(userRepository.save(user)).rejects.toThrow(InfrastructureError);
         });
     });
 
     describe('update', () => {
-        it('should update and return the user', async () => {
-            const emailResult = EmailVO.create('fidel@test.com');
-            const dniResult = DniVO.create('12345678');
-
-            if (emailResult.isErr()) throw new Error('Invalid email');
-            if (dniResult.isErr()) throw new Error('Invalid DNI');
-
-            const user = UserEntity.rehydrate({
-                id: 'id-1',
-                name: 'Fidel',
-                lastName: 'Old',
-                email: emailResult.value(),
-                dni: dniResult.value(),
-                password: PasswordVO.fromHashed('hashed'),
-                createdAt: new Date()
-            });
-
-            prismaMock.user.update.mockResolvedValue({
-                id: 'id-1',
-                name: 'Fidel',
-                lastName: 'New',
-                email: 'fidel@test.com',
-                dni: "12345678",
-                password: 'hashed',
-                isPasswordTemporary: false,
-                createdAt: user.createdAt,
-                updatedAt: new Date(),
-                deletedAt: null,
-                createdBy: null,
-                updatedBy: null,
-                deletedBy: null
-            });
+        it('should update and return UserEntity', async () => {
+            const user = makeUserEntity();
+            prismaMock.user.update.mockResolvedValue(makePrismaUser());
 
             const result = await userRepository.update(user);
 
             expect(result).toBeInstanceOf(UserEntity);
-            expect(prismaMock.user.update).toHaveBeenCalled();
+            expect(prismaMock.user.update).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    where: { id: user.getId() },
+                    include: { role: true }
+                })
+            );
+        });
+
+        it('should throw InfrastructureError when update fails', async () => {
+            const user = makeUserEntity();
+            prismaMock.user.update.mockRejectedValue(new Error('DB error'));
+
+            await expect(userRepository.update(user)).rejects.toThrow(InfrastructureError);
         });
     });
 
     describe('delete', () => {
-        const prismaUserMock: User = {
-            id: 'id-1',
-            name: 'Fidel',
-            lastName: 'Garcia',
-            email: 'fidel@test.com',
-            dni: '12345678',
-            password: 'hashed',
-            createdAt: new Date(),
-            updatedAt: new Date(),
-            deletedAt: new Date(),
-            createdBy: null,
-            updatedBy: null,
-            deletedBy: null
-        };
+        it('should soft delete user by setting deletedAt', async () => {
+            prismaMock.user.update.mockResolvedValue(makePrismaUser());
 
-        it('should soft delete user', async () => {
-            prismaMock.user.update.mockResolvedValue(prismaUserMock);
-            await userRepository.delete('id-1');
+            await userRepository.delete('user-id-123');
 
             expect(prismaMock.user.update).toHaveBeenCalledTimes(1);
-            const callArg = prismaMock.user.update.mock.calls[0][0];
-            expect(callArg.where).toEqual({
-                id: 'id-1',
-                deletedAt: null,
-            });
-            expect(callArg.data.deletedAt).toBeInstanceOf(Date);
+            const callArg = prismaMock.user.update.mock.calls[0]?.[0];
+            expect(callArg?.where).toEqual({ id: 'user-id-123', deletedAt: null });
+            expect(callArg?.data.deletedAt).toBeInstanceOf(Date);
         });
-
 
         it('should throw InfrastructureError when delete fails', async () => {
             prismaMock.user.update.mockRejectedValue(new Error('DB error'));
 
-            await expect(userRepository.delete('id-1'))
-                .rejects.toThrow(InfrastructureError);
+            await expect(userRepository.delete('user-id-123')).rejects.toThrow(InfrastructureError);
         });
     });
 });

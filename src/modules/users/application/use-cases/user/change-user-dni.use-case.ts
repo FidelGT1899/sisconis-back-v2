@@ -5,11 +5,12 @@ import type { AppError } from "@shared-kernel/errors/app.error";
 import { Result } from "@shared-kernel/errors/result";
 
 import type { IUserRepository } from "@users-domain/repositories/user.repository.interface";
-import { UserEntity } from "@users-domain/entities/user.entity";
 
 import type { ChangeUserDniDto } from "@users-application/dtos/change-user-dni.dto";
+import type { ReadUserDto } from "@users-application/dtos/read-user.dto";
 import { UserNotFoundError } from "@users-application/errors/user-not-found.error";
-import { UserAlreadyExistsError } from "@users-application/errors/user-already-exists.error";
+import { DniAlreadyInUseError } from "@users-application/errors/dni-already-in-use.error";
+import { UserResponseMapper } from "@users-application/mappers/user-response.mapper";
 
 @injectable()
 export class ChangeUserDniUseCase {
@@ -18,7 +19,7 @@ export class ChangeUserDniUseCase {
         private readonly userRepository: IUserRepository
     ) { }
 
-    async execute(dto: ChangeUserDniDto): Promise<Result<UserEntity, AppError>> {
+    async execute(dto: ChangeUserDniDto): Promise<Result<ReadUserDto, AppError>> {
         const user = await this.userRepository.findById(dto.id);
 
         if (!user) {
@@ -26,22 +27,19 @@ export class ChangeUserDniUseCase {
         }
 
         if (user.getDni() === dto.newDni) {
-            return Result.ok(user);
+            return Result.ok(UserResponseMapper.toDto(user));
         }
 
-        const dniExists = await this.userRepository.existsByDni(dto.newDni);
-        if (dniExists) {
-            return Result.fail(new UserAlreadyExistsError('dni', dto.newDni));
+        const dniInUse = await this.userRepository.existsByDniExcluding(dto.newDni, dto.id);
+        if (dniInUse) {
+            return Result.fail(new DniAlreadyInUseError(dto.newDni));
         }
 
         const result = user.updateDni(dto.newDni);
+        if (result.isErr()) return Result.fail(result.error());
 
-        if (result.isErr()) {
-            return Result.fail(result.error());
-        }
+        await this.userRepository.update(user);
 
-        const updatedUser = await this.userRepository.update(user);
-
-        return Result.ok(updatedUser);
+        return Result.ok(UserResponseMapper.toDto(user));
     }
 }

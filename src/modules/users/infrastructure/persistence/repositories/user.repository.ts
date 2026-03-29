@@ -24,11 +24,23 @@ export class UserRepository implements IUserRepository {
     }
 
     async existsByEmail(email: string): Promise<boolean> {
-        return this.exists({ email });
+        return this.existsByField({ email });
     }
 
     async existsByDni(dni: string): Promise<boolean> {
-        return this.exists({ dni });
+        return this.existsByField({ dni });
+    }
+
+    async existsByRoleId(roleId: string): Promise<boolean> {
+        return this.existsByField({ roleId });
+    }
+
+    async existsByEmailExcluding(email: string, excludeId: string): Promise<boolean> {
+        return this.existsByFieldExcluding({ email }, excludeId);
+    }
+
+    async existsByDniExcluding(dni: string, excludeId: string): Promise<boolean> {
+        return this.existsByFieldExcluding({ dni }, excludeId);
     }
 
     async index(
@@ -57,16 +69,8 @@ export class UserRepository implements IUserRepository {
             const [users, total] = await this.prisma.$transaction([
                 this.prisma.user.findMany({
                     where,
-                    // select: {
-                    //     id: true,
-                    //     name: true,
-                    //     lastName: true,
-                    //     email: true,
-                    //     createdAt: true
-                    // },
-                    orderBy: {
-                        [orderBy]: direction
-                    },
+                    include: { role: true },
+                    orderBy: { [orderBy]: direction },
                     skip: (page - 1) * limit,
                     take: limit
                 }),
@@ -74,14 +78,6 @@ export class UserRepository implements IUserRepository {
             ]);
 
             return {
-                // items: users.map(user => ({
-                //     id: user.id,
-                //     name: user.name,
-                //     lastName: user.lastName,
-                //     email: user.email,
-                //     createdAt: user.createdAt
-                // })),
-                // total
                 items: users.map(user => UserMapper.toDomain(user)),
                 total
             };
@@ -93,7 +89,8 @@ export class UserRepository implements IUserRepository {
     async findById(id: string): Promise<UserEntity | null> {
         try {
             const user = await this.prisma.user.findUnique({
-                where: { id, deletedAt: null }
+                where: { id, deletedAt: null },
+                include: { role: true },
             });
             return user ? UserMapper.toDomain(user) : null;
         } catch (error) {
@@ -101,11 +98,25 @@ export class UserRepository implements IUserRepository {
         }
     }
 
+    // async save(user: UserEntity): Promise<UserEntity> {
+    //     try {
+    //         const data = UserMapper.toPersistence(user);
+    //         const created = await this.prisma.user.create({
+    //             data,
+    //             include: { role: true }
+    //         });
+    //         return UserMapper.toDomain(created);
+    //     } catch (error) {
+    //         throw PrismaErrorMapper.mapError(error);
+    //     }
+    // }
+
     async save(user: UserEntity): Promise<UserEntity> {
         try {
             const data = UserMapper.toPersistence(user);
             const created = await this.prisma.user.create({
-                data
+                data,
+                include: { role: true }
             });
             return UserMapper.toDomain(created);
         } catch (error) {
@@ -118,7 +129,8 @@ export class UserRepository implements IUserRepository {
             const data = UserMapper.toPersistence(user);
             const updated = await this.prisma.user.update({
                 where: { id: user.getId() },
-                data
+                data,
+                include: { role: true }
             });
             return UserMapper.toDomain(updated);
         } catch (error) {
@@ -137,10 +149,28 @@ export class UserRepository implements IUserRepository {
         }
     }
 
-    private async exists(where: Prisma.UserWhereInput): Promise<boolean> {
+    private async existsByField(where: Prisma.UserWhereInput): Promise<boolean> {
         try {
             const user = await this.prisma.user.findFirst({
                 where: { ...where, deletedAt: null },
+                select: { id: true }
+            });
+            return user !== null;
+        } catch (error) {
+            throw PrismaErrorMapper.mapError(error);
+        }
+    }
+
+    private async existsByFieldExcluding(where: Prisma.UserWhereInput, excludeId: string): Promise<boolean> {
+        try {
+            const user = await this.prisma.user.findFirst({
+                where: {
+                    ...where,
+                    deletedAt: null,
+                    NOT: {
+                        id: excludeId
+                    }
+                },
                 select: { id: true }
             });
             return user !== null;

@@ -1,65 +1,75 @@
-import { IUserRepository } from "@users-domain/repositories/user.repository.interface";
-import { IEntityIdGenerator } from "@shared-domain/ports/id-generator";
 import { ChangeUserDniUseCase } from "./change-user-dni.use-case";
-import { UserEntity } from "@users-domain/entities/user.entity";
 import { UserNotFoundError } from "../../errors/user-not-found.error";
-import { IPasswordHasher } from "@shared-domain/ports/password-hasher";
+import { DniAlreadyInUseError } from "../../errors/dni-already-in-use.error";
+import { InvalidDniError } from "@users-domain/errors/invalid-dni.error";
 
-const mockUserRepository = {
-    findById: jest.fn(),
-    existsByDni: jest.fn(),
-    update: jest.fn(),
-} as jest.Mocked<IUserRepository>;
-
-const mockIdGenerator: jest.Mocked<IEntityIdGenerator> = {
-    generate: jest.fn(),
-};
-
-const mockPasswordHasher: jest.Mocked<IPasswordHasher> = {
-    hash: jest.fn(),
-};
+import { makeMockUserRepository } from "@users-tests/factories/mocks";
+import { makeUserEntity } from "@users-tests/factories/user.factory";
 
 describe('ChangeUserDniUseCase', () => {
     let useCase: ChangeUserDniUseCase;
+    let mockUserRepository: ReturnType<typeof makeMockUserRepository>;
 
     beforeEach(() => {
         jest.clearAllMocks();
+        mockUserRepository = makeMockUserRepository();
         useCase = new ChangeUserDniUseCase(mockUserRepository);
     });
 
-    it('should change user DNI', async () => {
-        mockIdGenerator.generate.mockReturnValue('user-123');
+    it('should change DNI successfully', async () => {
+        const user = makeUserEntity();
+        mockUserRepository.findById.mockResolvedValue(user);
+        mockUserRepository.existsByDniExcluding.mockResolvedValue(false);
+        mockUserRepository.update.mockResolvedValue(user);
 
-        const existingUser = await UserEntity.create({
-            name: 'John',
-            lastName: 'Doe',
-            email: 'john@test.com',
-            dni: '12345678'
-        }, mockIdGenerator, mockPasswordHasher);
-
-        if (existingUser.isErr()) throw new Error('Setup failed');
-        const userEntity = existingUser.value();
-
-        mockUserRepository.findById.mockResolvedValue(userEntity);
-        mockUserRepository.update.mockImplementation((u: UserEntity) => Promise.resolve(u));
-
-        const dto = { id: 'user-123', newDni: '12345679' };
-
-        const result = await useCase.execute(dto);
+        const result = await useCase.execute({ id: 'user-id-123', newDni: '87654321' });
 
         expect(result.isOk()).toBe(true);
-        const updatedUser = result.value();
-
-        expect(updatedUser.getDni()).toBe('12345679');
-        expect(mockUserRepository.update).toHaveBeenCalled();
+        expect(result.value().dni).toBe('87654321');
+        expect(mockUserRepository.update).toHaveBeenCalledTimes(1);
     });
 
-    it('should return UserNotFoundError if user does not exist', async () => {
+    it('should return same user if DNI is unchanged', async () => {
+        const user = makeUserEntity();
+        mockUserRepository.findById.mockResolvedValue(user);
+
+        const result = await useCase.execute({ id: 'user-id-123', newDni: '12345678' });
+
+        expect(result.isOk()).toBe(true);
+        expect(mockUserRepository.update).not.toHaveBeenCalled();
+    });
+
+    it('should fail with UserNotFoundError if user does not exist', async () => {
         mockUserRepository.findById.mockResolvedValue(null);
 
-        const result = await useCase.execute({ id: 'non-existent', newDni: '12345679' });
+        const result = await useCase.execute({ id: 'non-existent', newDni: '87654321' });
 
         expect(result.isErr()).toBe(true);
         expect(result.error()).toBeInstanceOf(UserNotFoundError);
+        expect(mockUserRepository.update).not.toHaveBeenCalled();
+    });
+
+    it('should fail with DniAlreadyInUseError if DNI is taken', async () => {
+        const user = makeUserEntity();
+        mockUserRepository.findById.mockResolvedValue(user);
+        mockUserRepository.existsByDniExcluding.mockResolvedValue(true);
+
+        const result = await useCase.execute({ id: 'user-id-123', newDni: '87654321' });
+
+        expect(result.isErr()).toBe(true);
+        expect(result.error()).toBeInstanceOf(DniAlreadyInUseError);
+        expect(mockUserRepository.update).not.toHaveBeenCalled();
+    });
+
+    it('should fail with InvalidDniError if new DNI format is invalid', async () => {
+        const user = makeUserEntity();
+        mockUserRepository.findById.mockResolvedValue(user);
+        mockUserRepository.existsByDniExcluding.mockResolvedValue(false);
+
+        const result = await useCase.execute({ id: 'user-id-123', newDni: 'invalid' });
+
+        expect(result.isErr()).toBe(true);
+        expect(result.error()).toBeInstanceOf(InvalidDniError);
+        expect(mockUserRepository.update).not.toHaveBeenCalled();
     });
 });

@@ -4,12 +4,13 @@ import { Result } from "@shared-kernel/errors/result";
 import type { AppError } from "@shared-kernel/errors/app.error";
 import { TYPES } from "@shared-infrastructure/ioc/types";
 
-import type { UserEntity } from "@users-domain/entities/user.entity";
 import type { IUserRepository } from "@users-domain/repositories/user.repository.interface";
 
 import { UserNotFoundError } from "@users-application/errors/user-not-found.error";
+import type { ReadUserDto } from "@users-application/dtos/read-user.dto";
+import { UserResponseMapper } from "@users-application/mappers/user-response.mapper";
 
-export type GetUserResult = Result<UserEntity, AppError>;
+export type GetUserResult = Result<ReadUserDto, AppError>;
 
 @injectable()
 export class GetUserUseCase {
@@ -25,6 +26,6 @@ export class GetUserUseCase {
             return Result.fail(new UserNotFoundError(id));
         }
 
-        return Result.ok(user);
+        return Result.ok(UserResponseMapper.toDto(user));
     }
 }
