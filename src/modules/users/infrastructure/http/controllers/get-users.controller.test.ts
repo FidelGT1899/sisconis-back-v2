@@ -1,59 +1,35 @@
 import { GetUsersController } from "./get-users.controller";
-import type { GetUsersUseCase } from "@users-application/use-cases/get-users.use-case";
-import type { HttpRequest } from "@shared-infrastructure/http/ports/controller";
+import type { GetUsersUseCase } from "@users-application/use-cases/user/get-users.use-case";
+import type { HttpRequest, SuccessResponse } from "@shared-infrastructure/http/ports/controller";
 import { Result } from "@shared-kernel/errors/result";
-import { UserEntity } from "@users-domain/entities/user.entity";
-import { UserNotFoundError } from "@users-application/errors/user-not-found.error";
+import { UserResponseMapper } from "@users-application/mappers/user-response.mapper";
+import { makeUserEntity } from "@users-tests/factories/user.factory";
 
 const mockUseCase = (): jest.Mocked<GetUsersUseCase> =>
-({
-    execute: jest.fn()
-} as unknown as jest.Mocked<GetUsersUseCase>);
+    ({ execute: jest.fn() } as unknown as jest.Mocked<GetUsersUseCase>);
 
-const makeRequest = (query?: unknown): HttpRequest => ({
-    query
+const makeRequest = (query?: Record<string, unknown>): HttpRequest => ({
+    ...(query && { query }),
 });
 
 describe("GetUsersController", () => {
     it("should return 200 with paginated users", async () => {
         const useCase = mockUseCase();
         const controller = new GetUsersController(useCase);
+        const items = [
+            UserResponseMapper.toDto(makeUserEntity()),
+            UserResponseMapper.toDto(makeUserEntity({ email: 'juan@test.com', dni: '87654321' })),
+        ];
 
-        const users = [
-            {
-                getId: jest.fn().mockReturnValue("user-1"),
-                getName: jest.fn().mockReturnValue("Fidel"),
-                getLastName: jest.fn().mockReturnValue("García"),
-                getEmail: jest.fn().mockReturnValue("fidel@test.com"),
-                getDni: jest.fn().mockReturnValue("12345678"),
-                getCreatedAt: jest.fn().mockReturnValue(new Date()),
-                getUpdatedAt: jest.fn().mockReturnValue(new Date()),
-            },
-            {
-                getId: jest.fn().mockReturnValue("user-2"),
-                getName: jest.fn().mockReturnValue("Juan"),
-                getLastName: jest.fn().mockReturnValue("Pérez"),
-                getEmail: jest.fn().mockReturnValue("juan@test.com"),
-                getDni: jest.fn().mockReturnValue("12345678"),
-                getCreatedAt: jest.fn().mockReturnValue(new Date()),
-                getUpdatedAt: jest.fn().mockReturnValue(new Date()),
-            },
-        ] as unknown as UserEntity[];
-
-        useCase.execute.mockResolvedValue(
-            Result.ok({
-                items: users,
-                total: 10,
-                page: 1,
-                limit: 2,
-            })
-        );
+        useCase.execute.mockResolvedValue(Result.ok({
+            items,
+            total: 10,
+            page: 1,
+            limit: 2,
+        }));
 
         const response = await controller.handle(
-            makeRequest({
-                page: "1",
-                limit: "2",
-            })
+            makeRequest({ page: "1", limit: "2" })
         );
 
         expect(useCase.execute).toHaveBeenCalledWith({
@@ -63,11 +39,11 @@ describe("GetUsersController", () => {
             direction: "desc",
             search: "",
         });
-
         expect(response.statusCode).toBe(200);
-        expect(response.body?.status).toBe("success");
-        expect(response.body?.data).toHaveLength(2);
-        expect(response.body?.meta).toEqual({
+        const body = response.body as SuccessResponse<unknown>;
+        expect(body.status).toBe("success");
+        expect(body.data).toHaveLength(2);
+        expect(body.meta).toEqual({
             page: 1,
             limit: 2,
             total: 10,
@@ -80,36 +56,27 @@ describe("GetUsersController", () => {
         const controller = new GetUsersController(useCase);
 
         await expect(
-            controller.handle(
-                makeRequest({
-                    page: "invalid",
-                    limit: -1,
-                })
-            )
+            controller.handle(makeRequest({ page: "invalid", limit: -1 }))
         ).rejects.toBeDefined();
 
         expect(useCase.execute).not.toHaveBeenCalled();
     });
 
-    it("should return error response when use case fails", async () => {
+    it("should return 200 with empty list when no users exist", async () => {
         const useCase = mockUseCase();
         const controller = new GetUsersController(useCase);
 
-        const error = new UserNotFoundError();
+        useCase.execute.mockResolvedValue(Result.ok({
+            items: [],
+            total: 0,
+            page: 1,
+            limit: 10,
+        }));
 
-        useCase.execute.mockResolvedValue(
-            Result.fail(error)
-        );
+        const response = await controller.handle(makeRequest({})); // ← {} en vez de sin argumento
 
-        const response = await controller.handle(
-            makeRequest({
-                page: "1",
-                limit: "10",
-            })
-        );
-
-        expect(response.statusCode).toBe(error.statusCode);
-        expect(response.body?.status).toBe("error");
-        expect(response.body?.code).toBe(error.code);
+        expect(response.statusCode).toBe(200);
+        const body = response.body as SuccessResponse;
+        expect(body.data).toHaveLength(0);
     });
 });

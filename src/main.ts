@@ -7,15 +7,18 @@ import { TYPES } from "@shared-infrastructure/ioc/types";
 import { createApp } from "./app";
 import type { UsersHttpControllers } from "@shared-infrastructure/ioc/modules/users.module";
 import type { SystemHttpControllers } from "@shared-infrastructure/ioc/modules/system.module";
+import type { RolesHttpControllers } from "@shared-infrastructure/ioc/modules/roles.module";
 
 // eslint-disable-next-line @typescript-eslint/require-await
 async function bootstrap(): Promise<void> {
     const usersControllers = container.get<UsersHttpControllers>(TYPES.UsersControllers);
     const systemControllers = container.get<SystemHttpControllers>(TYPES.SystemControllers);
+    const rolesControllers = container.get<RolesHttpControllers>(TYPES.RolesControllers);
 
     const app = createApp({
         users: usersControllers,
-        system: systemControllers
+        system: systemControllers,
+        roles: rolesControllers
     });
 
     const PORT = process.env.PORT ?? 3000;

@@ -4,9 +4,9 @@ import { TYPES } from "@shared-infrastructure/ioc/types";
 import { BaseController } from "@shared-infrastructure/http/base/base.controller";
 import type { Controller, HttpRequest, HttpResponse } from "@shared-infrastructure/http/ports/controller";
 
-import { GetUserUseCase } from "@users-application/use-cases/get-user.use-case";
+import { GetUserUseCase } from "@users-application/use-cases/user/get-user.use-case";
 
-import { UserResponseMapper } from "@users-infrastructure/mappers/user-response.mapper";
+import { UserHttpMapper } from "@users-infrastructure/mappers/user-http.mapper";
 
 @injectable()
 export class GetUserController extends BaseController implements Controller {
@@ -28,6 +28,6 @@ export class GetUserController extends BaseController implements Controller {
             return this.fail(result.error());
         }
 
-        return this.ok(UserResponseMapper.toResponse(result.value()));
+        return this.ok(UserHttpMapper.toResponse(result.value()));
     }
 }

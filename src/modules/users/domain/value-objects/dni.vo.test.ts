@@ -1,5 +1,6 @@
 import { DniVO } from "./dni.vo";
 import { InvalidDniError } from "../errors/invalid-dni.error";
+import { EmailVO } from "@users-domain/value-objects/email.vo";
 
 describe('DniVO', () => {
     it('should create a valid DniVO instance', () => {
@@ -35,15 +36,23 @@ describe('DniVO', () => {
         expect(dni1.equals(dni2)).toBe(false);
     });
 
-    it('should return false when comparing with a non-DniVO object', () => {
+    it('should return false when comparing with undefined', () => {
         const dni = DniVO.create('12345678').value();
-
-        expect(dni.equals("hola" as unknown)).toBe(false);
-        expect(dni.equals(123 as unknown)).toBe(false);
-        expect(dni.equals({ value: '12345678' } as unknown)).toBe(false);
+        expect(dni.equals(undefined)).toBe(false);
     });
 
-    it('should normalize dni to lowercase and trim spaces', () => {
+    it('should return false when comparing with a different VO type', () => {
+        const dni = DniVO.create('12345678').value();
+        const email = EmailVO.create('test@example.com').value();
+        expect(dni.equals(email)).toBe(false);
+    });
+
+    it('should return true when comparing with itself', () => {
+        const dni = DniVO.create('12345678').value();
+        expect(dni.equals(dni)).toBe(true);
+    });
+
+    it('should trim spaces from dni', () => {
         const result = DniVO.create('  12345678  ');
 
         expect(result.isOk()).toBe(true);

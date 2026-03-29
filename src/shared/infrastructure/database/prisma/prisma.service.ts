@@ -1,6 +1,6 @@
 import { injectable } from "inversify";
 import { PrismaPg } from "@prisma/adapter-pg";
-import { PrismaClient } from "@prisma-generated";
+import { PrismaClient } from "@prisma/client";
 
 @injectable()
 export class PrismaService {

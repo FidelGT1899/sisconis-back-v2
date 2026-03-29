@@ -39,9 +39,21 @@ npx prisma migrate dev --name nombre_descriptivo
 
 Ejemplos:
 
--   `init`
--   `add_dni_to_user`
--   `add_user_status`
+- `init`
+- `add_dni_to_user`
+- `add_user_status`
+
+En caso solo necesites, crear la migración sin aplicarla:
+
+```
+npx prisma migrate dev --create-only --name nombre_descriptivo
+```
+
+Y para ejecutar la migración:
+
+```
+npx prisma migrate deploy
+```
 
 ### 2. Regenerar el cliente de Prisma
 
@@ -49,9 +61,9 @@ Ejemplos:
 
 Imprescindible cuando:
 
--   Agregas campos
--   Cambias relaciones
--   Los repositorios no reconocen nuevos atributos
+- Agregas campos
+- Cambias relaciones
+- Los repositorios no reconocen nuevos atributos
 
 ```
 npx prisma generate
@@ -71,9 +83,9 @@ npx prisma studio
 
 Útil cuando:
 
--   Hay errores de columnas `NOT NULL`
--   El schema cambió demasiado
--   La DB local quedó inconsistente
+- Hay errores de columnas `NOT NULL`
+- El schema cambió demasiado
+- La DB local quedó inconsistente
 
 ```
 npx prisma migrate reset
@@ -114,10 +126,10 @@ No crea migraciones automáticamente.
 
 ## 📝 Notas Importantes
 
--   `migrate dev` = desarrollo local
--   `db pull` = solo inspección / reverse engineering
--   `generate` = **siempre** después de cambios en el schema
--   Nunca editar la BD manualmente sin saber el impacto en migraciones
+- `migrate dev` = desarrollo local
+- `db pull` = solo inspección / reverse engineering
+- `generate` = **siempre** después de cambios en el schema
+- Nunca editar la BD manualmente sin saber el impacto en migraciones
 
 ---
 

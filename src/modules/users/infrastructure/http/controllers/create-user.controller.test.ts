@@ -1,45 +1,34 @@
 import { CreateUserController } from "./create-user.controller";
-import type { CreateUserUseCase } from "@users-application/use-cases/create-user.use-case";
+import type { CreateUserUseCase } from "@users-application/use-cases/user/create-user.use-case";
 import { Result } from "@shared-kernel/errors/result";
 import type { HttpRequest } from "@shared-infrastructure/http/ports/controller";
-import { UserEntity } from "@users-domain/entities/user.entity";
 import { UserAlreadyExistsError } from "@users-application/errors/user-already-exists.error";
+import { UserResponseMapper } from "@users-application/mappers/user-response.mapper";
+import { makeUserEntity } from "@users-tests/factories/user.factory";
 
 const mockUseCase = (): jest.Mocked<CreateUserUseCase> =>
-({
-    execute: jest.fn()
-} as unknown as jest.Mocked<CreateUserUseCase>);
+    ({ execute: jest.fn() } as unknown as jest.Mocked<CreateUserUseCase>);
 
-
-const makeRequest = (body: unknown): HttpRequest => ({
-    body,
+const makeRequest = (body?: unknown): HttpRequest => ({
+    ...(body !== undefined && { body }),
 });
 
 describe("CreateUserController", () => {
     it("should return 201 when user is created successfully", async () => {
         const useCase = mockUseCase();
         const controller = new CreateUserController(useCase);
+        const dto = UserResponseMapper.toDto(makeUserEntity());
+        useCase.execute.mockResolvedValue(Result.ok(dto));
 
-        const mockUser = {
-            getId: jest.fn().mockReturnValue("user-id"),
-            getName: jest.fn().mockReturnValue("Fidel"),
-            getLastName: jest.fn().mockReturnValue("García"),
-            getEmail: jest.fn().mockReturnValue("fidel@test.com"),
-            getDni: jest.fn().mockReturnValue("12345678"),
-            getCreatedAt: jest.fn().mockReturnValue(new Date()),
-            getUpdatedAt: jest.fn().mockReturnValue(new Date()),
-        } as unknown as UserEntity;
-
-        useCase.execute.mockResolvedValue(
-            Result.ok(mockUser)
-        );
+        const validRoleId = "550e8400-e29b-41d4-a716-446655440000";
 
         const response = await controller.handle(
             makeRequest({
                 name: "Fidel",
                 lastName: "García",
                 email: "fidel@test.com",
-                dni: "12345678"
+                dni: "12345678",
+                roleId: validRoleId
             })
         );
 
@@ -50,19 +39,18 @@ describe("CreateUserController", () => {
     it("should return error response when use case fails", async () => {
         const useCase = mockUseCase();
         const controller = new CreateUserController(useCase);
+        const error = new UserAlreadyExistsError("email", "fidel@test.com");
+        useCase.execute.mockResolvedValue(Result.fail(error));
 
-        const error = new UserAlreadyExistsError("fidel@test.com");
-
-        useCase.execute.mockResolvedValue(
-            Result.fail(error)
-        );
+        const validRoleId = "550e8400-e29b-41d4-a716-446655440000";
 
         const response = await controller.handle(
             makeRequest({
                 name: "Fidel",
                 lastName: "García",
                 email: "fidel@test.com",
-                dni: "12345678"
+                dni: "12345678",
+                roleId: validRoleId
             })
         );
 
@@ -76,11 +64,18 @@ describe("CreateUserController", () => {
         const controller = new CreateUserController(useCase);
 
         await expect(
-            controller.handle(
-                makeRequest({
-                    email: "invalid-email",
-                })
-            )
+            controller.handle(makeRequest({ email: "invalid-email" }))
+        ).rejects.toBeDefined();
+
+        expect(useCase.execute).not.toHaveBeenCalled();
+    });
+
+    it("should throw validation error when required fields are missing", async () => {
+        const useCase = mockUseCase();
+        const controller = new CreateUserController(useCase);
+
+        await expect(
+            controller.handle(makeRequest({}))
         ).rejects.toBeDefined();
 
         expect(useCase.execute).not.toHaveBeenCalled();

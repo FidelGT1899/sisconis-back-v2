@@ -27,15 +27,13 @@ const config = {
             '<rootDir>/src/modules/users/application/$1',
         '^@users-infrastructure/(.*)$':
             '<rootDir>/src/modules/users/infrastructure/$1',
+        '^@users-tests/(.*)$': '<rootDir>/src/modules/users/__tests__/$1',
 
         '^@system-domain/(.*)$': '<rootDir>/src/modules/system/domain/$1',
         '^@system-application/(.*)$':
             '<rootDir>/src/modules/system/application/$1',
         '^@system-infrastructure/(.*)$':
             '<rootDir>/src/modules/system/infrastructure/$1',
-
-        '^@prisma-generated$': '<rootDir>/generated/prisma/index.js',
-        '^@prisma-generated/(.*)$': '<rootDir>/generated/prisma/$1',
     },
     transform: {
         '^.+\\.tsx?$': [
@@ -48,7 +46,7 @@ const config = {
     roots: ['<rootDir>/src'],
     // setupFiles: ['<rootDir>/setupTests.ts'],
     testEnvironment: 'node',
-    testMatch: ['**/__tests__/**/*.ts', '**/?(*.)+(spec|test).ts'],
+    testMatch: ['**/?(*.)+(spec|test).ts'],
 };
 
 export default config;

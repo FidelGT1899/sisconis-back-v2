@@ -1,0 +1,34 @@
+{
+    "compilerOptions": {
+        "target": "ES2020",
+        "lib": ["ES2020"],
+
+        "strict": true,
+        "esModuleInterop": true,
+        "allowSyntheticDefaultImports": true,
+        "forceConsistentCasingInFileNames": true,
+        "skipLibCheck": true,
+        "noUncheckedIndexedAccess": true,
+        "exactOptionalPropertyTypes": true,
+        "noUnusedLocals": true,
+        "noUnusedParameters": true,
+
+        "experimentalDecorators": true,
+        "emitDecoratorMetadata": true,
+
+        "resolveJsonModule": true,
+        "baseUrl": ".",
+        "paths": {
+            "@shared-kernel/*": ["src/shared/kernel/*"],
+            "@shared-domain/*": ["src/shared/domain/*"],
+            "@shared-infrastructure/*": ["src/shared/infrastructure/*"],
+            "@users-domain/*": ["src/modules/users/domain/*"],
+            "@users-application/*": ["src/modules/users/application/*"],
+            "@users-infrastructure/*": ["src/modules/users/infrastructure/*"],
+            "@users-tests/*": ["src/modules/users/__tests__/*"],
+            "@system-domain/*": ["src/modules/system/domain/*"],
+            "@system-application/*": ["src/modules/system/application/*"],
+            "@system-infrastructure/*": ["src/modules/system/infrastructure/*"]
+        }
+    }
+}

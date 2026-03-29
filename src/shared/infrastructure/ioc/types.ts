@@ -27,24 +27,56 @@ export const TYPES = {
     // Users Domain
     UserRepository: Symbol.for("UserRepository"),
 
+    // Roles Domain
+    RoleRepository: Symbol.for("RoleRepository"),
+
     // Users Application
     GetUsersUseCase: Symbol.for("GetUsersUseCase"),
     GetUserUseCase: Symbol.for("GetUserUseCase"),
     CreateUserUseCase: Symbol.for("CreateUserUseCase"),
-    UpdateUserUseCase: Symbol.for("UpdateUserUseCase"),
+    UpdateUserProfileUseCase: Symbol.for("UpdateUserProfileUseCase"),
+    UpdateUserByAdminUseCase: Symbol.for("UpdateUserByAdminUseCase"),
     DeleteUserUseCase: Symbol.for("DeleteUserUseCase"),
     ResetUserPasswordUseCase: Symbol.for("ResetUserPasswordUseCase"),
     ChangeUserPasswordUseCase: Symbol.for("ChangeUserPasswordUseCase"),
     ChangeUserDniUseCase: Symbol.for("ChangeUserDniUseCase"),
+    UpdateUserRoleUseCase: Symbol.for("UpdateUserRoleUseCase"),
+    SuspendUserUseCase: Symbol.for("SuspendUserUseCase"),
+    ActivateUserUseCase: Symbol.for("ActivateUserUseCase"),
+    DeactivateUserUseCase: Symbol.for("DeactivateUserUseCase"),
+
+    // Roles Application
+    GetRolesUseCase: Symbol.for("GetRolesUseCase"),
+    GetRoleUseCase: Symbol.for("GetRoleUseCase"),
+    CreateRoleUseCase: Symbol.for("CreateRoleUseCase"),
+    UpdateRoleUseCase: Symbol.for("UpdateRoleUseCase"),
+    DeleteRoleUseCase: Symbol.for("DeleteRoleUseCase"),
+    ActivateRoleUseCase: Symbol.for("ActivateRoleUseCase"),
+    DeactivateRoleUseCase: Symbol.for("DeactivateRoleUseCase"),
 
     // Users Infrastructure
     UsersControllers: Symbol.for("UsersControllers"),
     GetUsersController: Symbol.for("GetUsersController"),
     GetUserController: Symbol.for("GetUserController"),
     CreateUserController: Symbol.for("CreateUserController"),
-    UpdateUserController: Symbol.for("UpdateUserController"),
+    UpdateUserProfileController: Symbol.for("UpdateUserProfileController"),
+    UpdateUserByAdminController: Symbol.for("UpdateUserByAdminController"),
     DeleteUserController: Symbol.for("DeleteUserController"),
     ResetUserPasswordController: Symbol.for("ResetUserPasswordController"),
     ChangeUserPasswordController: Symbol.for("ChangeUserPasswordController"),
     ChangeUserDniController: Symbol.for("ChangeUserDniController"),
+    UpdateUserRoleController: Symbol.for("UpdateUserRoleController"),
+    SuspendUserController: Symbol.for("SuspendUserController"),
+    ActivateUserController: Symbol.for("ActivateUserController"),
+    DeactivateUserController: Symbol.for("DeactivateUserController"),
+
+    // Roles Infrastructure
+    RolesControllers: Symbol.for("RolesControllers"),
+    GetRolesController: Symbol.for("GetRolesController"),
+    GetRoleController: Symbol.for("GetRoleController"),
+    CreateRoleController: Symbol.for("CreateRoleController"),
+    UpdateRoleController: Symbol.for("UpdateRoleController"),
+    DeleteRoleController: Symbol.for("DeleteRoleController"),
+    ActivateRoleController: Symbol.for("ActivateRoleController"),
+    DeactivateRoleController: Symbol.for("DeactivateRoleController"),
 };

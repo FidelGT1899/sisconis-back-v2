@@ -3,4 +3,5 @@ export interface CreateUserDto {
     lastName: string;
     email: string;
     dni: string;
+    roleId: string;
 }

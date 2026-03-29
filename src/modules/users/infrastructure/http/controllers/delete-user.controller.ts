@@ -4,7 +4,7 @@ import { TYPES } from "@shared-infrastructure/ioc/types";
 import { BaseController } from "@shared-infrastructure/http/base/base.controller";
 import type { Controller, HttpRequest, HttpResponse } from "@shared-infrastructure/http/ports/controller";
 
-import { DeleteUserUseCase } from "@users-application/use-cases/delete-user.use-case";
+import { DeleteUserUseCase } from "@users-application/use-cases/user/delete-user.use-case";
 
 @injectable()
 export class DeleteUserController extends BaseController implements Controller {

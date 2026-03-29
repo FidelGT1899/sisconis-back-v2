@@ -2,6 +2,7 @@ export interface SuccessResponse<T = unknown> {
     status: "success";
     data?: T;
     code?: string;
+    meta?: Record<string, unknown>;
 }
 
 export interface ErrorResponse {

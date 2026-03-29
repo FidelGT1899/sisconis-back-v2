@@ -3,15 +3,18 @@ import type { Express } from "express";
 
 import type { UsersHttpControllers } from "@shared-infrastructure/ioc/modules/users.module";
 import type { SystemHttpControllers } from "@shared-infrastructure/ioc/modules/system.module";
+import type { RolesHttpControllers } from "@shared-infrastructure/ioc/modules/roles.module";
 import { globalErrorMiddleware } from "@shared-infrastructure/http/middlewares/error.middleware";
 
 import { createUserRoutes } from "@users-infrastructure/http/routes/user.routes";
 import { createSystemRoutes } from "@system-infrastructure/http/routes/system.routes";
+import { createRoleRoutes } from "@users-infrastructure/http/routes/role.routes";
 
 export function createApp(
     controllers: {
         users: UsersHttpControllers;
         system: SystemHttpControllers;
+        roles: RolesHttpControllers;
     }
 ): Express {
     const app = express();
@@ -30,6 +33,7 @@ export function createApp(
         readinessController: controllers.system.readinessController,
         systemInfoController: controllers.system.systemInfoController,
     }));
+    apiRouter.use("/roles", createRoleRoutes(controllers.roles));
 
     // mount api
     app.use("/v1/api", apiRouter);

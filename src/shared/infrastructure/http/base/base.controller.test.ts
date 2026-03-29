@@ -3,9 +3,15 @@ import { BaseController } from "./base.controller";
 import { HttpResponseBuilder } from "@shared-infrastructure/http/base/http-response.builder";
 import { Result } from "@shared-kernel/errors/result";
 
+class TestError extends AppError {
+    constructor(code: string, message: string, statusCode?: number) {
+        super(code, message, statusCode);
+    }
+}
+
 class TestController extends BaseController {
-    public okPublic<T>(data?: T) {
-        return this.ok(data);
+    public okPublic<T>(data?: T, meta?: Record<string, unknown>) {
+        return this.ok(data, meta);
     }
 
     public createdPublic<T>(data?: T) {
@@ -18,6 +24,10 @@ class TestController extends BaseController {
 
     public badRequestPublic(message: string, code?: string) {
         return this.badRequest(message, code);
+    }
+
+    public missingParamPublic(param: string) {
+        return this.missingParam(param);
     }
 
     public handleResultPublic<T>(
@@ -40,6 +50,14 @@ describe('BaseController', () => {
 
         expect(response.statusCode).toBe(200);
         expect(response.body).toEqual(HttpResponseBuilder.success({ foo: "bar" }));
+    });
+
+    it("should return 200 with data and meta", () => {
+        const meta = { page: 1, total: 10 };
+        const response = controller.okPublic({ items: [] }, meta);
+
+        expect(response.statusCode).toBe(200);
+        expect(response.body).toEqual(HttpResponseBuilder.success({ items: [] }, meta));
     });
 
     it("should return 201 with success body", () => {
@@ -65,31 +83,33 @@ describe('BaseController', () => {
         );
     });
 
+    it("should return 400 with missing param message", () => {
+        const response = controller.missingParamPublic("id");
+
+        expect(response.statusCode).toBe(400);
+        expect(response.body).toEqual(
+            HttpResponseBuilder.error("id is required", "BAD_REQUEST")
+        );
+    });
+
     it("should return ok response when result is ok", () => {
         const result = Result.ok({ name: "Fidel" });
-
         const response = controller.handleResultPublic(result);
 
         expect(response.statusCode).toBe(200);
-        expect(response.body).toEqual(
-            HttpResponseBuilder.success({ name: "Fidel" })
-        );
+        expect(response.body).toEqual(HttpResponseBuilder.success({ name: "Fidel" }));
     });
 
     it("should return created response when status is created", () => {
         const result = Result.ok({ id: "123" });
-
         const response = controller.handleResultPublic(result, "created");
 
         expect(response.statusCode).toBe(201);
-        expect(response.body).toEqual(
-            HttpResponseBuilder.success({ id: "123" })
-        );
+        expect(response.body).toEqual(HttpResponseBuilder.success({ id: "123" }));
     });
 
     it("should return created without body when value is undefined", () => {
         const result = Result.ok(undefined);
-
         const response = controller.handleResultPublic(result, "created");
 
         expect(response.statusCode).toBe(201);
@@ -97,9 +117,8 @@ describe('BaseController', () => {
     });
 
     it("should map AppError to HttpResponse when result is error", () => {
-        const error: AppError = new AppError("TEST_ERROR", "Boom", 500) as AppError;
-        const result = Result.fail<unknown, AppError>(error);
-
+        const error = new TestError("TEST_ERROR", "Boom", 500);
+        const result = Result.fail<unknown, TestError>(error);
         const response = controller.handleResultPublic(result);
 
         expect(response.statusCode).toBe(500);

@@ -6,30 +6,99 @@
 
 generator client {
   provider = "prisma-client-js"
-  output   = "../generated/prisma"
 }
 
 datasource db {
   provider = "postgresql"
+  schemas  = ["public", "users"]
 }
 
+enum RoleStatus {
+    PENDING
+    ACTIVE
+    INACTIVE
+    @@schema("users")
+}
+
+enum UserStatus {
+    SUSPENDED
+    ACTIVE
+    INACTIVE
+    @@schema("users")
+}
+
+/// User authentication and authorization model
+///
+/// Security:
+/// - Passwords hashed with bcrypt (12 rounds)
+/// - UUIDs generated in application layer
+/// - Soft deletes preserve data integrity
+/// - Unique constraints only for active users
 model User {
+    /// UUID v4 generated in application
     id                  String    @id @map("id")
     name                String
-    lastName            String
-    email               String
-    dni                 String
-    password            String
-    isPasswordTemporary Boolean   @default(true)
-    createdAt           DateTime  @default(now())
-    updatedAt           DateTime  @updatedAt
-    deletedAt           DateTime?
-    createdBy           String?
-    updatedBy           String?
-    deletedBy           String?
+    lastName            String    @map("last_name")
 
-    @@index([email], map: "user_email_unique_idx")
-    @@index([dni], map: "user_dni_unique_idx")
+    /// Unique email (only for active users)
+    /// @unique partial index: WHERE deletedAt IS NULL
+    email               String
+
+    /// National ID (unique for active users)
+    /// @unique partial index: WHERE deletedAt IS NULL
+    dni                 String
+
+    /// Bcrypt hashed password (12 salt rounds)
+    /// @see src/domain/user/value-objects/password.vo.ts
+    password            String
+
+    /// Forces password change on first login
+    isPasswordTemporary Boolean   @default(true) @map("is_password_temporary")
+
+    roleId              String    @map("role_id")
+    role                Role      @relation(fields: [roleId], references: [id], onDelete: Restrict)
+
+    status              UserStatus @default(ACTIVE)
+
+    phone               String?   @map("phone")
+    address             String?   @map("address")
+    photoUrl            String?   @map("photo_url")
+
+    createdAt           DateTime  @default(now()) @map("created_at")
+    updatedAt           DateTime  @updatedAt @map("updated_at")
+    deletedAt           DateTime? @map("deleted_at")
+    createdBy           String?   @map("created_by")
+    updatedBy           String?   @map("updated_by")
+    deletedBy           String?   @map("deleted_by")
+
+    @@index([deletedAt, email], map: "user_email_unique_idx")
+    @@index([deletedAt, dni], map: "user_dni_unique_idx")
+    @@index([deletedAt, roleId], map: "user_role_idx")
 
     @@map("users")
+    @@schema("users")
 }
+
+model Role {
+    id          String      @id @map("id")
+    name        String
+    description String?
+    status      RoleStatus @default(PENDING)
+    level       Int
+
+    users       User[]
+
+    createdAt   DateTime @default(now()) @map("created_at")
+    updatedAt   DateTime @updatedAt @map("updated_at")
+    deletedAt   DateTime? @map("deleted_at")
+    createdBy   String?   @map("created_by")
+    updatedBy   String?   @map("updated_by")
+    deletedBy   String?   @map("deleted_by")
+
+    @@index([deletedAt, name], map: "role_name_unique_idx")
+    @@index([deletedAt, level], map: "role_level_idx")
+
+    @@map("roles")
+    @@schema("users")
+}
+

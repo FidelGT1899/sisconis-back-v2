@@ -4,7 +4,7 @@ import { TYPES } from "@shared-infrastructure/ioc/types";
 import { BaseController } from "@shared-infrastructure/http/base/base.controller";
 import type { Controller, HttpRequest, HttpResponse } from "@shared-infrastructure/http/ports/controller";
 
-import { ChangeUserPasswordUseCase } from "@users-application/use-cases/change-user-password.use-case";
+import { ChangeUserPasswordUseCase } from "@users-application/use-cases/user/change-user-password.use-case";
 
 import { ChangeUserPasswordSchema } from "@users-infrastructure/http/requests/change-user-password.schema";
 
