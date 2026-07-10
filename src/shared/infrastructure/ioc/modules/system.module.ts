@@ -12,15 +12,9 @@ import { FeatureFlagsController } from "@system-infrastructure/http/controllers/
 import { ReadinessController } from "@system-infrastructure/http/controllers/readiness.controller";
 import { SystemInfoController } from "@system-infrastructure/http/controllers/system-info.controller";
 
-import { TYPES } from "../types";
+import { createSystemRoutes } from "@system-infrastructure/http/routes/system.routes";
 
-export interface SystemHttpControllers {
-    clockController: ClockController;
-    featureFlagsController: FeatureFlagsController;
-    healthController: HealthController;
-    readinessController: ReadinessController;
-    systemInfoController: SystemInfoController;
-}
+import { TYPES } from "../types";
 
 export const systemModule = new ContainerModule((options) => {
     const { bind } = options;
@@ -40,14 +34,16 @@ export const systemModule = new ContainerModule((options) => {
     bind(TYPES.ReadinessController).to(ReadinessController).inTransientScope();
     bind(TYPES.SystemInfoController).to(SystemInfoController).inTransientScope();
 
-    // Aggregate
-    bind<SystemHttpControllers>(TYPES.SystemControllers)
-        .toDynamicValue((ctx) => ({
-            clockController: ctx.get(TYPES.ClockController),
-            featureFlagsController: ctx.get(TYPES.FeatureFlagsController),
-            healthController: ctx.get(TYPES.HealthController),
-            readinessController: ctx.get(TYPES.ReadinessController),
-            systemInfoController: ctx.get(TYPES.SystemInfoController),
-        }))
-        .inTransientScope();
+    // Router
+    bind(TYPES.SystemRouter)
+        .toDynamicValue((ctx) =>
+            createSystemRoutes({
+                clockController: ctx.get(TYPES.ClockController),
+                featureFlagsController: ctx.get(TYPES.FeatureFlagsController),
+                healthController: ctx.get(TYPES.HealthController),
+                readinessController: ctx.get(TYPES.ReadinessController),
+                systemInfoController: ctx.get(TYPES.SystemInfoController),
+            })
+        )
+        .inSingletonScope();
 });

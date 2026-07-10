@@ -31,23 +31,9 @@ import { SuspendUserController } from "@users-infrastructure/http/controllers/su
 import { ActivateUserController } from "@users-infrastructure/http/controllers/activate-user.controller";
 import { DeactivateUserController } from "@users-infrastructure/http/controllers/deactivate-user.controller";
 
-import { TYPES } from "../types";
+import { createUserRoutes } from "@users-infrastructure/http/routes/user.routes";
 
-export interface UsersHttpControllers {
-    createUserController: CreateUserController;
-    getUserController: GetUserController;
-    getUsersController: GetUsersController;
-    updateUserProfileController: UpdateUserProfileController;
-    updateUserByAdminController: UpdateUserByAdminController;
-    deleteUserController: DeleteUserController;
-    resetUserPasswordController: ResetUserPasswordController;
-    changeUserPasswordController: ChangeUserPasswordController;
-    changeUserDniController: ChangeUserDniController;
-    updateUserRoleController: UpdateUserRoleController;
-    suspendUserController: SuspendUserController;
-    activateUserController: ActivateUserController;
-    deactivateUserController: DeactivateUserController;
-}
+import { TYPES } from "../types";
 
 export const usersModule = new ContainerModule((options) => {
     const { bind } = options;
@@ -84,22 +70,24 @@ export const usersModule = new ContainerModule((options) => {
     bind(TYPES.ActivateUserController).to(ActivateUserController).inTransientScope();
     bind(TYPES.DeactivateUserController).to(DeactivateUserController).inTransientScope();
 
-    // Aggregate
-    bind<UsersHttpControllers>(TYPES.UsersControllers)
-        .toDynamicValue((ctx) => ({
-            createUserController: ctx.get(TYPES.CreateUserController),
-            getUserController: ctx.get(TYPES.GetUserController),
-            getUsersController: ctx.get(TYPES.GetUsersController),
-            updateUserProfileController: ctx.get(TYPES.UpdateUserProfileController),
-            updateUserByAdminController: ctx.get(TYPES.UpdateUserByAdminController),
-            deleteUserController: ctx.get(TYPES.DeleteUserController),
-            resetUserPasswordController: ctx.get(TYPES.ResetUserPasswordController),
-            changeUserPasswordController: ctx.get(TYPES.ChangeUserPasswordController),
-            changeUserDniController: ctx.get(TYPES.ChangeUserDniController),
-            updateUserRoleController: ctx.get(TYPES.UpdateUserRoleController),
-            suspendUserController: ctx.get(TYPES.SuspendUserController),
-            activateUserController: ctx.get(TYPES.ActivateUserController),
-            deactivateUserController: ctx.get(TYPES.DeactivateUserController),
-        }))
-        .inTransientScope();
+    // Router
+    bind(TYPES.UsersRouter)
+        .toDynamicValue((ctx) =>
+            createUserRoutes({
+                createUserController: ctx.get(TYPES.CreateUserController),
+                getUserController: ctx.get(TYPES.GetUserController),
+                getUsersController: ctx.get(TYPES.GetUsersController),
+                updateUserProfileController: ctx.get(TYPES.UpdateUserProfileController),
+                updateUserByAdminController: ctx.get(TYPES.UpdateUserByAdminController),
+                deleteUserController: ctx.get(TYPES.DeleteUserController),
+                resetUserPasswordController: ctx.get(TYPES.ResetUserPasswordController),
+                changeUserPasswordController: ctx.get(TYPES.ChangeUserPasswordController),
+                changeUserDniController: ctx.get(TYPES.ChangeUserDniController),
+                updateUserRoleController: ctx.get(TYPES.UpdateUserRoleController),
+                suspendUserController: ctx.get(TYPES.SuspendUserController),
+                activateUserController: ctx.get(TYPES.ActivateUserController),
+                deactivateUserController: ctx.get(TYPES.DeactivateUserController),
+            })
+        )
+        .inSingletonScope();
 });

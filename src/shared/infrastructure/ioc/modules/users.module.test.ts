@@ -1,6 +1,7 @@
 import { Container } from "inversify";
+import type { Router } from "express";
+
 import { usersModule } from "./users.module";
-import type { UsersHttpControllers } from "./users.module";
 import { TYPES } from "../types";
 
 describe('Users IoC module', () => {
@@ -51,21 +52,8 @@ describe('Users IoC module', () => {
 
         void container.load(usersModule);
 
-        const controllers = container.get<UsersHttpControllers>(TYPES.UsersControllers);
+        const usersRouter = container.get<Router>(TYPES.UsersRouter);
 
-        expect(controllers).toBeDefined();
-        expect(controllers.createUserController).toBeDefined();
-        expect(controllers.getUserController).toBeDefined();
-        expect(controllers.getUsersController).toBeDefined();
-        expect(controllers.updateUserProfileController).toBeDefined();
-        expect(controllers.updateUserByAdminController).toBeDefined();
-        expect(controllers.deleteUserController).toBeDefined();
-        expect(controllers.resetUserPasswordController).toBeDefined();
-        expect(controllers.changeUserPasswordController).toBeDefined();
-        expect(controllers.changeUserDniController).toBeDefined();
-        expect(controllers.updateUserRoleController).toBeDefined();
-        expect(controllers.suspendUserController).toBeDefined();
-        expect(controllers.activateUserController).toBeDefined();
-        expect(controllers.deactivateUserController).toBeDefined();
+        expect(usersRouter).toBeDefined();
     });
 });

@@ -28,7 +28,10 @@
             "@users-tests/*": ["src/modules/users/__tests__/*"],
             "@system-domain/*": ["src/modules/system/domain/*"],
             "@system-application/*": ["src/modules/system/application/*"],
-            "@system-infrastructure/*": ["src/modules/system/infrastructure/*"]
+            "@system-infrastructure/*": ["src/modules/system/infrastructure/*"],
+            "@auth-domain/*": ["src/modules/auth/domain/*"],
+            "@auth-application/*": ["src/modules/auth/application/*"],
+            "@auth-infrastructure/*": ["src/modules/auth/infrastructure/*"]
         }
     }
 }

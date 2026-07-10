@@ -1,5 +1,4 @@
 export const TYPES = {
-    // ILogger: Symbol.for("ILogger"),
     // ILogService: Symbol.for("ILogService"),
 
     // Shared
@@ -7,6 +6,8 @@ export const TYPES = {
     EntityIdGenerator: Symbol.for("EntityIdGenerator"),
     AuditIdGenerator: Symbol.for("AuditIdGenerator"),
     PasswordHasher: Symbol.for("PasswordHasher"),
+    Logger: Symbol.for("Logger"),
+    GlobalErrorMiddleware: Symbol.for("GlobalErrorMiddleware"),
 
     // System Application
     HealthCheckUseCase: Symbol.for("HealthCheckUseCase"),
@@ -17,7 +18,7 @@ export const TYPES = {
     FeatureFlagsUseCase: Symbol.for("FeatureFlagUseCase"),
 
     // System Infrastructure
-    SystemControllers: Symbol.for("SystemControllers"),
+    SystemRouter: Symbol.for("SystemRouter"),
     HealthController: Symbol.for("HealthController"),
     SystemInfoController: Symbol.for("SystemInfoController"),
     ClockController: Symbol.for("ClockController"),
@@ -55,7 +56,7 @@ export const TYPES = {
     DeactivateRoleUseCase: Symbol.for("DeactivateRoleUseCase"),
 
     // Users Infrastructure
-    UsersControllers: Symbol.for("UsersControllers"),
+    UsersRouter: Symbol.for("UsersRouter"),
     GetUsersController: Symbol.for("GetUsersController"),
     GetUserController: Symbol.for("GetUserController"),
     CreateUserController: Symbol.for("CreateUserController"),
@@ -71,7 +72,7 @@ export const TYPES = {
     DeactivateUserController: Symbol.for("DeactivateUserController"),
 
     // Roles Infrastructure
-    RolesControllers: Symbol.for("RolesControllers"),
+    RolesRouter: Symbol.for("RolesRouter"),
     GetRolesController: Symbol.for("GetRolesController"),
     GetRoleController: Symbol.for("GetRoleController"),
     CreateRoleController: Symbol.for("CreateRoleController"),
