@@ -23,15 +23,7 @@ import { DeleteRoleController } from "@users-infrastructure/http/controllers/rol
 import { ActivateRoleController } from "@users-infrastructure/http/controllers/role/activate-role.controller";
 import { DeactivateRoleController } from "@users-infrastructure/http/controllers/role/deactivate-role.controller";
 
-export interface RolesHttpControllers {
-    createRoleController: CreateRoleController;
-    getRolesController: GetRolesController;
-    getRoleController: GetRoleController;
-    updateRoleController: UpdateRoleController;
-    deleteRoleController: DeleteRoleController;
-    activateRoleController: ActivateRoleController;
-    deactivateRoleController: DeactivateRoleController;
-}
+import { createRoleRoutes } from "@users-infrastructure/http/routes/role.routes";
 
 export const rolesModule = new ContainerModule((options) => {
     const { bind } = options;
@@ -57,16 +49,18 @@ export const rolesModule = new ContainerModule((options) => {
     bind(TYPES.ActivateRoleController).to(ActivateRoleController).inTransientScope();
     bind(TYPES.DeactivateRoleController).to(DeactivateRoleController).inTransientScope();
 
-    // Aggregate
-    bind<RolesHttpControllers>(TYPES.RolesControllers)
-        .toDynamicValue((ctx) => ({
-            createRoleController: ctx.get(TYPES.CreateRoleController),
-            getRoleController: ctx.get(TYPES.GetRoleController),
-            getRolesController: ctx.get(TYPES.GetRolesController),
-            updateRoleController: ctx.get(TYPES.UpdateRoleController),
-            deleteRoleController: ctx.get(TYPES.DeleteRoleController),
-            activateRoleController: ctx.get(TYPES.ActivateRoleController),
-            deactivateRoleController: ctx.get(TYPES.DeactivateRoleController),
-        }))
-        .inTransientScope();
+    // Router
+    bind(TYPES.RolesRouter)
+        .toDynamicValue((ctx) =>
+            createRoleRoutes({
+                createRoleController: ctx.get(TYPES.CreateRoleController),
+                getRoleController: ctx.get(TYPES.GetRoleController),
+                getRolesController: ctx.get(TYPES.GetRolesController),
+                updateRoleController: ctx.get(TYPES.UpdateRoleController),
+                deleteRoleController: ctx.get(TYPES.DeleteRoleController),
+                activateRoleController: ctx.get(TYPES.ActivateRoleController),
+                deactivateRoleController: ctx.get(TYPES.DeactivateRoleController),
+            })
+        )
+        .inSingletonScope();
 });

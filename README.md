@@ -6,7 +6,7 @@ Este proyecto fue iniciado previamente, pero ha sido retomado y modernizado con 
 
 ---
 
-## 🚀 Características principales
+## Características principales
 
 - Gestión completa de permisos de ingreso y salida.
 - Registro y autenticación de usuarios.

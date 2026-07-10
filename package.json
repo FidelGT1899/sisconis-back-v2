@@ -14,9 +14,7 @@
         "lint": "eslint .",
         "test": "jest",
         "test:watch": "jest --watchAll",
-        "test:coverage": "jest --coverage",
-        "openapi:validate": "tsx scripts/openapi/validate-openapi.ts",
-        "openapi:generate": "tsx scripts/openapi/generate-openapi.ts"
+        "test:coverage": "jest --coverage"
     },
     "keywords": [],
     "author": "Fidel García",

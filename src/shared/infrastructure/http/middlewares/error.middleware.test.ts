@@ -1,7 +1,8 @@
-import { globalErrorMiddleware } from "./error.middleware";
+import { createGlobalErrorMiddleware } from "./error.middleware";
 import { ZodError, z } from "zod";
 import { AppError } from "@shared-kernel/errors/app.error";
 import type { Request, Response, NextFunction } from "express";
+import type { ILogger } from "@shared-domain/ports/logger";
 
 class TestError extends AppError {
     constructor(code: string, message: string, statusCode?: number) {
@@ -12,6 +13,11 @@ class TestError extends AppError {
 describe("globalErrorMiddleware", () => {
     const req = {} as Request;
     const next = jest.fn() as NextFunction;
+    let globalErrorMiddleware: ReturnType<typeof createGlobalErrorMiddleware>;
+
+    const logger = {
+        error: jest.fn()
+    } as unknown as ILogger;
 
     const res = {
         status: jest.fn().mockReturnThis(),
@@ -20,6 +26,7 @@ describe("globalErrorMiddleware", () => {
 
     beforeEach(() => {
         jest.clearAllMocks();
+        globalErrorMiddleware = createGlobalErrorMiddleware(logger);
     });
 
     it("should handle ZodError", () => {

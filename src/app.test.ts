@@ -1,69 +1,43 @@
-import type { RolesHttpControllers } from "@shared-infrastructure/ioc/modules/roles.module";
-import { createApp } from "./app";
+import express, { type ErrorRequestHandler, type NextFunction, type Request, type Response } from "express";
 import request from "supertest";
-import type { SystemHttpControllers } from "@shared-infrastructure/ioc/modules/system.module";
-import type { UsersHttpControllers } from "@shared-infrastructure/ioc/modules/users.module";
 
-const createMockController = (statusCode: number, body?: unknown) => ({
-    handle: jest.fn().mockResolvedValue({ statusCode, body })
+import { createApp } from "./app";
+
+const usersRouter = express.Router();
+const rolesRouter = express.Router();
+const systemRouter = express.Router();
+
+const globalErrorMiddleware: ErrorRequestHandler = jest.fn(
+    (
+        err: Error,
+        _req: Request,
+        res: Response,
+        _next: NextFunction
+    ) => {
+        res.status(500).json({
+            error: err.message,
+        });
+    }
+);
+
+beforeEach(() => {
+    usersRouter.stack = [];
+    rolesRouter.stack = [];
+    systemRouter.stack = [];
+    jest.clearAllMocks();
 });
-
-const fakeUsersControllers = {
-    createUserController: createMockController(201, { status: "success" }),
-    getUserController: createMockController(200, { status: "success" }),
-    getUsersController: createMockController(200, { status: "success" }),
-    updateUserProfileController: createMockController(200, { status: "success" }),
-    updateUserByAdminController: createMockController(200, { status: "success" }),
-    deleteUserController: createMockController(204),
-    resetUserPasswordController: createMockController(204),
-    changeUserPasswordController: createMockController(204),
-    changeUserDniController: createMockController(204),
-    updateUserRoleController: createMockController(204),
-    suspendUserController: createMockController(204),
-    activateUserController: createMockController(204),
-    deactivateUserController: createMockController(204),
-} as unknown as UsersHttpControllers;
-
-const fakeSystemControllers = {
-    clockController: createMockController(200, {
-        timestamp: new Date().toISOString(),
-        iso: new Date().toISOString(),
-        unix: Math.floor(Date.now() / 1000)
-    }),
-    featureFlagsController: createMockController(200, []),
-    healthController: createMockController(200, {
-        status: "ok",
-        timestamp: new Date().toISOString()
-    }),
-    readinessController: createMockController(200, {
-        status: "ready",
-        checks: {},
-        timestamp: new Date().toISOString()
-    }),
-    systemInfoController: createMockController(200, {
-        name: "sisconis-api",
-        version: "dev",
-        environment: "test",
-        uptime: 0
-    })
-} as unknown as SystemHttpControllers;
-
-const fakeRolesControllers = {
-    getRoleController: createMockController(200, { status: "success" }),
-    getRolesController: createMockController(200, { status: "success" }),
-    createRoleController: createMockController(201, { status: "success" }),
-    updateRoleController: createMockController(200, { status: "success" }),
-    deleteRoleController: createMockController(204),
-    activateRoleController: createMockController(204),
-    updateUserRoleController: createMockController(204),
-} as unknown as RolesHttpControllers;
 
 describe("App bootstrap", () => {
     it("should respond 200 on health check", async () => {
+        systemRouter.get("/health", (_req, res) => {
+            res.sendStatus(200);
+        });
+
         const app = createApp({
-            users: fakeUsersControllers,
-            system: fakeSystemControllers,
-            roles: fakeRolesControllers,
+            usersRouter,
+            rolesRouter,
+            systemRouter,
+            globalErrorMiddleware,
         });
 
         const response = await request(app).get("/v1/api/health");
@@ -73,9 +47,10 @@ describe("App bootstrap", () => {
 
     it("should respond 404 on unknown route", async () => {
         const app = createApp({
-            users: fakeUsersControllers,
-            system: fakeSystemControllers,
-            roles: fakeRolesControllers,
+            usersRouter,
+            rolesRouter,
+            systemRouter,
+            globalErrorMiddleware,
         });
 
         const response = await request(app).get("/v1/api/unknown-route");
@@ -84,20 +59,20 @@ describe("App bootstrap", () => {
     });
 
     it("should handle ZodError from controller via error middleware", async () => {
-        const errorController = {
-            handle: jest.fn().mockRejectedValue(
-                new Error("ZodError simulation")
-            )
-        };
+        usersRouter.get("/", (_req, _res, next) => {
+            next(new Error("Boom"));
+        });
 
         const app = createApp({
-            users: { ...fakeUsersControllers, getUsersController: errorController } as unknown as UsersHttpControllers,
-            system: fakeSystemControllers,
-            roles: fakeRolesControllers,
+            usersRouter,
+            rolesRouter,
+            systemRouter,
+            globalErrorMiddleware,
         });
 
         const response = await request(app).get("/v1/api/users");
 
         expect(response.status).toBe(500);
+        expect(globalErrorMiddleware).toHaveBeenCalled();
     });
 });

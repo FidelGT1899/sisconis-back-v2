@@ -1,34 +1,52 @@
 import "dotenv/config";
 import "reflect-metadata";
 
+import type { ErrorRequestHandler, Router } from "express";
+
 import { container } from "@shared-infrastructure/ioc/container";
 import { TYPES } from "@shared-infrastructure/ioc/types";
+import { createGracefulShutdown } from "@shared-infrastructure/lifecycle/graceful-shutdown";
+import type { PrismaService } from "@shared-infrastructure/database/prisma/prisma.service";
+import type { ILogger } from "@shared-domain/ports/logger";
 
 import { createApp } from "./app";
-import type { UsersHttpControllers } from "@shared-infrastructure/ioc/modules/users.module";
-import type { SystemHttpControllers } from "@shared-infrastructure/ioc/modules/system.module";
-import type { RolesHttpControllers } from "@shared-infrastructure/ioc/modules/roles.module";
 
-// eslint-disable-next-line @typescript-eslint/require-await
-async function bootstrap(): Promise<void> {
-    const usersControllers = container.get<UsersHttpControllers>(TYPES.UsersControllers);
-    const systemControllers = container.get<SystemHttpControllers>(TYPES.SystemControllers);
-    const rolesControllers = container.get<RolesHttpControllers>(TYPES.RolesControllers);
+function bootstrap(): void {
+    const usersRouter = container.get<Router>(TYPES.UsersRouter);
+    const systemRouter = container.get<Router>(TYPES.SystemRouter);
+    const rolesRouter = container.get<Router>(TYPES.RolesRouter);
+    const globalErrorMiddleware = container.get<ErrorRequestHandler>(TYPES.GlobalErrorMiddleware);
 
     const app = createApp({
-        users: usersControllers,
-        system: systemControllers,
-        roles: rolesControllers
+        usersRouter,
+        rolesRouter,
+        systemRouter,
+        globalErrorMiddleware
     });
 
     const PORT = process.env.PORT ?? 3000;
 
-    app.listen(PORT, () => {
+    const server = app.listen(PORT, () => {
         console.log(`Server running on port ${PORT}`);
     });
+
+    const logger = container.get<ILogger>(TYPES.Logger);
+    const prismaService = container.get<PrismaService>(TYPES.PrismaService);
+
+    const shutdown = createGracefulShutdown({
+        server,
+        resources: [prismaService],
+        logger,
+        timeoutMs: 10_000,
+    });
+
+    process.on("SIGTERM", () => void shutdown("SIGTERM"));
+    process.on("SIGINT", () => void shutdown("SIGINT"));
 }
 
-bootstrap().catch((error) => {
-    console.error("💥 Fatal error during bootstrap", error);
+try {
+    bootstrap();
+} catch (error) {
+    console.error("Fatal error during bootstrap", error);
     process.exit(1);
-});
+}
