@@ -1,6 +1,6 @@
 import { UpdateUserProfileController } from "./update-user-profile.controller";
 import type { UpdateUserProfileUseCase } from "@users-application/use-cases/user/update-user-profile.use-case";
-import type { HttpRequest } from "@shared-infrastructure/http/ports/controller";
+import { makeHttpRequest } from "@shared-infrastructure/http/testing/http-request.factory";
 import { Result } from "@shared-kernel/errors/result";
 import { UserNotFoundError } from "@users-application/errors/user-not-found.error";
 import { UserResponseMapper } from "@users-application/mappers/user-response.mapper";
@@ -8,14 +8,6 @@ import { makeUserEntity } from "@users-tests/factories/user.factory";
 
 const mockUseCase = (): jest.Mocked<UpdateUserProfileUseCase> =>
     ({ execute: jest.fn() } as unknown as jest.Mocked<UpdateUserProfileUseCase>);
-
-const makeRequest = (
-    params?: Record<string, string>,
-    body?: unknown
-): HttpRequest => ({
-    ...(params && { params }),
-    ...(body !== undefined && { body }),
-});
 
 describe("UpdateUserProfileController", () => {
     it("should return 200 when profile is updated successfully", async () => {
@@ -25,7 +17,10 @@ describe("UpdateUserProfileController", () => {
         useCase.execute.mockResolvedValue(Result.ok(dto));
 
         const response = await controller.handle(
-            makeRequest({ id: "user-id" }, { name: "Jane", lastName: "Smith" })
+            makeHttpRequest({
+                params: { id: "user-id" },
+                body: { name: "Jane", lastName: "Smith" }
+            })
         );
 
         expect(useCase.execute).toHaveBeenCalledWith({
@@ -42,7 +37,9 @@ describe("UpdateUserProfileController", () => {
         const controller = new UpdateUserProfileController(useCase);
 
         const response = await controller.handle(
-            makeRequest({}, { name: "Jane" })
+            makeHttpRequest({
+                body: { name: "Jane" }
+            })
         );
 
         expect(useCase.execute).not.toHaveBeenCalled();
@@ -55,7 +52,10 @@ describe("UpdateUserProfileController", () => {
         const controller = new UpdateUserProfileController(useCase);
 
         await expect(
-            controller.handle(makeRequest({ id: "user-id" }, {}))
+            controller.handle(makeHttpRequest({
+                params: { id: "user-id" },
+                body: {}
+            }))
         ).rejects.toBeDefined();
 
         expect(useCase.execute).not.toHaveBeenCalled();
@@ -68,7 +68,10 @@ describe("UpdateUserProfileController", () => {
         useCase.execute.mockResolvedValue(Result.fail(error));
 
         const response = await controller.handle(
-            makeRequest({ id: "user-id" }, { name: "Jane" })
+            makeHttpRequest({
+                params: { id: "user-id" },
+                body: { name: "Jane" }
+            })
         );
 
         expect(response.statusCode).toBe(error.statusCode);

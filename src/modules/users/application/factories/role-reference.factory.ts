@@ -12,7 +12,6 @@ export class RoleReferenceFactory {
             id: role.getId(),
             name: role.getName(),
             level: role.getLevel(),
-            status: role.getStatus(),
         });
 
         if (roleRefResult.isErr()) {

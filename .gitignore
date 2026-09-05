@@ -30,7 +30,8 @@ Desktop.ini
 *.swo
 
 docs/comandos.md
-docs/openapi/openapi.json
+docs/notas_generales.md
 
 generated/
 .clinic/
+redis/users.acl

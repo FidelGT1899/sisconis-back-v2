@@ -16,7 +16,10 @@ describe("globalErrorMiddleware", () => {
     let globalErrorMiddleware: ReturnType<typeof createGlobalErrorMiddleware>;
 
     const logger = {
-        error: jest.fn()
+        error: jest.fn(),
+        warn: jest.fn(),
+        info: jest.fn(),
+        debug: jest.fn(),
     } as unknown as ILogger;
 
     const res = {

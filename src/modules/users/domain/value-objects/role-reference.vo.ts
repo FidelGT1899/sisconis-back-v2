@@ -1,13 +1,11 @@
 import { Result } from "@shared-kernel/errors/result";
 import { ValueObjectBase } from "@shared-domain/value-object.base";
-import { RoleStatus } from "@users-domain/entities/role.entity";
 import { InvalidRoleReferenceError } from "@users-domain/errors/invalid-role-reference.error";
 
 interface RoleReferenceProps {
     id: string;
     name: string;
     level: number;
-    status: RoleStatus;
 }
 
 /**
@@ -19,19 +17,16 @@ export class RoleReferenceVO extends ValueObjectBase {
     private readonly id: string;
     private readonly name: string;
     private readonly level: number;
-    private readonly status: RoleStatus;
 
     private constructor(
         id: string,
         name: string,
-        level: number,
-        status: RoleStatus
+        level: number
     ) {
         super();
         this.id = id;
         this.name = name;
         this.level = level;
-        this.status = status;
     }
 
     protected getEqualityComponents(): ReadonlyArray<unknown> {
@@ -55,8 +50,7 @@ export class RoleReferenceVO extends ValueObjectBase {
             new RoleReferenceVO(
                 props.id,
                 props.name,
-                props.level,
-                props.status
+                props.level
             )
         );
     }
@@ -65,15 +59,6 @@ export class RoleReferenceVO extends ValueObjectBase {
     public getId(): string { return this.id; }
     public getName(): string { return this.name; }
     public getLevel(): number { return this.level; }
-    public getStatus(): RoleStatus { return this.status; }
-
-    public isActive(): boolean {
-        return this.status === RoleStatus.ACTIVE;
-    }
-
-    public isAssignable(): boolean {
-        return this.isActive();
-    }
 
     public canManageLevel(targetLevel: number): boolean {
         return this.level > targetLevel;

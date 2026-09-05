@@ -13,13 +13,6 @@ datasource db {
   schemas  = ["public", "users", "auth"]
 }
 
-enum RoleStatus {
-    PENDING
-    ACTIVE
-    INACTIVE
-    @@schema("users")
-}
-
 enum UserStatus {
     SUSPENDED
     ACTIVE
@@ -83,7 +76,6 @@ model Role {
     id          String      @id @map("id")
     name        String
     description String?
-    status      RoleStatus @default(PENDING)
     level       Int
 
     users       User[]

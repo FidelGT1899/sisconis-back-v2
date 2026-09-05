@@ -4,7 +4,6 @@ import type { IPasswordHasher } from '@shared-domain/ports/password-hasher';
 import type { IUserRepository } from '@users-domain/repositories/user.repository.interface';
 import type { IRoleRepository } from '@users-domain/repositories/role.repository.interface';
 import { UserStatus } from '@users-domain/entities/user.entity';
-import { RoleStatus } from '@users-domain/entities/role.entity';
 
 export const makeMockIdGenerator = () => {
     const m = mock<IEntityIdGenerator>();
@@ -36,7 +35,6 @@ export const makePrismaUser = (overrides = {}) => ({
         id: 'role-id-123',
         name: 'Admin',
         description: null,
-        status: RoleStatus.ACTIVE,
         level: 7,
         createdAt: new Date('2024-01-01'),
         updatedAt: new Date('2024-01-01'),

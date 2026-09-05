@@ -1,4 +1,4 @@
-import { RoleEntity, RoleStatus } from "@users-domain/entities/role.entity";
+import { RoleEntity } from "@users-domain/entities/role.entity";
 import type { Role as RolePersistenceModel } from "@prisma/client";
 
 export class RoleMapper {
@@ -7,7 +7,6 @@ export class RoleMapper {
             id: raw.id,
             name: raw.name,
             description: raw.description,
-            status: raw.status as RoleStatus,
             level: raw.level,
             createdAt: raw.createdAt,
             updatedAt: raw.updatedAt,
@@ -23,7 +22,6 @@ export class RoleMapper {
             id: entity.getId(),
             name: entity.getName(),
             description: entity.getDescription(),
-            status: entity.getStatus(),
             level: entity.getLevel(),
             createdAt: entity.createdAt,
             updatedAt: entity.updatedAt || new Date(),

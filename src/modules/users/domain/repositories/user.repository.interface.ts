@@ -19,6 +19,7 @@ export interface IUserRepository extends IRepository<
     existsByDniExcluding(dni: string, excludeId: string): Promise<boolean>;
     // index(params: PaginationParams<UserOrderBy>): Promise<PaginatedResult<UserEntity>>;
     findById(id: string): Promise<UserEntity | null>;
+    findByEmail(email: string): Promise<UserEntity | null>;
     save(user: UserEntity): Promise<UserEntity>;
     update(user: UserEntity): Promise<UserEntity>;
 }

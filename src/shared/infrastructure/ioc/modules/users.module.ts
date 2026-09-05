@@ -1,7 +1,10 @@
 import { ContainerModule } from "inversify";
 
+// Repositories
 import type { IUserRepository } from "@users-domain/repositories/user.repository.interface";
+import { UserRepository } from "@users-infrastructure/persistence/repositories/user.repository";
 
+// Use Cases
 import { CreateUserUseCase } from "@users-application/use-cases/user/create-user.use-case";
 import { GetUsersUseCase } from "@users-application/use-cases/user/get-users.use-case";
 import { GetUserUseCase } from "@users-application/use-cases/user/get-user.use-case";
@@ -16,7 +19,7 @@ import { SuspendUserUseCase } from "@users-application/use-cases/user/suspend-us
 import { ActivateUserUseCase } from "@users-application/use-cases/user/activate-user.use-case";
 import { DeactivateUserUseCase } from "@users-application/use-cases/user/deactivate-user.use-case";
 
-import { UserRepository } from "@users-infrastructure/persistence/repositories/user.repository";
+// Controllers
 import { GetUsersController } from "@users-infrastructure/http/controllers/get-users.controller";
 import { GetUserController } from "@users-infrastructure/http/controllers/get-user.controller";
 import { CreateUserController } from "@users-infrastructure/http/controllers/create-user.controller";

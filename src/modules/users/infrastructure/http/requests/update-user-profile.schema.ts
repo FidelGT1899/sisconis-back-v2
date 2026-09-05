@@ -3,9 +3,9 @@ import { z } from "zod";
 export const UpdateUserProfileSchema = z.object({
     name: z.string().min(3).max(50).trim().optional(),
     lastName: z.string().min(3).max(50).trim().optional(),
-    phone: z.string().min(3).max(20).trim().optional(),
-    address: z.string().min(3).max(100).trim().optional(),
-    photoUrl: z.string().regex(/^https:\/\/res\.cloudinary\.com\/.+/).optional(),
+    phone: z.string().min(3).max(20).trim().nullable().optional(),
+    address: z.string().min(3).max(100).trim().nullable().optional(),
+    photoUrl: z.string().regex(/^https:\/\/res\.cloudinary\.com\/.+/).nullable().optional(),
 })
     .strict()
     .refine(

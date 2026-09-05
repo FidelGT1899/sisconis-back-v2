@@ -1,13 +1,15 @@
 import { injectable } from "inversify";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@prisma/client";
+import { env } from "@shared-infrastructure/config/env";
+import type { Disposable } from "@shared-infrastructure/lifecycle/graceful-shutdown";
 
 @injectable()
-export class PrismaService {
+export class PrismaService implements Disposable {
     private readonly client: PrismaClient;
 
     constructor() {
-        const connectionString = process.env.DATABASE_URL;
+        const connectionString = env.DATABASE_URL;
 
         if (!connectionString) {
             throw new Error("DATABASE_URL is not defined");

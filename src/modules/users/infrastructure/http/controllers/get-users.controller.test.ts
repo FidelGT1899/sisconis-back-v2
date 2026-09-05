@@ -1,16 +1,13 @@
 import { GetUsersController } from "./get-users.controller";
 import type { GetUsersUseCase } from "@users-application/use-cases/user/get-users.use-case";
-import type { HttpRequest, SuccessResponse } from "@shared-infrastructure/http/ports/controller";
+import type { SuccessResponse } from "@shared-infrastructure/http/ports/controller";
+import { makeHttpRequest } from "@shared-infrastructure/http/testing/http-request.factory";
 import { Result } from "@shared-kernel/errors/result";
 import { UserResponseMapper } from "@users-application/mappers/user-response.mapper";
 import { makeUserEntity } from "@users-tests/factories/user.factory";
 
 const mockUseCase = (): jest.Mocked<GetUsersUseCase> =>
     ({ execute: jest.fn() } as unknown as jest.Mocked<GetUsersUseCase>);
-
-const makeRequest = (query?: Record<string, unknown>): HttpRequest => ({
-    ...(query && { query }),
-});
 
 describe("GetUsersController", () => {
     it("should return 200 with paginated users", async () => {
@@ -29,7 +26,7 @@ describe("GetUsersController", () => {
         }));
 
         const response = await controller.handle(
-            makeRequest({ page: "1", limit: "2" })
+            makeHttpRequest({ query: { page: "1", limit: "2" } })
         );
 
         expect(useCase.execute).toHaveBeenCalledWith({
@@ -56,7 +53,7 @@ describe("GetUsersController", () => {
         const controller = new GetUsersController(useCase);
 
         await expect(
-            controller.handle(makeRequest({ page: "invalid", limit: -1 }))
+            controller.handle(makeHttpRequest({ query: { page: "invalid", limit: -1 } }))
         ).rejects.toBeDefined();
 
         expect(useCase.execute).not.toHaveBeenCalled();
@@ -73,7 +70,7 @@ describe("GetUsersController", () => {
             limit: 10,
         }));
 
-        const response = await controller.handle(makeRequest({})); // ← {} en vez de sin argumento
+        const response = await controller.handle(makeHttpRequest({ query: {} }));
 
         expect(response.statusCode).toBe(200);
         const body = response.body as SuccessResponse;

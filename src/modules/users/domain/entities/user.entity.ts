@@ -11,7 +11,6 @@ import { DniVO } from "@users-domain/value-objects/dni.vo";
 import { PasswordFactory, type PasswordType } from "@users-domain/factories/password.factory";
 import { TemporaryPasswordVO } from "@users-domain/value-objects/temporary-password.vo";
 import { RoleReferenceVO } from "@users-domain/value-objects/role-reference.vo";
-import { CannotAssignRoleError } from "@users-domain/errors/cannot-assign-role.error";
 import { UserAlreadyActiveError } from "@users-domain/errors/user-already-active.error";
 import { UserAlreadyInactiveError } from "@users-domain/errors/user-already-deactive.error";
 import { UserAlreadySuspendedError } from "@users-domain/errors/user-already-suspended.error";
@@ -73,12 +72,12 @@ export class UserEntity extends EntityBase<string, UserProps> {
     }
 
     // --- Business Logic of Role ---
-    public hasActiveRole(): boolean {
-        return this.props.role.isActive();
-    }
-
     public canManageUser(targetUser: UserEntity): boolean {
         return this.props.role.canManageLevel(targetUser.getRoleLevel());
+    }
+
+    public canAssignRoleLevel(level: number): boolean {
+        return this.props.role.canManageLevel(level);
     }
 
     // --- Factory Method from New User ---
@@ -95,7 +94,7 @@ export class UserEntity extends EntityBase<string, UserProps> {
         },
         idGenerator: IEntityIdGenerator,
         hasher: IPasswordHasher
-    ): Promise<Result<UserEntity, InvalidEmailError | InvalidDniError | CannotAssignRoleError>> {
+    ): Promise<Result<UserEntity, InvalidEmailError | InvalidDniError>> {
         const emailResult = EmailVO.create(payload.email);
         const dniResult = DniVO.create(payload.dni);
 
@@ -105,10 +104,6 @@ export class UserEntity extends EntityBase<string, UserProps> {
 
         if (dniResult.isErr()) {
             return Result.fail(dniResult.error());
-        }
-
-        if (!payload.role.isAssignable()) {
-            return Result.fail(new CannotAssignRoleError());
         }
 
         const id = idGenerator.generate();
@@ -193,19 +188,13 @@ export class UserEntity extends EntityBase<string, UserProps> {
     }
 
     // --- Behavior Methods ---
-    public changeRole(newRole: RoleReferenceVO): Result<void, CannotAssignRoleError> {
-        if (!newRole.isAssignable()) {
-            return Result.fail(new CannotAssignRoleError());
-        }
-
+    public changeRole(newRole: RoleReferenceVO): void {
         if (this.props.role.equals(newRole)) {
-            return Result.ok(undefined);
+            return;
         }
 
         this.props.role = newRole;
         this.updatedAt = new Date();
-
-        return Result.ok(undefined);
     }
 
     public async changePassword(
@@ -319,9 +308,17 @@ export class UserEntity extends EntityBase<string, UserProps> {
         return Result.ok(undefined);
     }
 
+    public ensureCanLogin(): Result<void, UserNotActiveError> {
+        return this.ensureActive();
+    }
+
     public ensureRoleAssignable(): Result<void, UserNotActiveError> {
+        return this.ensureActive();
+    }
+
+    private ensureActive(): Result<void, UserNotActiveError> {
         if (this.props.status !== UserStatus.ACTIVE) {
-            return Result.fail(new UserNotActiveError(this.id));
+            return Result.fail(new UserNotActiveError(this.id, this.props.status));
         }
         return Result.ok(undefined);
     }
