@@ -1,20 +1,12 @@
 import { ActivateUserController } from "./activate-user.controller";
 import type { ActivateUserUseCase } from "@users-application/use-cases/user/activate-user.use-case";
-import type { HttpRequest } from "@shared-infrastructure/http/ports/controller";
+import { makeHttpRequest } from "@shared-infrastructure/http/testing/http-request.factory";
 import { Result } from "@shared-kernel/errors/result";
 import { UserNotFoundError } from "@users-application/errors/user-not-found.error";
 import { UserAlreadyActiveError } from "@users-domain/errors/user-already-active.error";
 
 const mockUseCase = (): jest.Mocked<ActivateUserUseCase> =>
     ({ execute: jest.fn() } as unknown as jest.Mocked<ActivateUserUseCase>);
-
-const makeRequest = (
-    params?: Record<string, string>,
-    body?: unknown
-): HttpRequest => ({
-    ...(params && { params }),
-    ...(body !== undefined && { body }),
-});
 
 describe("ActivateUserController", () => {
     it("should return 204 when user is activated successfully", async () => {
@@ -23,7 +15,7 @@ describe("ActivateUserController", () => {
         useCase.execute.mockResolvedValue(Result.ok(undefined));
 
         const response = await controller.handle(
-            makeRequest({ id: "user-id" })
+            makeHttpRequest({ params: { id: "user-id" } })
         );
 
         expect(useCase.execute).toHaveBeenCalledWith("user-id");
@@ -35,7 +27,7 @@ describe("ActivateUserController", () => {
         const useCase = mockUseCase();
         const controller = new ActivateUserController(useCase);
 
-        const response = await controller.handle(makeRequest({}));
+        const response = await controller.handle(makeHttpRequest({}));
 
         expect(useCase.execute).not.toHaveBeenCalled();
         expect(response.statusCode).toBe(400);
@@ -49,7 +41,7 @@ describe("ActivateUserController", () => {
         useCase.execute.mockResolvedValue(Result.fail(error));
 
         const response = await controller.handle(
-            makeRequest({ id: "user-id" })
+            makeHttpRequest({ params: { id: "user-id" } })
         );
 
         expect(response.statusCode).toBe(error.statusCode);
@@ -64,7 +56,7 @@ describe("ActivateUserController", () => {
         useCase.execute.mockResolvedValue(Result.fail(error));
 
         const response = await controller.handle(
-            makeRequest({ id: "user-id" })
+            makeHttpRequest({ params: { id: "user-id" } })
         );
 
         expect(response.statusCode).toBe(error.statusCode);

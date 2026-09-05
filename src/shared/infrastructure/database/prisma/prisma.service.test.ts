@@ -1,26 +1,7 @@
 import { PrismaService } from './prisma.service';
 
 describe('PrismaService', () => {
-    const ORIGINAL_ENV = process.env;
-
-    beforeEach(() => {
-        jest.resetModules();
-        process.env = { ...ORIGINAL_ENV };
-    });
-
-    afterEach(() => {
-        process.env = ORIGINAL_ENV;
-    });
-
-    it('should throw if DATABASE_URL is not defined', () => {
-        delete process.env.DATABASE_URL;
-
-        expect(() => new PrismaService()).toThrow('DATABASE_URL is not defined');
-    });
-
-    it('should create PrismaClient when DATABASE_URL exists', () => {
-        process.env.DATABASE_URL = 'postgresql://fake:fake@localhost:5432/db';
-
+    it('should instantiate PrismaClient with adapter and configuration', () => {
         const service = new PrismaService();
         const client = service.getClient();
 
@@ -28,4 +9,35 @@ describe('PrismaService', () => {
         expect(client.$queryRaw).toBeDefined();
         expect(client.$disconnect).toBeDefined();
     });
+
+    it('should disconnect PrismaClient when disconnect is called', async () => {
+        const service = new PrismaService();
+        const client = service.getClient();
+        const disconnectSpy = jest.spyOn(client, '$disconnect').mockResolvedValue(undefined as never);
+
+        await service.disconnect();
+
+        expect(disconnectSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it('should return true if query succeeds on isConnected', async () => {
+        const service = new PrismaService();
+        const client = service.getClient();
+        jest.spyOn(client, '$queryRaw').mockResolvedValue([{ 1: 1 }] as never);
+
+        const connected = await service.isConnected();
+
+        expect(connected).toBe(true);
+    });
+
+    it('should return false if query fails on isConnected', async () => {
+        const service = new PrismaService();
+        const client = service.getClient();
+        jest.spyOn(client, '$queryRaw').mockRejectedValue(new Error('Connection lost') as never);
+
+        const connected = await service.isConnected();
+
+        expect(connected).toBe(false);
+    });
 });
+

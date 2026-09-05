@@ -1,20 +1,12 @@
 import { UpdateUserRoleController } from "./update-user-role.controller";
 import type { UpdateUserRoleUseCase } from "@users-application/use-cases/user/update-user-role.use-case";
-import type { HttpRequest } from "@shared-infrastructure/http/ports/controller";
+import { makeHttpRequest } from "@shared-infrastructure/http/testing/http-request.factory";
 import { Result } from "@shared-kernel/errors/result";
 import { UserNotFoundError } from "@users-application/errors/user-not-found.error";
 import { UnauthorizedRoleAssignmentError } from "@users-application/errors/unauthorized-role-assignment.error";
 
 const mockUseCase = (): jest.Mocked<UpdateUserRoleUseCase> =>
     ({ execute: jest.fn() } as unknown as jest.Mocked<UpdateUserRoleUseCase>);
-
-const makeRequest = (
-    params?: Record<string, string>,
-    body?: unknown
-): HttpRequest => ({
-    ...(params && { params }),
-    ...(body !== undefined && { body }),
-});
 
 const validUserId = "550e8400-e29b-41d4-a716-446655440000";
 const validRoleId = "550e8400-e29b-41d4-a716-446655440001";
@@ -27,10 +19,10 @@ describe("UpdateUserRoleController", () => {
         useCase.execute.mockResolvedValue(Result.ok(undefined));
 
         const response = await controller.handle(
-            makeRequest(
-                { id: validUserId },
-                { roleId: validRoleId, executorId: validExecutorId }
-            )
+            makeHttpRequest({
+                params: { id: validUserId },
+                body: { roleId: validRoleId, executorId: validExecutorId }
+            })
         );
 
         expect(useCase.execute).toHaveBeenCalledWith({
@@ -47,7 +39,7 @@ describe("UpdateUserRoleController", () => {
         const controller = new UpdateUserRoleController(useCase);
 
         const response = await controller.handle(
-            makeRequest({}, { roleId: validRoleId, executorId: validExecutorId })
+            makeHttpRequest({ body: { roleId: validRoleId, executorId: validExecutorId } })
         );
 
         expect(useCase.execute).not.toHaveBeenCalled();
@@ -60,7 +52,7 @@ describe("UpdateUserRoleController", () => {
         const controller = new UpdateUserRoleController(useCase);
 
         await expect(
-            controller.handle(makeRequest({ id: validUserId }, {}))
+            controller.handle(makeHttpRequest({ params: { id: validUserId }, body: {} }))
         ).rejects.toBeDefined();
 
         expect(useCase.execute).not.toHaveBeenCalled();
@@ -73,10 +65,10 @@ describe("UpdateUserRoleController", () => {
         useCase.execute.mockResolvedValue(Result.fail(error));
 
         const response = await controller.handle(
-            makeRequest(
-                { id: validUserId },
-                { roleId: validRoleId, executorId: validExecutorId }
-            )
+            makeHttpRequest({
+                params: { id: validUserId },
+                body: { roleId: validRoleId, executorId: validExecutorId }
+            })
         );
 
         expect(response.statusCode).toBe(error.statusCode);
@@ -91,10 +83,10 @@ describe("UpdateUserRoleController", () => {
         useCase.execute.mockResolvedValue(Result.fail(error));
 
         const response = await controller.handle(
-            makeRequest(
-                { id: validUserId },
-                { roleId: validRoleId, executorId: validExecutorId }
-            )
+            makeHttpRequest({
+                params: { id: validUserId },
+                body: { roleId: validRoleId, executorId: validExecutorId }
+            })
         );
 
         expect(response.statusCode).toBe(error.statusCode);

@@ -12,6 +12,7 @@ import { UserNotFoundError } from "@users-application/errors/user-not-found.erro
 import { RoleNotFoundError } from "@users-application/errors/role/role-not-found.error";
 import type { UpdateUserRoleDto } from "@users-application/dtos/update-user-role.dto";
 import { RoleReferenceVO } from "@users-domain/value-objects/role-reference.vo";
+import { CannotModifyOwnRoleError } from "@users-application/errors/cannot-modify-own-role.error";
 
 @injectable()
 export class UpdateUserRoleUseCase {
@@ -23,17 +24,17 @@ export class UpdateUserRoleUseCase {
     ) { }
 
     async execute(dto: UpdateUserRoleDto): Promise<Result<void, AppError>> {
+        if (dto.executorId === dto.userId) return Result.fail(new CannotModifyOwnRoleError());
+
         const executor = await this.userRepository.findById(dto.executorId);
         if (!executor) return Result.fail(new UserNotFoundError(dto.executorId));
 
-        const executorRole = await this.roleRepository.findById(executor.getRoleId());
-
-        if (!executorRole || executorRole.getLevel() < 7) {
-            return Result.fail(new UnauthorizedRoleAssignmentError());
-        }
-
         const userToUpdate = await this.userRepository.findById(dto.userId);
         if (!userToUpdate) return Result.fail(new UserNotFoundError(dto.userId));
+
+        if (!executor.canManageUser(userToUpdate)) {
+            return Result.fail(new UnauthorizedRoleAssignmentError());
+        }
 
         const canAssign = userToUpdate.ensureRoleAssignable();
         if (canAssign.isErr()) return Result.fail(canAssign.error());
@@ -41,14 +42,14 @@ export class UpdateUserRoleUseCase {
         const newRole = await this.roleRepository.findById(dto.newRoleId);
         if (!newRole) return Result.fail(new RoleNotFoundError(dto.newRoleId));
 
-        const assignable = newRole.ensureAssignable();
-        if (assignable.isErr()) return Result.fail(assignable.error());
+        if (!executor.canAssignRoleLevel(newRole.getLevel())) {
+            return Result.fail(new UnauthorizedRoleAssignmentError());
+        }
 
         const roleRef = RoleReferenceVO.create({
             id: newRole.getId(),
             name: newRole.getName(),
-            level: newRole.getLevel(),
-            status: newRole.getStatus()
+            level: newRole.getLevel()
         });
         if (roleRef.isErr()) return Result.fail(roleRef.error());
         userToUpdate.changeRole(roleRef.value());

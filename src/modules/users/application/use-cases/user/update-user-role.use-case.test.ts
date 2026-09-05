@@ -2,9 +2,9 @@ import { UpdateUserRoleUseCase } from "./update-user-role.use-case";
 import { UserNotFoundError } from "../../errors/user-not-found.error";
 import { RoleNotFoundError } from "../../errors/role/role-not-found.error";
 import { UnauthorizedRoleAssignmentError } from "../../errors/unauthorized-role-assignment.error";
+import { CannotModifyOwnRoleError } from "../../errors/cannot-modify-own-role.error";
 import { UserNotActiveError } from "@users-domain/errors/user-not-active.error";
 import { UserStatus } from "@users-domain/entities/user.entity";
-import { RoleStatus } from "@users-domain/entities/role.entity";
 
 import { makeMockUserRepository, makeMockRoleRepository } from "@users-tests/factories/mocks";
 import { makeUserEntity } from "@users-tests/factories/user.factory";
@@ -28,28 +28,43 @@ describe('UpdateUserRoleUseCase', () => {
         useCase = new UpdateUserRoleUseCase(mockUserRepository, mockRoleRepository);
     });
 
-    it('should update user role successfully', async () => {
-        const executor = makeUserEntity();
-        const userToUpdate = makeUserEntity();
-        const executorRole = makeRoleEntity({ level: 7 });
-        const newRole = makeRoleEntity({ id: 'new-role-id' });
+    it('should update user role successfully when executor has higher role level', async () => {
+        const executor = makeUserEntity({ id: 'executor-id', roleLevel: 10 });
+        const userToUpdate = makeUserEntity({ id: 'user-id-123', roleLevel: 5 });
+        const newRole = makeRoleEntity({ id: 'new-role-id', level: 6 });
 
-        mockUserRepository.findById
-            .mockResolvedValueOnce(executor)
-            .mockResolvedValueOnce(userToUpdate);
-        mockRoleRepository.findById
-            .mockResolvedValueOnce(executorRole)
-            .mockResolvedValueOnce(newRole);
+        mockUserRepository.findById.mockImplementation((id: string) => {
+            if (id === 'executor-id') return Promise.resolve(executor);
+            if (id === 'user-id-123') return Promise.resolve(userToUpdate);
+            return Promise.resolve(null);
+        });
+        mockRoleRepository.findById.mockResolvedValue(newRole);
         mockUserRepository.update.mockResolvedValue(userToUpdate);
 
         const result = await useCase.execute(dto);
 
         expect(result.isOk()).toBe(true);
         expect(mockUserRepository.update).toHaveBeenCalledTimes(1);
+        expect(userToUpdate.getRoleId()).toBe('new-role-id');
+    });
+
+    it('should fail with CannotModifyOwnRoleError if executor tries to modify their own role', async () => {
+        const selfDto = {
+            executorId: 'user-id-123',
+            userId: 'user-id-123',
+            newRoleId: 'new-role-id'
+        };
+
+        const result = await useCase.execute(selfDto);
+
+        expect(result.isErr()).toBe(true);
+        expect(result.error()).toBeInstanceOf(CannotModifyOwnRoleError);
+        expect(mockUserRepository.findById).not.toHaveBeenCalled();
+        expect(mockUserRepository.update).not.toHaveBeenCalled();
     });
 
     it('should fail with UserNotFoundError if executor does not exist', async () => {
-        mockUserRepository.findById.mockResolvedValueOnce(null);
+        mockUserRepository.findById.mockResolvedValue(null);
 
         const result = await useCase.execute(dto);
 
@@ -58,12 +73,30 @@ describe('UpdateUserRoleUseCase', () => {
         expect(mockUserRepository.update).not.toHaveBeenCalled();
     });
 
-    it('should fail with UnauthorizedRoleAssignmentError if executor role level is below 7', async () => {
-        const executor = makeUserEntity();
-        const executorRole = makeRoleEntity({ level: 5 });
+    it('should fail with UserNotFoundError if user to update does not exist', async () => {
+        const executor = makeUserEntity({ id: 'executor-id', roleLevel: 10 });
 
-        mockUserRepository.findById.mockResolvedValueOnce(executor);
-        mockRoleRepository.findById.mockResolvedValueOnce(executorRole);
+        mockUserRepository.findById.mockImplementation((id: string) => {
+            if (id === 'executor-id') return Promise.resolve(executor);
+            return Promise.resolve(null);
+        });
+
+        const result = await useCase.execute(dto);
+
+        expect(result.isErr()).toBe(true);
+        expect(result.error()).toBeInstanceOf(UserNotFoundError);
+        expect(mockUserRepository.update).not.toHaveBeenCalled();
+    });
+
+    it('should fail with UnauthorizedRoleAssignmentError if executor role level is not greater than target user', async () => {
+        const executor = makeUserEntity({ id: 'executor-id', roleLevel: 5 });
+        const userToUpdate = makeUserEntity({ id: 'user-id-123', roleLevel: 7 });
+
+        mockUserRepository.findById.mockImplementation((id: string) => {
+            if (id === 'executor-id') return Promise.resolve(executor);
+            if (id === 'user-id-123') return Promise.resolve(userToUpdate);
+            return Promise.resolve(null);
+        });
 
         const result = await useCase.execute(dto);
 
@@ -72,31 +105,15 @@ describe('UpdateUserRoleUseCase', () => {
         expect(mockUserRepository.update).not.toHaveBeenCalled();
     });
 
-    it('should fail with UserNotFoundError if user to update does not exist', async () => {
-        const executor = makeUserEntity();
-        const executorRole = makeRoleEntity({ level: 7 });
-
-        mockUserRepository.findById
-            .mockResolvedValueOnce(executor)
-            .mockResolvedValueOnce(null);
-        mockRoleRepository.findById.mockResolvedValueOnce(executorRole);
-
-        const result = await useCase.execute(dto);
-
-        expect(result.isErr()).toBe(true);
-        expect(result.error()).toBeInstanceOf(UserNotFoundError);
-        expect(mockUserRepository.update).not.toHaveBeenCalled();
-    });
-
     it('should fail with UserNotActiveError if user to update is not active', async () => {
-        const executor = makeUserEntity();
-        const userToUpdate = makeUserEntity({ status: UserStatus.INACTIVE });
-        const executorRole = makeRoleEntity({ level: 7 });
+        const executor = makeUserEntity({ id: 'executor-id', roleLevel: 10 });
+        const userToUpdate = makeUserEntity({ id: 'user-id-123', roleLevel: 5, status: UserStatus.INACTIVE });
 
-        mockUserRepository.findById
-            .mockResolvedValueOnce(executor)
-            .mockResolvedValueOnce(userToUpdate);
-        mockRoleRepository.findById.mockResolvedValueOnce(executorRole);
+        mockUserRepository.findById.mockImplementation((id: string) => {
+            if (id === 'executor-id') return Promise.resolve(executor);
+            if (id === 'user-id-123') return Promise.resolve(userToUpdate);
+            return Promise.resolve(null);
+        });
 
         const result = await useCase.execute(dto);
 
@@ -106,16 +123,15 @@ describe('UpdateUserRoleUseCase', () => {
     });
 
     it('should fail with RoleNotFoundError if new role does not exist', async () => {
-        const executor = makeUserEntity();
-        const userToUpdate = makeUserEntity();
-        const executorRole = makeRoleEntity({ level: 7 });
+        const executor = makeUserEntity({ id: 'executor-id', roleLevel: 10 });
+        const userToUpdate = makeUserEntity({ id: 'user-id-123', roleLevel: 5 });
 
-        mockUserRepository.findById
-            .mockResolvedValueOnce(executor)
-            .mockResolvedValueOnce(userToUpdate);
-        mockRoleRepository.findById
-            .mockResolvedValueOnce(executorRole)
-            .mockResolvedValueOnce(null);
+        mockUserRepository.findById.mockImplementation((id: string) => {
+            if (id === 'executor-id') return Promise.resolve(executor);
+            if (id === 'user-id-123') return Promise.resolve(userToUpdate);
+            return Promise.resolve(null);
+        });
+        mockRoleRepository.findById.mockResolvedValue(null);
 
         const result = await useCase.execute(dto);
 
@@ -124,22 +140,22 @@ describe('UpdateUserRoleUseCase', () => {
         expect(mockUserRepository.update).not.toHaveBeenCalled();
     });
 
-    it('should fail if new role is not active', async () => {
-        const executor = makeUserEntity();
-        const userToUpdate = makeUserEntity();
-        const executorRole = makeRoleEntity({ level: 7 });
-        const inactiveRole = makeRoleEntity({ id: 'new-role-id', status: RoleStatus.INACTIVE });
+    it('should fail with UnauthorizedRoleAssignmentError if executor cannot assign the new role level', async () => {
+        const executor = makeUserEntity({ id: 'executor-id', roleLevel: 7 });
+        const userToUpdate = makeUserEntity({ id: 'user-id-123', roleLevel: 5 });
+        const highLevelRole = makeRoleEntity({ id: 'new-role-id', level: 8 });
 
-        mockUserRepository.findById
-            .mockResolvedValueOnce(executor)
-            .mockResolvedValueOnce(userToUpdate);
-        mockRoleRepository.findById
-            .mockResolvedValueOnce(executorRole)
-            .mockResolvedValueOnce(inactiveRole);
+        mockUserRepository.findById.mockImplementation((id: string) => {
+            if (id === 'executor-id') return Promise.resolve(executor);
+            if (id === 'user-id-123') return Promise.resolve(userToUpdate);
+            return Promise.resolve(null);
+        });
+        mockRoleRepository.findById.mockResolvedValue(highLevelRole);
 
         const result = await useCase.execute(dto);
 
         expect(result.isErr()).toBe(true);
+        expect(result.error()).toBeInstanceOf(UnauthorizedRoleAssignmentError);
         expect(mockUserRepository.update).not.toHaveBeenCalled();
     });
 });

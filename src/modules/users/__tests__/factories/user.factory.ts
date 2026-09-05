@@ -1,17 +1,25 @@
 import { UserEntity, UserStatus } from '@users-domain/entities/user.entity';
+import type { RoleReferenceVO } from '@users-domain/value-objects/role-reference.vo';
 import { makeRoleReference } from './role.factory';
 
-interface UserPropsOverrides {
+export interface UserPropsOverrides {
     name?: string;
     lastName?: string;
     email?: string;
     dni?: string;
+    role?: RoleReferenceVO;
+    roleLevel?: number;
+    phone?: string;
+    address?: string;
+    photoUrl?: string;
 }
 
-interface ExistingUserPropsOverrides extends UserPropsOverrides {
+export interface ExistingUserPropsOverrides extends UserPropsOverrides {
+    id?: string;
     password?: string;
     isTemporaryPassword?: boolean;
     status?: UserStatus;
+    createdAt?: Date;
 }
 
 export const makeUserProps = (overrides: UserPropsOverrides = {}) => ({
@@ -19,7 +27,10 @@ export const makeUserProps = (overrides: UserPropsOverrides = {}) => ({
     lastName: overrides.lastName ?? 'Doe',
     email: overrides.email ?? 'john.doe@example.com',
     dni: overrides.dni ?? '12345678',
-    role: makeRoleReference(),
+    role: overrides.role ?? makeRoleReference(overrides.roleLevel !== undefined ? { level: overrides.roleLevel } : {}),
+    ...(overrides.phone !== undefined && { phone: overrides.phone }),
+    ...(overrides.address !== undefined && { address: overrides.address }),
+    ...(overrides.photoUrl !== undefined && { photoUrl: overrides.photoUrl }),
 });
 
 export const makeExistingUserProps = (overrides: ExistingUserPropsOverrides = {}) => ({
@@ -31,8 +42,8 @@ export const makeExistingUserProps = (overrides: ExistingUserPropsOverrides = {}
 
 export const makeUserEntity = (overrides: ExistingUserPropsOverrides = {}): UserEntity => {
     return UserEntity.fromExisting(
-        'user-id-123',
+        overrides.id ?? 'user-id-123',
         makeExistingUserProps(overrides),
-        new Date('2024-01-01')
+        overrides.createdAt ?? new Date('2024-01-01')
     ).value();
 };

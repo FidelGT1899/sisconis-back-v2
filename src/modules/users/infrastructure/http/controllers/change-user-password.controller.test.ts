@@ -1,6 +1,6 @@
 import { ChangeUserPasswordController } from "./change-user-password.controller";
 import type { ChangeUserPasswordUseCase } from "@users-application/use-cases/user/change-user-password.use-case";
-import type { HttpRequest } from "@shared-infrastructure/http/ports/controller";
+import { makeHttpRequest } from "@shared-infrastructure/http/testing/http-request.factory";
 import { Result } from "@shared-kernel/errors/result";
 import { UserNotFoundError } from "@users-application/errors/user-not-found.error";
 import { UserResponseMapper } from "@users-application/mappers/user-response.mapper";
@@ -8,14 +8,6 @@ import { makeUserEntity } from "@users-tests/factories/user.factory";
 
 const mockUseCase = (): jest.Mocked<ChangeUserPasswordUseCase> =>
     ({ execute: jest.fn() } as unknown as jest.Mocked<ChangeUserPasswordUseCase>);
-
-const makeRequest = (
-    params?: Record<string, string>,
-    body?: unknown
-): HttpRequest => ({
-    ...(params && { params }),
-    ...(body !== undefined && { body }),
-});
 
 describe("ChangeUserPasswordController", () => {
     it("should return 204 when password is changed successfully", async () => {
@@ -25,7 +17,7 @@ describe("ChangeUserPasswordController", () => {
         useCase.execute.mockResolvedValue(Result.ok(dto));
 
         const response = await controller.handle(
-            makeRequest({ id: "user-id" }, { newPassword: "!Passw0rd" })
+            makeHttpRequest({ params: { id: "user-id" }, body: { newPassword: "!Passw0rd" } })
         );
 
         expect(useCase.execute).toHaveBeenCalledWith({
@@ -41,7 +33,7 @@ describe("ChangeUserPasswordController", () => {
         const controller = new ChangeUserPasswordController(useCase);
 
         const response = await controller.handle(
-            makeRequest({}, { newPassword: "!Passw0rd" })
+            makeHttpRequest({ body: { newPassword: "!Passw0rd" } })
         );
 
         expect(useCase.execute).not.toHaveBeenCalled();
@@ -54,7 +46,7 @@ describe("ChangeUserPasswordController", () => {
         const controller = new ChangeUserPasswordController(useCase);
 
         await expect(
-            controller.handle(makeRequest({ id: "user-id" }, { newPassword: "Pass1" }))
+            controller.handle(makeHttpRequest({ params: { id: "user-id" }, body: { newPassword: "Pass1" } }))
         ).rejects.toBeDefined();
 
         expect(useCase.execute).not.toHaveBeenCalled();
@@ -65,7 +57,7 @@ describe("ChangeUserPasswordController", () => {
         const controller = new ChangeUserPasswordController(useCase);
 
         await expect(
-            controller.handle(makeRequest({ id: "user-id" }, { newPassword: "a1".repeat(26) }))
+            controller.handle(makeHttpRequest({ params: { id: "user-id" }, body: { newPassword: "a1".repeat(26) } }))
         ).rejects.toBeDefined();
 
         expect(useCase.execute).not.toHaveBeenCalled();
@@ -76,7 +68,7 @@ describe("ChangeUserPasswordController", () => {
         const controller = new ChangeUserPasswordController(useCase);
 
         await expect(
-            controller.handle(makeRequest({ id: "user-id" }, { newPassword: "onlylowercase" }))
+            controller.handle(makeHttpRequest({ params: { id: "user-id" }, body: { newPassword: "onlylowercase" } }))
         ).rejects.toBeDefined();
 
         expect(useCase.execute).not.toHaveBeenCalled();
@@ -87,7 +79,7 @@ describe("ChangeUserPasswordController", () => {
         const controller = new ChangeUserPasswordController(useCase);
 
         await expect(
-            controller.handle(makeRequest({ id: "user-id" }, { newPassword: "12345678" }))
+            controller.handle(makeHttpRequest({ params: { id: "user-id" }, body: { newPassword: "12345678" } }))
         ).rejects.toBeDefined();
 
         expect(useCase.execute).not.toHaveBeenCalled();
@@ -98,7 +90,7 @@ describe("ChangeUserPasswordController", () => {
         const controller = new ChangeUserPasswordController(useCase);
 
         await expect(
-            controller.handle(makeRequest({ id: "user-id" }, {}))
+            controller.handle(makeHttpRequest({ params: { id: "user-id" }, body: {} }))
         ).rejects.toBeDefined();
 
         expect(useCase.execute).not.toHaveBeenCalled();
@@ -109,7 +101,7 @@ describe("ChangeUserPasswordController", () => {
         const controller = new ChangeUserPasswordController(useCase);
 
         await expect(
-            controller.handle(makeRequest({ id: "user-id" }, { newPassword: 12345678 }))
+            controller.handle(makeHttpRequest({ params: { id: "user-id" }, body: { newPassword: 12345678 } }))
         ).rejects.toBeDefined();
 
         expect(useCase.execute).not.toHaveBeenCalled();
@@ -122,7 +114,7 @@ describe("ChangeUserPasswordController", () => {
         useCase.execute.mockResolvedValue(Result.fail(error));
 
         const response = await controller.handle(
-            makeRequest({ id: "user-id" }, { newPassword: "!Passw0rd" })
+            makeHttpRequest({ params: { id: "user-id" }, body: { newPassword: "!Passw0rd" } })
         );
 
         expect(response.statusCode).toBe(error.statusCode);

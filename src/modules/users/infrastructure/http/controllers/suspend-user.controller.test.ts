@@ -1,4 +1,4 @@
-import type { HttpRequest } from "@shared-infrastructure/http/ports/controller";
+import { makeHttpRequest } from "@shared-infrastructure/http/testing/http-request.factory";
 import { Result } from "@shared-kernel/errors/result";
 import { UserNotFoundError } from "@users-application/errors/user-not-found.error";
 import type { SuspendUserUseCase } from "@users-application/use-cases/user/suspend-user.use-case";
@@ -8,14 +8,6 @@ import { UserAlreadySuspendedError } from "@users-domain/errors/user-already-sus
 const mockUseCase = (): jest.Mocked<SuspendUserUseCase> =>
     ({ execute: jest.fn() } as unknown as jest.Mocked<SuspendUserUseCase>);
 
-const makeRequest = (
-    params?: Record<string, string>,
-    body?: unknown
-): HttpRequest => ({
-    ...(params && { params }),
-    ...(body !== undefined && { body }),
-});
-
 describe("SuspendUserController", () => {
     it("should return 204 when user is suspended successfully", async () => {
         const useCase = mockUseCase();
@@ -23,7 +15,7 @@ describe("SuspendUserController", () => {
         useCase.execute.mockResolvedValue(Result.ok(undefined));
 
         const response = await controller.handle(
-            makeRequest({ id: "user-id" })
+            makeHttpRequest({ params: { id: "user-id" } })
         );
 
         expect(useCase.execute).toHaveBeenCalledWith("user-id");
@@ -35,7 +27,7 @@ describe("SuspendUserController", () => {
         const useCase = mockUseCase();
         const controller = new SuspendUserController(useCase);
 
-        const response = await controller.handle(makeRequest({}));
+        const response = await controller.handle(makeHttpRequest({}));
 
         expect(useCase.execute).not.toHaveBeenCalled();
         expect(response.statusCode).toBe(400);
@@ -49,7 +41,7 @@ describe("SuspendUserController", () => {
         useCase.execute.mockResolvedValue(Result.fail(error));
 
         const response = await controller.handle(
-            makeRequest({ id: "user-id" })
+            makeHttpRequest({ params: { id: "user-id" } })
         );
 
         expect(response.statusCode).toBe(error.statusCode);
@@ -64,7 +56,7 @@ describe("SuspendUserController", () => {
         useCase.execute.mockResolvedValue(Result.fail(error));
 
         const response = await controller.handle(
-            makeRequest({ id: "user-id" })
+            makeHttpRequest({ params: { id: "user-id" } })
         );
 
         expect(response.statusCode).toBe(error.statusCode);

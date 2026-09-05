@@ -1,6 +1,6 @@
 import { ChangeUserDniController } from "./change-user-dni.controller";
 import type { ChangeUserDniUseCase } from "@users-application/use-cases/user/change-user-dni.use-case";
-import type { HttpRequest } from "@shared-infrastructure/http/ports/controller";
+import { makeHttpRequest } from "@shared-infrastructure/http/testing/http-request.factory";
 import { Result } from "@shared-kernel/errors/result";
 import { UserNotFoundError } from "@users-application/errors/user-not-found.error";
 import { makeUserEntity } from "@users-tests/factories/user.factory";
@@ -8,14 +8,6 @@ import { UserResponseMapper } from "@users-application/mappers/user-response.map
 
 const mockUseCase = (): jest.Mocked<ChangeUserDniUseCase> =>
     ({ execute: jest.fn() } as unknown as jest.Mocked<ChangeUserDniUseCase>);
-
-const makeRequest = (
-    params?: Record<string, string>,
-    body?: unknown
-): HttpRequest => ({
-    ...(params && { params }),
-    ...(body !== undefined && { body }),
-});
 
 describe("ChangeUserDniController", () => {
     it("should return 204 when DNI is updated successfully", async () => {
@@ -26,7 +18,10 @@ describe("ChangeUserDniController", () => {
         useCase.execute.mockResolvedValue(Result.ok(dto));
 
         const response = await controller.handle(
-            makeRequest({ id: "user-id" }, { newDni: "12345678" })
+            makeHttpRequest({
+                params: { id: "user-id" },
+                body: { newDni: "12345678" }
+            })
         );
 
         expect(useCase.execute).toHaveBeenCalledWith({ id: "user-id", newDni: "12345678" });
@@ -39,7 +34,9 @@ describe("ChangeUserDniController", () => {
         const controller = new ChangeUserDniController(useCase);
 
         const response = await controller.handle(
-            makeRequest({}, { newDni: "12345678" })
+            makeHttpRequest({
+                body: { newDni: "12345678" }
+            })
         );
 
         expect(useCase.execute).not.toHaveBeenCalled();
@@ -52,7 +49,10 @@ describe("ChangeUserDniController", () => {
         const controller = new ChangeUserDniController(useCase);
 
         await expect(
-            controller.handle(makeRequest({ id: "user-id" }, { newDni: "invalid-dni" }))
+            controller.handle(makeHttpRequest({
+                params: { id: "user-id" },
+                body: { newDni: "invalid-dni" }
+            }))
         ).rejects.toBeDefined();
 
         expect(useCase.execute).not.toHaveBeenCalled();
@@ -63,7 +63,10 @@ describe("ChangeUserDniController", () => {
         const controller = new ChangeUserDniController(useCase);
 
         await expect(
-            controller.handle(makeRequest({ id: "user-id" }, {}))
+            controller.handle(makeHttpRequest({
+                params: { id: "user-id" },
+                body: {}
+            }))
         ).rejects.toBeDefined();
 
         expect(useCase.execute).not.toHaveBeenCalled();
@@ -77,7 +80,10 @@ describe("ChangeUserDniController", () => {
         useCase.execute.mockResolvedValue(Result.fail(error));
 
         const response = await controller.handle(
-            makeRequest({ id: "user-id" }, { newDni: "12345678" })
+            makeHttpRequest({
+                params: { id: "user-id" },
+                body: { newDni: "12345678" }
+            })
         );
 
         expect(response.statusCode).toBe(error.statusCode);

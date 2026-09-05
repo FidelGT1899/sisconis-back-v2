@@ -8,6 +8,7 @@ import { TYPES } from "@shared-infrastructure/ioc/types";
 import { createGracefulShutdown } from "@shared-infrastructure/lifecycle/graceful-shutdown";
 import type { PrismaService } from "@shared-infrastructure/database/prisma/prisma.service";
 import type { ILogger } from "@shared-domain/ports/logger";
+import { env } from "@shared-infrastructure/config/env";
 
 import { createApp } from "./app";
 
@@ -15,19 +16,19 @@ function bootstrap(): void {
     const usersRouter = container.get<Router>(TYPES.UsersRouter);
     const systemRouter = container.get<Router>(TYPES.SystemRouter);
     const rolesRouter = container.get<Router>(TYPES.RolesRouter);
+    const authRouter = container.get<Router>(TYPES.AuthRouter);
     const globalErrorMiddleware = container.get<ErrorRequestHandler>(TYPES.GlobalErrorMiddleware);
 
     const app = createApp({
         usersRouter,
         rolesRouter,
         systemRouter,
+        authRouter,
         globalErrorMiddleware
     });
 
-    const PORT = process.env.PORT ?? 3000;
-
-    const server = app.listen(PORT, () => {
-        console.log(`Server running on port ${PORT}`);
+    const server = app.listen(env.PORT, () => {
+        console.log(`Server running on port ${env.PORT}`);
     });
 
     const logger = container.get<ILogger>(TYPES.Logger);

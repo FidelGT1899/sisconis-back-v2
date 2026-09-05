@@ -44,7 +44,7 @@ const config = {
         ],
     },
     roots: ['<rootDir>/src'],
-    // setupFiles: ['<rootDir>/setupTests.ts'],
+    setupFiles: ['<rootDir>/setupTests.ts'],
     testEnvironment: 'node',
     testMatch: ['**/?(*.)+(spec|test).ts'],
 };

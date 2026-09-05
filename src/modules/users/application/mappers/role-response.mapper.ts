@@ -6,7 +6,6 @@ export class RoleResponseMapper {
         const dto: ReadRoleDto = {
             id: role.getId(),
             name: role.getName(),
-            status: role.getStatus(),
             level: role.getLevel(),
             createdAt: role.getCreatedAt(),
             updatedAt: role.getUpdatedAt(),

@@ -48,9 +48,6 @@ export class CreateUserUseCase {
             return Result.fail(new RoleNotFoundError(dto.roleId));
         }
 
-        const assignable = role.ensureAssignable();
-        if (assignable.isErr()) return Result.fail(assignable.error());
-
         const roleRefResult = RoleReferenceFactory.fromRoleEntity(role);
         if (roleRefResult.isErr()) return Result.fail(roleRefResult.error());
 

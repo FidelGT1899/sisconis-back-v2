@@ -19,9 +19,29 @@ services:
             timeout: 5s
             retries: 5
 
+    sisconis-redis:
+        image: redis:7-alpine
+        container_name: sisconis-redis
+        restart: unless-stopped
+        command: redis-server --aclfile /usr/local/etc/redis/users.acl
+        ports:
+            - '6379:6379'
+        volumes:
+            - sisconis-redis-data:/data
+            - ./redis/users.acl:/usr/local/etc/redis/users.acl:ro
+        networks:
+            - sisconis-net
+        healthcheck:
+            test: ['CMD', 'redis-cli', '--user', 'sisconis', '--pass', '${REDIS_PASSWORD}', '--no-auth-warning', 'ping']
+            interval: 10s
+            timeout: 5s
+            retries: 5
+
 volumes:
     sisconis-db-data:
         name: sisconis-db-data
+    sisconis-redis-data:
+        name: sisconis-redis-data
 
 networks:
     sisconis-net:

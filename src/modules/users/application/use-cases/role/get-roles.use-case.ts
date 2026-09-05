@@ -39,7 +39,6 @@ export class GetRolesUseCase {
             id: role.getId(),
             name: role.getName(),
             description: role.getDescription() ?? '',
-            status: role.getStatus(),
             level: role.getLevel(),
             createdAt: role.getCreatedAt()
         }));

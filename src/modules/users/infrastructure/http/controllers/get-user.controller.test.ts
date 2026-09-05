@@ -1,6 +1,7 @@
 import { GetUserController } from "./get-user.controller";
 import type { GetUserUseCase } from "@users-application/use-cases/user/get-user.use-case";
-import type { HttpRequest, SuccessResponse } from "@shared-infrastructure/http/ports/controller";
+import type { SuccessResponse } from "@shared-infrastructure/http/ports/controller";
+import { makeHttpRequest } from "@shared-infrastructure/http/testing/http-request.factory";
 import { Result } from "@shared-kernel/errors/result";
 import { UserNotFoundError } from "@users-application/errors/user-not-found.error";
 import { UserResponseMapper } from "@users-application/mappers/user-response.mapper";
@@ -8,10 +9,6 @@ import { makeUserEntity } from "@users-tests/factories/user.factory";
 
 const mockUseCase = (): jest.Mocked<GetUserUseCase> =>
     ({ execute: jest.fn() } as unknown as jest.Mocked<GetUserUseCase>);
-
-const makeRequest = (params?: Record<string, string>): HttpRequest => ({
-    ...(params && { params }),
-});
 
 describe("GetUserController", () => {
     it("should return 200 and user data when user is found", async () => {
@@ -21,7 +18,7 @@ describe("GetUserController", () => {
         useCase.execute.mockResolvedValue(Result.ok(dto));
 
         const response = await controller.handle(
-            makeRequest({ id: "user-id" })
+            makeHttpRequest({ params: { id: "user-id" } })
         );
 
         expect(useCase.execute).toHaveBeenCalledWith("user-id");
@@ -35,7 +32,7 @@ describe("GetUserController", () => {
         const useCase = mockUseCase();
         const controller = new GetUserController(useCase);
 
-        const response = await controller.handle(makeRequest({}));
+        const response = await controller.handle(makeHttpRequest({}));
 
         expect(useCase.execute).not.toHaveBeenCalled();
         expect(response.statusCode).toBe(400);
@@ -49,7 +46,7 @@ describe("GetUserController", () => {
         useCase.execute.mockResolvedValue(Result.fail(error));
 
         const response = await controller.handle(
-            makeRequest({ id: "user-id" })
+            makeHttpRequest({ params: { id: "user-id" } })
         );
 
         expect(response.statusCode).toBe(error.statusCode);

@@ -8,6 +8,8 @@ export const TYPES = {
     PasswordHasher: Symbol.for("PasswordHasher"),
     Logger: Symbol.for("Logger"),
     GlobalErrorMiddleware: Symbol.for("GlobalErrorMiddleware"),
+    HashService: Symbol.for("HashService"),
+    RedisService: Symbol.for("RedisService"),
 
     // System Application
     HealthCheckUseCase: Symbol.for("HealthCheckUseCase"),
@@ -30,6 +32,14 @@ export const TYPES = {
 
     // Roles Domain
     RoleRepository: Symbol.for("RoleRepository"),
+
+    // Auth Domain
+    SessionRepository: Symbol.for("SessionRepository"),
+    TokenService: Symbol.for("TokenService"),
+    TokenGenerator: Symbol.for("TokenGenerator"),
+    RateLimiter: Symbol.for("RateLimiter"),
+    DeviceInfoParser: Symbol.for("DeviceInfoParser"),
+    AccessTokenBlacklist: Symbol.for("AccessTokenBlacklist"),
 
     // Users Application
     GetUsersUseCase: Symbol.for("GetUsersUseCase"),
@@ -54,6 +64,13 @@ export const TYPES = {
     DeleteRoleUseCase: Symbol.for("DeleteRoleUseCase"),
     ActivateRoleUseCase: Symbol.for("ActivateRoleUseCase"),
     DeactivateRoleUseCase: Symbol.for("DeactivateRoleUseCase"),
+
+    // Auth Application
+    LoginUseCase: Symbol.for("LoginUseCase"),
+    RefreshTokenUseCase: Symbol.for("RefreshTokenUseCase"),
+    LogoutUseCase: Symbol.for("LogoutUseCase"),
+    LogoutAllDevicesUseCase: Symbol.for("LogoutAllDevicesUseCase"),
+    LogoutBySecurityEventUseCase: Symbol.for("LogoutBySecurityEventUseCase"),
 
     // Users Infrastructure
     UsersRouter: Symbol.for("UsersRouter"),
@@ -80,4 +97,12 @@ export const TYPES = {
     DeleteRoleController: Symbol.for("DeleteRoleController"),
     ActivateRoleController: Symbol.for("ActivateRoleController"),
     DeactivateRoleController: Symbol.for("DeactivateRoleController"),
+
+    // Auth Infrastructure
+    AuthRouter: Symbol.for("AuthRouter"),
+    LoginController: Symbol.for("LoginController"),
+    RefreshTokenController: Symbol.for("RefreshTokenController"),
+    LogoutController: Symbol.for("LogoutController"),
+    LogoutAllDevicesController: Symbol.for("LogoutAllDevicesController"),
+    AuthMiddleware: Symbol.for("AuthMiddleware"),
 };

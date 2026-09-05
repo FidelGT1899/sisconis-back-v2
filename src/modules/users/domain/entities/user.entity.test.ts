@@ -5,7 +5,6 @@ import { InvalidDniError } from "@users-domain/errors/invalid-dni.error";
 import { makeMockIdGenerator, makeMockPasswordHasher } from "@users-tests/factories/mocks";
 import { makeExistingUserProps, makeUserEntity, makeUserProps } from "@users-tests/factories/user.factory";
 import { makeRoleReference } from "@users-tests/factories/role.factory";
-import { CannotAssignRoleError } from "@users-domain/errors/cannot-assign-role.error";
 import { UserAlreadyActiveError } from "@users-domain/errors/user-already-active.error";
 import { UserAlreadyInactiveError } from "@users-domain/errors/user-already-deactive.error";
 import { UserAlreadySuspendedError } from "@users-domain/errors/user-already-suspended.error";
@@ -80,17 +79,19 @@ describe('UserEntity', () => {
             expect(result.error()).toBeInstanceOf(InvalidDniError);
         });
 
-        it('should fail with CannotAssignRoleError if role is not assignable', async () => {
-            const inactiveRole = makeRoleReference({ status: 'INACTIVE' });
+        it('should create user successfully regardless of role status override (RoleReferenceVO has no status field)', async () => {
+            // RoleReferenceVO only carries { id, name, level } — no status.
+            // UserEntity.create does not validate role status at creation time.
+            // The 'status' override is silently ignored by makeRoleReference.
+            const roleRef = makeRoleReference({ id: 'some-role-id', level: 5 });
 
             const result = await UserEntity.create(
-                { ...makeUserProps(), role: inactiveRole },
+                { ...makeUserProps(), role: roleRef },
                 mockIdGenerator,
                 mockPasswordHasher
             );
 
-            expect(result.isErr()).toBe(true);
-            expect(result.error()).toBeInstanceOf(CannotAssignRoleError);
+            expect(result.isOk()).toBe(true);
         });
     });
 

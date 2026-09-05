@@ -6,6 +6,7 @@ import { createApp } from "./app";
 const usersRouter = express.Router();
 const rolesRouter = express.Router();
 const systemRouter = express.Router();
+const authRouter = express.Router();
 
 const globalErrorMiddleware: ErrorRequestHandler = jest.fn(
     (
@@ -24,6 +25,7 @@ beforeEach(() => {
     usersRouter.stack = [];
     rolesRouter.stack = [];
     systemRouter.stack = [];
+    authRouter.stack = [];
     jest.clearAllMocks();
 });
 
@@ -37,6 +39,7 @@ describe("App bootstrap", () => {
             usersRouter,
             rolesRouter,
             systemRouter,
+            authRouter,
             globalErrorMiddleware,
         });
 
@@ -50,6 +53,7 @@ describe("App bootstrap", () => {
             usersRouter,
             rolesRouter,
             systemRouter,
+            authRouter,
             globalErrorMiddleware,
         });
 
@@ -67,6 +71,7 @@ describe("App bootstrap", () => {
             usersRouter,
             rolesRouter,
             systemRouter,
+            authRouter,
             globalErrorMiddleware,
         });
 

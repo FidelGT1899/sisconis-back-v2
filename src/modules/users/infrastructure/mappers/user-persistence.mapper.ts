@@ -4,7 +4,6 @@ import { TemporaryPasswordVO } from "@users-domain/value-objects/temporary-passw
 import { UserEntity, UserStatus } from "@users-domain/entities/user.entity";
 import { EmailVO } from "@users-domain/value-objects/email.vo";
 import { RoleReferenceVO } from "@users-domain/value-objects/role-reference.vo";
-import type { RoleStatus } from "@users-domain/entities/role.entity";
 import { DatabaseIntegrityError } from "@users-infrastructure/errors/database-integrity.error";
 
 interface UserPersistenceModel {
@@ -18,7 +17,6 @@ interface UserPersistenceModel {
         id: string;
         name: string;
         level: number;
-        status: string;
     };
     status: string;
     phone: string | null;
@@ -92,7 +90,6 @@ export class UserMapper {
             id: raw.role.id,
             name: raw.role.name,
             level: raw.role.level,
-            status: raw.role.status as RoleStatus,
         });
 
         if (roleRefResult.isErr()) {

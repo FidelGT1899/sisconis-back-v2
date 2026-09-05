@@ -1,7 +1,7 @@
 import { AppError } from "@shared-kernel/errors/app.error";
 import type { Result } from "@shared-kernel/errors/result";
 import { HttpResponseBuilder } from "@shared-infrastructure/http/base/http-response.builder";
-import type { HttpRequest, HttpResponse } from "@shared-infrastructure/http/ports/controller";
+import type { HttpCookie, HttpRequest, HttpResponse } from "@shared-infrastructure/http/ports/controller";
 import { HttpErrorMapper } from "@shared-infrastructure/http/errors/error-mapper";
 
 export abstract class BaseController {
@@ -9,6 +9,18 @@ export abstract class BaseController {
         return {
             statusCode: 200,
             body: HttpResponseBuilder.success(data, meta),
+        };
+    }
+
+    protected okWithCookies<T = unknown>(
+        data: T,
+        cookies: HttpCookie[],
+        meta?: Record<string, unknown>
+    ): HttpResponse {
+        return {
+            statusCode: 200,
+            body: HttpResponseBuilder.success(data, meta),
+            cookies,
         };
     }
 
@@ -32,6 +44,13 @@ export abstract class BaseController {
         };
     }
 
+    protected unauthorized(message: string, code = "UNAUTHORIZED"): HttpResponse {
+        return {
+            statusCode: 401,
+            body: HttpResponseBuilder.error(message, code),
+        };
+    }
+
     protected fail(error: AppError): HttpResponse {
         return HttpErrorMapper.toResponse(error);
     }
@@ -40,10 +59,21 @@ export abstract class BaseController {
         return req.params?.id ?? null;
     }
 
+    protected getUserAgent(req: HttpRequest): string {
+        return (req.headers?.["user-agent"] as string | undefined) ?? "unknown";
+    }
+
+    protected getCookie(req: HttpRequest, name: string): string | null {
+        return req.cookies?.[name] ?? null;
+    }
+
+    protected getAuth(req: HttpRequest) {
+        return req.auth ?? null;
+    }
+
     protected missingParam(param: string): HttpResponse {
         return this.badRequest(`${param} is required`);
     }
-
 
     protected handleResult<T>(
         result: Result<T, AppError>,

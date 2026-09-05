@@ -1,16 +1,12 @@
 import { DeleteUserController } from "./delete-user.controller";
 import type { DeleteUserUseCase } from "@users-application/use-cases/user/delete-user.use-case";
-import type { HttpRequest } from "@shared-infrastructure/http/ports/controller";
+import { makeHttpRequest } from "@shared-infrastructure/http/testing/http-request.factory";
 import { Result } from "@shared-kernel/errors/result";
 import { UserNotFoundError } from "@users-application/errors/user-not-found.error";
 import { UserNotDeletableError } from "@users-domain/errors/user-not-deletable.error";
 
 const mockUseCase = (): jest.Mocked<DeleteUserUseCase> =>
     ({ execute: jest.fn() } as unknown as jest.Mocked<DeleteUserUseCase>);
-
-const makeRequest = (params?: Record<string, string>): HttpRequest => ({
-    ...(params && { params }),
-});
 
 describe("DeleteUserController", () => {
     it("should return 204 when user is deleted successfully", async () => {
@@ -19,7 +15,7 @@ describe("DeleteUserController", () => {
         useCase.execute.mockResolvedValue(Result.ok(undefined));
 
         const response = await controller.handle(
-            makeRequest({ id: "user-id" })
+            makeHttpRequest({ params: { id: "user-id" } })
         );
 
         expect(useCase.execute).toHaveBeenCalledWith("user-id");
@@ -31,7 +27,7 @@ describe("DeleteUserController", () => {
         const useCase = mockUseCase();
         const controller = new DeleteUserController(useCase);
 
-        const response = await controller.handle(makeRequest({}));
+        const response = await controller.handle(makeHttpRequest({}));
 
         expect(useCase.execute).not.toHaveBeenCalled();
         expect(response.statusCode).toBe(400);
@@ -45,7 +41,7 @@ describe("DeleteUserController", () => {
         useCase.execute.mockResolvedValue(Result.fail(error));
 
         const response = await controller.handle(
-            makeRequest({ id: "user-id" })
+            makeHttpRequest({ params: { id: "user-id" } })
         );
 
         expect(response.statusCode).toBe(error.statusCode);
@@ -60,7 +56,7 @@ describe("DeleteUserController", () => {
         useCase.execute.mockResolvedValue(Result.fail(error));
 
         const response = await controller.handle(
-            makeRequest({ id: "user-id" })
+            makeHttpRequest({ params: { id: "user-id" } })
         );
 
         expect(response.statusCode).toBe(error.statusCode);

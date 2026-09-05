@@ -1,15 +1,11 @@
 import { ResetUserPasswordController } from "./reset-user-password.controller";
 import type { ResetUserPasswordUseCase } from "@users-application/use-cases/user/reset-user-password.use-case";
-import type { HttpRequest } from "@shared-infrastructure/http/ports/controller";
+import { makeHttpRequest } from "@shared-infrastructure/http/testing/http-request.factory";
 import { Result } from "@shared-kernel/errors/result";
 import { UserNotFoundError } from "@users-application/errors/user-not-found.error";
 
 const mockUseCase = (): jest.Mocked<ResetUserPasswordUseCase> =>
     ({ execute: jest.fn() } as unknown as jest.Mocked<ResetUserPasswordUseCase>);
-
-const makeRequest = (params?: Record<string, string>): HttpRequest => ({
-    ...(params && { params }),
-});
 
 describe("ResetUserPasswordController", () => {
     it("should return 204 when password is reset successfully", async () => {
@@ -18,7 +14,7 @@ describe("ResetUserPasswordController", () => {
         useCase.execute.mockResolvedValue(Result.ok(undefined));
 
         const response = await controller.handle(
-            makeRequest({ id: "user-id" })
+            makeHttpRequest({ params: { id: "user-id" } })
         );
 
         expect(useCase.execute).toHaveBeenCalledWith("user-id");
@@ -30,7 +26,7 @@ describe("ResetUserPasswordController", () => {
         const useCase = mockUseCase();
         const controller = new ResetUserPasswordController(useCase);
 
-        const response = await controller.handle(makeRequest({}));
+        const response = await controller.handle(makeHttpRequest({}));
 
         expect(useCase.execute).not.toHaveBeenCalled();
         expect(response.statusCode).toBe(400);
@@ -41,7 +37,7 @@ describe("ResetUserPasswordController", () => {
         const useCase = mockUseCase();
         const controller = new ResetUserPasswordController(useCase);
 
-        const response = await controller.handle(makeRequest({ id: "" }));
+        const response = await controller.handle(makeHttpRequest({ params: { id: "" } }));
 
         expect(useCase.execute).not.toHaveBeenCalled();
         expect(response.statusCode).toBe(400);
@@ -55,7 +51,7 @@ describe("ResetUserPasswordController", () => {
         useCase.execute.mockResolvedValue(Result.fail(error));
 
         const response = await controller.handle(
-            makeRequest({ id: "non-existent-user" })
+            makeHttpRequest({ params: { id: "non-existent-user" } })
         );
 
         expect(useCase.execute).toHaveBeenCalledWith("non-existent-user");
@@ -70,7 +66,7 @@ describe("ResetUserPasswordController", () => {
         useCase.execute.mockRejectedValue(new Error("Database connection failed"));
 
         await expect(
-            controller.handle(makeRequest({ id: "user-id" }))
+            controller.handle(makeHttpRequest({ params: { id: "user-id" } }))
         ).rejects.toThrow("Database connection failed");
     });
 });

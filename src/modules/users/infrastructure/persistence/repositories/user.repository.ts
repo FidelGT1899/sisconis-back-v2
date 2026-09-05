@@ -98,18 +98,17 @@ export class UserRepository implements IUserRepository {
         }
     }
 
-    // async save(user: UserEntity): Promise<UserEntity> {
-    //     try {
-    //         const data = UserMapper.toPersistence(user);
-    //         const created = await this.prisma.user.create({
-    //             data,
-    //             include: { role: true }
-    //         });
-    //         return UserMapper.toDomain(created);
-    //     } catch (error) {
-    //         throw PrismaErrorMapper.mapError(error);
-    //     }
-    // }
+    async findByEmail(email: string): Promise<UserEntity | null> {
+        try {
+            const user = await this.prisma.user.findFirst({
+                where: { email, deletedAt: null },
+                include: { role: true },
+            });
+            return user ? UserMapper.toDomain(user) : null;
+        } catch (error) {
+            throw PrismaErrorMapper.mapError(error);
+        }
+    }
 
     async save(user: UserEntity): Promise<UserEntity> {
         try {
