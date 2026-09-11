@@ -53,7 +53,7 @@ describe("UpdateUserRoleController", () => {
 
         await expect(
             controller.handle(makeHttpRequest({ params: { id: validUserId }, body: {} }))
-        ).rejects.toBeDefined();
+        ).rejects.toThrow();
 
         expect(useCase.execute).not.toHaveBeenCalled();
     });
