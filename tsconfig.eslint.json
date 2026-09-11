@@ -5,11 +5,11 @@
     },
     "include": [
         "src/**/*.ts",
+        "tests/**/*.ts",
         "docs/**/*",
         "scripts/**/*",
         "eslint.config.ts",
-        "jest.config.ts",
-        "setupTests.ts",
+        "jest.config.mjs",
         "prisma.config.ts",
         "src/generated/prisma/**/*.ts"
     ],
