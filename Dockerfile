@@ -4,7 +4,7 @@ ARG NODE_VERSION=22.12.0
 
 # ---------- Base: solo lo común a todos los stages ----------
 FROM node:${NODE_VERSION}-alpine AS base
-RUN corepack enable
+RUN npm install -g corepack@latest && corepack enable
 WORKDIR /app
 
 # ---------- Deps: instala TODAS las dependencias (incl. dev) ----------

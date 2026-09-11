@@ -34,6 +34,12 @@ const config = {
             '<rootDir>/src/modules/system/application/$1',
         '^@system-infrastructure/(.*)$':
             '<rootDir>/src/modules/system/infrastructure/$1',
+
+        '^@auth-domain/(.*)$': '<rootDir>/src/modules/auth/domain/$1',
+        '^@auth-application/(.*)$':
+            '<rootDir>/src/modules/auth/application/$1',
+        '^@auth-infrastructure/(.*)$':
+            '<rootDir>/src/modules/auth/infrastructure/$1',
     },
     transform: {
         '^.+\\.tsx?$': [
