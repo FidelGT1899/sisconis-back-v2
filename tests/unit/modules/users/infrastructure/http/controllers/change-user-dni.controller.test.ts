@@ -53,7 +53,7 @@ describe("ChangeUserDniController", () => {
                 params: { id: "user-id" },
                 body: { newDni: "invalid-dni" }
             }))
-        ).rejects.toBeDefined();
+        ).rejects.toThrow();
 
         expect(useCase.execute).not.toHaveBeenCalled();
     });
@@ -67,7 +67,7 @@ describe("ChangeUserDniController", () => {
                 params: { id: "user-id" },
                 body: {}
             }))
-        ).rejects.toBeDefined();
+        ).rejects.toThrow();
 
         expect(useCase.execute).not.toHaveBeenCalled();
     });

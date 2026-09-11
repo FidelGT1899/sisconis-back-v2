@@ -47,7 +47,7 @@ describe("ChangeUserPasswordController", () => {
 
         await expect(
             controller.handle(makeHttpRequest({ params: { id: "user-id" }, body: { newPassword: "Pass1" } }))
-        ).rejects.toBeDefined();
+        ).rejects.toThrow();
 
         expect(useCase.execute).not.toHaveBeenCalled();
     });
@@ -58,7 +58,7 @@ describe("ChangeUserPasswordController", () => {
 
         await expect(
             controller.handle(makeHttpRequest({ params: { id: "user-id" }, body: { newPassword: "a1".repeat(26) } }))
-        ).rejects.toBeDefined();
+        ).rejects.toThrow();
 
         expect(useCase.execute).not.toHaveBeenCalled();
     });
@@ -69,7 +69,7 @@ describe("ChangeUserPasswordController", () => {
 
         await expect(
             controller.handle(makeHttpRequest({ params: { id: "user-id" }, body: { newPassword: "onlylowercase" } }))
-        ).rejects.toBeDefined();
+        ).rejects.toThrow();
 
         expect(useCase.execute).not.toHaveBeenCalled();
     });
@@ -80,7 +80,7 @@ describe("ChangeUserPasswordController", () => {
 
         await expect(
             controller.handle(makeHttpRequest({ params: { id: "user-id" }, body: { newPassword: "12345678" } }))
-        ).rejects.toBeDefined();
+        ).rejects.toThrow();
 
         expect(useCase.execute).not.toHaveBeenCalled();
     });
@@ -91,7 +91,7 @@ describe("ChangeUserPasswordController", () => {
 
         await expect(
             controller.handle(makeHttpRequest({ params: { id: "user-id" }, body: {} }))
-        ).rejects.toBeDefined();
+        ).rejects.toThrow();
 
         expect(useCase.execute).not.toHaveBeenCalled();
     });
@@ -102,7 +102,7 @@ describe("ChangeUserPasswordController", () => {
 
         await expect(
             controller.handle(makeHttpRequest({ params: { id: "user-id" }, body: { newPassword: 12345678 } }))
-        ).rejects.toBeDefined();
+        ).rejects.toThrow();
 
         expect(useCase.execute).not.toHaveBeenCalled();
     });

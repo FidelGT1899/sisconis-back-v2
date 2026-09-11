@@ -65,7 +65,7 @@ describe("CreateUserController", () => {
 
         await expect(
             controller.handle(makeHttpRequest({ body: { email: "invalid-email" } }))
-        ).rejects.toBeDefined();
+        ).rejects.toThrow();
 
         expect(useCase.execute).not.toHaveBeenCalled();
     });
@@ -76,7 +76,7 @@ describe("CreateUserController", () => {
 
         await expect(
             controller.handle(makeHttpRequest({ body: {} }))
-        ).rejects.toBeDefined();
+        ).rejects.toThrow();
 
         expect(useCase.execute).not.toHaveBeenCalled();
     });
