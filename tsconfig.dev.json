@@ -5,11 +5,11 @@
         "moduleResolution": "bundler",
         "verbatimModuleSyntax": true,
         "isolatedModules": true,
-        "rootDir": "src",
+        "rootDir": ".",
         "outDir": "dist",
         "sourceMap": true,
         "types": ["node", "jest"]
     },
-    "include": ["src/**/*"],
+    "include": ["src/**/*", "tests/**/*"],
     "exclude": ["node_modules", "dist"]
 }

@@ -19,6 +19,9 @@ function bootstrap(): void {
     const authRouter = container.get<Router>(TYPES.AuthRouter);
     const globalErrorMiddleware = container.get<ErrorRequestHandler>(TYPES.GlobalErrorMiddleware);
 
+    const logger = container.get<ILogger>(TYPES.Logger);
+    const prismaService = container.get<PrismaService>(TYPES.PrismaService);
+
     const app = createApp({
         usersRouter,
         rolesRouter,
@@ -28,11 +31,8 @@ function bootstrap(): void {
     });
 
     const server = app.listen(env.PORT, () => {
-        console.log(`Server running on port ${env.PORT}`);
+        logger.info(`Server running on port ${env.PORT}`);
     });
-
-    const logger = container.get<ILogger>(TYPES.Logger);
-    const prismaService = container.get<PrismaService>(TYPES.PrismaService);
 
     const shutdown = createGracefulShutdown({
         server,

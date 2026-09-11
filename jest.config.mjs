@@ -5,7 +5,7 @@ const config = {
     collectCoverageFrom: [
         'src/**/*.ts',
         '!src/**/*.d.ts',
-        '!src/**/__tests__/**',
+        '!src/main.ts',
     ],
     coverageDirectory: 'coverage',
     coverageProvider: 'v8',
@@ -27,7 +27,7 @@ const config = {
             '<rootDir>/src/modules/users/application/$1',
         '^@users-infrastructure/(.*)$':
             '<rootDir>/src/modules/users/infrastructure/$1',
-        '^@users-tests/(.*)$': '<rootDir>/src/modules/users/__tests__/$1',
+        '^@tests-factories/(.*)$': '<rootDir>/tests/factories/$1',
 
         '^@system-domain/(.*)$': '<rootDir>/src/modules/system/domain/$1',
         '^@system-application/(.*)$':
@@ -43,8 +43,8 @@ const config = {
             },
         ],
     },
-    roots: ['<rootDir>/src'],
-    setupFiles: ['<rootDir>/setupTests.ts'],
+    roots: ['<rootDir>/tests', '<rootDir>/src'],
+    setupFiles: ['<rootDir>/tests/setup.ts'],
     testEnvironment: 'node',
     testMatch: ['**/?(*.)+(spec|test).ts'],
 };
