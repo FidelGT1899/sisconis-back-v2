@@ -54,7 +54,7 @@ describe("GetUsersController", () => {
 
         await expect(
             controller.handle(makeHttpRequest({ query: { page: "invalid", limit: -1 } }))
-        ).rejects.toBeDefined();
+        ).rejects.toThrow();
 
         expect(useCase.execute).not.toHaveBeenCalled();
     });

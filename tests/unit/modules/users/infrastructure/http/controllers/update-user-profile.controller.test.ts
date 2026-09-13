@@ -56,7 +56,7 @@ describe("UpdateUserProfileController", () => {
                 params: { id: "user-id" },
                 body: {}
             }))
-        ).rejects.toBeDefined();
+        ).rejects.toThrow();
 
         expect(useCase.execute).not.toHaveBeenCalled();
     });

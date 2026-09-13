@@ -4,16 +4,19 @@ ARG NODE_VERSION=22.12.0
 
 # ---------- Base: solo lo común a todos los stages ----------
 FROM node:${NODE_VERSION}-alpine AS base
-RUN corepack enable
+RUN npm install -g corepack@latest && corepack enable
 WORKDIR /app
 
 # ---------- Deps: instala TODAS las dependencias (incl. dev) ----------
 FROM base AS deps
-COPY package.json pnpm-lock.yaml ./
+COPY package.json pnpm-lock.yaml .npmrc ./
 RUN pnpm install --frozen-lockfile
 
 # ---------- Builder: genera Prisma Client y compila TypeScript ----------
 FROM base AS builder
+ARG DATABASE_URL="postgresql://user:pass@localhost:5432/dummy"
+ENV DATABASE_URL=$DATABASE_URL
+
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN pnpm prisma generate
@@ -21,7 +24,7 @@ RUN pnpm build
 
 # ---------- Production-deps: SOLO dependencias de producción ----------
 FROM base AS production-deps
-COPY package.json pnpm-lock.yaml ./
+COPY package.json pnpm-lock.yaml .npmrc ./
 RUN pnpm install --frozen-lockfile --prod
 
 # ---------- Runner: imagen final, mínima ----------
