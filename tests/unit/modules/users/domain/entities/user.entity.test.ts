@@ -2,6 +2,9 @@ import { UserEntity, UserStatus } from "@users-domain/entities/user.entity";
 import { InvalidEmailError } from "@users-domain/errors/invalid-email.error";
 import { InvalidPasswordError } from "@users-domain/errors/invalid-password.error";
 import { InvalidDniError } from "@users-domain/errors/invalid-dni.error";
+import { EmailVO } from "@users-domain/value-objects/email.vo";
+import { DniVO } from "@users-domain/value-objects/dni.vo";
+import { PasswordFactory } from "@users-domain/factories/password.factory";
 import { makeMockIdGenerator, makeMockPasswordHasher } from "@tests-factories/users/mocks";
 import { makeExistingUserProps, makeUserEntity, makeUserProps } from "@tests-factories/users/user.factory";
 import { makeRoleReference } from "@tests-factories/users/role.factory";
@@ -375,6 +378,210 @@ describe('UserEntity', () => {
             user.updateProfile({});
 
             expect(user.updatedAt).toBe(before);
+        });
+    });
+
+    describe('requiresPasswordChange', () => {
+        it('should return true when password is temporary', async () => {
+            const result = await UserEntity.create(
+                makeUserProps(),
+                mockIdGenerator,
+                mockPasswordHasher
+            );
+
+            expect(result.value().requiresPasswordChange()).toBe(true);
+        });
+
+        it('should return false when password is permanent', () => {
+            const user = makeUserEntity();
+
+            expect(user.requiresPasswordChange()).toBe(false);
+        });
+    });
+
+    describe('changeRole', () => {
+        it('should update role and updatedAt when role changes', () => {
+            const user = makeUserEntity();
+            const newRole = makeRoleReference({ id: 'role-id-456', level: 3 });
+            const before = user.updatedAt;
+
+            user.changeRole(newRole);
+
+            expect(user.getRoleId()).toBe('role-id-456');
+            expect(user.updatedAt).not.toBe(before);
+        });
+
+        it('should not update updatedAt when role is the same', () => {
+            const user = makeUserEntity();
+            const sameRole = makeRoleReference({ id: user.getRoleId(), level: user.getRoleLevel() });
+            const before = user.updatedAt;
+
+            user.changeRole(sameRole);
+
+            expect(user.getRoleId()).toBe(sameRole.getId());
+            expect(user.updatedAt).toBe(before);
+        });
+    });
+
+    describe('role management permissions', () => {
+        it('should allow the actor to manage a target user of lower level', () => {
+            const actor = makeUserEntity({ roleLevel: 7 });
+            const target = makeUserEntity({ roleLevel: 3 });
+
+            expect(actor.canManageUser(target)).toBe(true);
+            expect(actor.canAssignRoleLevel(3)).toBe(true);
+        });
+
+        it('should not allow the actor to manage a target user of equal or higher level', () => {
+            const actor = makeUserEntity({ roleLevel: 7 });
+            const equal = makeUserEntity({ roleLevel: 7 });
+            const higher = makeUserEntity({ roleLevel: 9 });
+
+            expect(actor.canManageUser(equal)).toBe(false);
+            expect(actor.canManageUser(higher)).toBe(false);
+            expect(actor.canAssignRoleLevel(7)).toBe(false);
+            expect(actor.canAssignRoleLevel(9)).toBe(false);
+        });
+    });
+
+    describe('updateEmail', () => {
+        it('should update email and updatedAt when valid', () => {
+            const user = makeUserEntity();
+            const before = user.updatedAt;
+
+            const result = user.updateEmail('new.address@example.com');
+
+            expect(result.isOk()).toBe(true);
+            expect(user.getEmail()).toBe('new.address@example.com');
+            expect(user.updatedAt).not.toBe(before);
+        });
+
+        it('should fail with InvalidEmailError and not mutate when invalid', () => {
+            const user = makeUserEntity();
+            const before = user.updatedAt;
+
+            const result = user.updateEmail('invalid');
+
+            expect(result.isErr()).toBe(true);
+            expect(result.error()).toBeInstanceOf(InvalidEmailError);
+            expect(user.getEmail()).toBe('john.doe@example.com');
+            expect(user.updatedAt).toBe(before);
+        });
+    });
+
+    describe('updateDni', () => {
+        it('should update dni and updatedAt when valid', () => {
+            const user = makeUserEntity();
+            const before = user.updatedAt;
+
+            const result = user.updateDni('87654321');
+
+            expect(result.isOk()).toBe(true);
+            expect(user.getDni()).toBe('87654321');
+            expect(user.updatedAt).not.toBe(before);
+        });
+
+        it('should fail with InvalidDniError and not mutate when invalid', () => {
+            const user = makeUserEntity();
+            const before = user.updatedAt;
+
+            const result = user.updateDni('bad-dni');
+
+            expect(result.isErr()).toBe(true);
+            expect(result.error()).toBeInstanceOf(InvalidDniError);
+            expect(user.getDni()).toBe('12345678');
+            expect(user.updatedAt).toBe(before);
+        });
+    });
+
+    describe('resetToTemporaryPassword', () => {
+        it('should rehash the DNI as a temporary password and update updatedAt', async () => {
+            const user = makeUserEntity();
+            const before = user.updatedAt;
+
+            mockPasswordHasher.hash.mockResolvedValue('temp_hash_12345678');
+            await user.resetToTemporaryPassword(mockPasswordHasher);
+
+            expect(mockPasswordHasher.hash).toHaveBeenCalledWith('12345678');
+            expect(user.getPassword()).toBe('temp_hash_12345678');
+            expect(user.isPasswordTemporary()).toBe(true);
+            expect(user.requiresPasswordChange()).toBe(true);
+            expect(user.updatedAt).not.toBe(before);
+        });
+    });
+
+    describe('verifyPassword', () => {
+        it('should delegate to the password VO matches and return true on match', async () => {
+            const user = makeUserEntity();
+            mockPasswordHasher.compare.mockResolvedValue(true);
+
+            await expect(user.verifyPassword('PlainPassword123', mockPasswordHasher)).resolves.toBe(true);
+            expect(mockPasswordHasher.compare).toHaveBeenCalled();
+        });
+
+        it('should return false when compare fails', async () => {
+            const user = makeUserEntity();
+            mockPasswordHasher.compare.mockResolvedValue(false);
+
+            await expect(user.verifyPassword('WrongPassword', mockPasswordHasher)).resolves.toBe(false);
+        });
+    });
+
+    describe('status predicates', () => {
+        it('should expose isActive, isInactive and isSuspended based on current status', () => {
+            const active = makeUserEntity({ status: UserStatus.ACTIVE });
+            const inactive = makeUserEntity({ status: UserStatus.INACTIVE });
+            const suspended = makeUserEntity({ status: UserStatus.SUSPENDED });
+
+            expect(active.isActive()).toBe(true);
+            expect(active.isInactive()).toBe(false);
+            expect(active.isSuspended()).toBe(false);
+
+            expect(inactive.isActive()).toBe(false);
+            expect(inactive.isInactive()).toBe(true);
+
+            expect(suspended.isActive()).toBe(false);
+            expect(suspended.isSuspended()).toBe(true);
+        });
+    });
+
+    describe('ensureCanLogin', () => {
+        it('should allow login when user is active', () => {
+            const user = makeUserEntity({ status: UserStatus.ACTIVE });
+
+            const result = user.ensureCanLogin();
+
+            expect(result.isOk()).toBe(true);
+        });
+
+        it('should fail when user is inactive or suspended', () => {
+            const inactive = makeUserEntity({ status: UserStatus.INACTIVE });
+            const suspended = makeUserEntity({ status: UserStatus.SUSPENDED });
+
+            expect(inactive.ensureCanLogin().isErr()).toBe(true);
+            expect(inactive.ensureCanLogin().error()).toBeInstanceOf(UserNotActiveError);
+            expect(suspended.ensureCanLogin().isErr()).toBe(true);
+        });
+    });
+
+    describe('rehydrate', () => {
+        it('should build an entity without validation preserving props', () => {
+            const user = UserEntity.rehydrate({
+                id: 'rehydrated-id',
+                name: 'Ana',
+                lastName: 'Gomez',
+                email: EmailVO.create('ana@example.com').value(),
+                dni: DniVO.create('87654321').value(),
+                password: PasswordFactory.rehydratePermanent('some-hash'),
+                role: makeRoleReference({ id: 'role-rehydrate-1', level: 5 }),
+                status: UserStatus.ACTIVE,
+                createdAt: new Date('2024-05-01'),
+            });
+
+            expect(user).toBeInstanceOf(UserEntity);
+            expect(user.getId()).toBe('rehydrated-id');
+            expect(user.getName()).toBe('Ana');
+            expect(user.getRoleLevel()).toBe(5);
         });
     });
 });

@@ -1,8 +1,11 @@
 import { CreateUserUseCase } from "@users-application/use-cases/user/create-user.use-case";
 import { UserAlreadyExistsError } from "@users-application/errors/user-already-exists.error";
 import { RoleNotFoundError } from "@users-application/errors/role/role-not-found.error";
+import { FailedToCreateRoleReferenceError } from "@users-application/errors/role/failed-to-create-role-reference.error";
 import { InvalidEmailError } from "@users-domain/errors/invalid-email.error";
 import { InvalidDniError } from "@users-domain/errors/invalid-dni.error";
+import { RoleEntity } from "@users-domain/entities/role.entity";
+import { UserStatus } from "@users-domain/entities/user.entity";
 
 import {
     makeMockUserRepository,
@@ -53,6 +56,11 @@ describe('CreateUserUseCase', () => {
         expect(result.isOk()).toBe(true);
         expect(result.value().email).toBe(inputDto.email);
         expect(result.value().dni).toBe(inputDto.dni);
+        expect(result.value().status).toBe(UserStatus.ACTIVE);
+        expect(result.value().role).toEqual({
+            id: makeRoleEntity().getId(),
+            name: makeRoleEntity().getName(),
+        });
         expect(mockUserRepository.save).toHaveBeenCalledTimes(1);
     });
 
@@ -86,6 +94,25 @@ describe('CreateUserUseCase', () => {
 
         expect(result.isErr()).toBe(true);
         expect(result.error()).toBeInstanceOf(RoleNotFoundError);
+        expect(mockUserRepository.save).not.toHaveBeenCalled();
+    });
+
+    it('should fail with FailedToCreateRoleReferenceError when role data is invalid', async () => {
+        mockUserRepository.existsByEmail.mockResolvedValue(false);
+        mockUserRepository.existsByDni.mockResolvedValue(false);
+        const invalidRole = RoleEntity.rehydrate({
+            id: 'role-id-123',
+            name: 'Admin',
+            description: null,
+            level: 0,
+            createdAt: new Date('2024-01-01'),
+        });
+        mockRoleRepository.findById.mockResolvedValue(invalidRole);
+
+        const result = await useCase.execute(inputDto);
+
+        expect(result.isErr()).toBe(true);
+        expect(result.error()).toBeInstanceOf(FailedToCreateRoleReferenceError);
         expect(mockUserRepository.save).not.toHaveBeenCalled();
     });
 

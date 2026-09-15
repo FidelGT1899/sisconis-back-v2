@@ -3,6 +3,8 @@ import { mock } from 'jest-mock-extended';
 import { LoginUseCase } from '@auth-application/use-cases/login.use-case';
 import { InvalidCredentialsError } from '@auth-application/errors/invalid-credentials.error';
 import { AccountBlockedError } from '@auth-application/errors/account-blocked.error';
+import { UserStatus } from '@users-domain/entities/user.entity';
+import { InvalidDeviceInfoError } from '@auth-domain/errors/invalid-device-info.error';
 import type { IUserRepository } from '@users-domain/repositories/user.repository.interface';
 import type { ISessionRepository } from '@auth-domain/repositories/session.repository.interface';
 import type { ITokenService } from '@auth-domain/ports/token.service.interface';
@@ -119,7 +121,7 @@ describe('LoginUseCase', () => {
     });
 
     it('should return InvalidCredentialsError when user cannot login (inactive)', async () => {
-        const user = makeUserEntity({ status: 'SUSPENDED' as never });
+        const user = makeUserEntity({ status: UserStatus.SUSPENDED });
         mockUserRepository.findByEmail.mockResolvedValue(user);
         mockPasswordHasher.compare.mockResolvedValue(false);
 
@@ -156,6 +158,19 @@ describe('LoginUseCase', () => {
                 email: 'test@example.com',
             })
         );
+    });
+
+    it('should propagate InvalidDeviceInfoError when device info cannot be build', async () => {
+        const user = makeUserEntity();
+        mockUserRepository.findByEmail.mockResolvedValue(user);
+        mockPasswordHasher.compare.mockResolvedValue(true);
+        mockDeviceInfoParser.parse.mockReturnValue('');
+
+        const result = await useCase.execute(loginDto);
+
+        expect(result.isErr()).toBe(true);
+        expect(result.error()).toBeInstanceOf(InvalidDeviceInfoError);
+        expect(mockSessionRepository.save).not.toHaveBeenCalled();
     });
 
     it('should not save session or reset attempts when credentials fail', async () => {

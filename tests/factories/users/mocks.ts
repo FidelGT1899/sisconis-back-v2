@@ -54,5 +54,19 @@ export const makePrismaUser = (overrides = {}) => ({
 
 export const asUnknown = (value: unknown) => value;
 
+export const makePrismaRole = (overrides = {}) => ({
+    id: 'role-id-123',
+    name: 'Admin',
+    description: 'Administrator role',
+    level: 7,
+    createdAt: new Date('2024-01-01'),
+    updatedAt: new Date('2024-01-01'),
+    deletedAt: null,
+    createdBy: null,
+    updatedBy: null,
+    deletedBy: null,
+    ...overrides,
+});
+
 export const makeMockUserRepository = () => mock<IUserRepository>();
 export const makeMockRoleRepository = () => mock<IRoleRepository>();
