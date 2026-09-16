@@ -3,6 +3,7 @@ import type { GetUsersUseCase } from "@users-application/use-cases/user/get-user
 import type { SuccessResponse } from "@shared-infrastructure/http/ports/controller";
 import { makeHttpRequest } from "@tests-factories/http-request.factory";
 import { Result } from "@shared-kernel/errors/result";
+import { UnexpectedError } from "@shared-kernel/errors/unexpected.error";
 import { UserResponseMapper } from "@users-application/mappers/user-response.mapper";
 import { makeUserEntity } from "@tests-factories/users/user.factory";
 
@@ -75,5 +76,18 @@ describe("GetUsersController", () => {
         expect(response.statusCode).toBe(200);
         const body = response.body as SuccessResponse;
         expect(body.data).toHaveLength(0);
+    });
+
+    it("should return error response when use case fails", async () => {
+        const useCase = mockUseCase();
+        const controller = new GetUsersController(useCase);
+        const error = new UnexpectedError('LIST_USERS_FAILED', 'Failed to list users');
+        useCase.execute.mockResolvedValue(Result.fail(error));
+
+        const response = await controller.handle(makeHttpRequest({ query: {} }));
+
+        expect(response.statusCode).toBe(500);
+        expect(response.body?.status).toBe('error');
+        expect(response.body?.code).toBe('LIST_USERS_FAILED');
     });
 });

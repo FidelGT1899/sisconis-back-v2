@@ -47,6 +47,37 @@ describe('GetUsersUseCase', () => {
         });
     });
 
+    it('should pass custom pagination and search to the repository', async () => {
+        mockUserRepository.index.mockResolvedValue({ items: [], total: 0 });
+
+        await useCase.execute({
+            page: 4,
+            limit: 25,
+            orderBy: 'name',
+            direction: 'asc',
+            search: 'joh',
+        });
+
+        expect(mockUserRepository.index).toHaveBeenCalledWith({
+            page: 4,
+            limit: 25,
+            orderBy: 'name',
+            direction: 'asc',
+            search: 'joh',
+        });
+    });
+
+    it('should not override returned page and limit while mapping DTOs', async () => {
+        const user = makeUserEntity();
+        mockUserRepository.index.mockResolvedValue({ items: [user], total: 7 });
+
+        const result = await useCase.execute({ page: 2, limit: 3 });
+
+        expect(result.value().page).toBe(2);
+        expect(result.value().limit).toBe(3);
+        expect(result.value().total).toBe(7);
+    });
+
     it('should return empty list when no users exist', async () => {
         mockUserRepository.index.mockResolvedValue({ items: [], total: 0 });
 

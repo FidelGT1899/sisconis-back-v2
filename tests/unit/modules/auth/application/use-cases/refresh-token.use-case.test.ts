@@ -4,6 +4,7 @@ import { RefreshTokenUseCase } from '@auth-application/use-cases/refresh-token.u
 import { SessionNotFoundError } from '@auth-application/errors/session-not-found.error';
 import { InactiveSessionError } from '@auth-domain/errors/inactive-session.error';
 import { RefreshTokenReuseDetectedError } from '@auth-domain/errors/refresh-token-reuse-detected.error';
+import { InvalidRefreshTokenHashError } from '@auth-domain/errors/invalid-refresh-token-hash.error';
 import type { IUserRepository } from '@users-domain/repositories/user.repository.interface';
 import type { ISessionRepository } from '@auth-domain/repositories/session.repository.interface';
 import type { ITokenService } from '@auth-domain/ports/token.service.interface';
@@ -12,6 +13,14 @@ import type { IHashService } from '@shared-domain/ports/hash-service';
 import { SessionEntity } from '@auth-domain/entities/session.entity';
 import { DeviceInfoVO } from '@auth-domain/value-objects/device-info.vo';
 import { RefreshTokenHashVO } from '@auth-domain/value-objects/refresh-token-hash.vo';
+import { makeUserEntity } from '@tests-factories/users/user.factory';
+
+const hashOf = (rawRefreshToken: string): string => `sha256:${rawRefreshToken}`;
+
+// El hash almacenado es SIEMPRE distinto del token crudo, para que solo un
+// flujo que realmente hashee el token entrante pueda dar match.
+const validRefreshToken = 'a'.repeat(64);
+const SESSION_HASH = hashOf(validRefreshToken);
 
 const createValidSession = (overrides: Partial<{
     sessionId: string;
@@ -23,7 +32,7 @@ const createValidSession = (overrides: Partial<{
         userAgent: 'Mozilla/5.0',
     }).value();
 
-    const hash = RefreshTokenHashVO.create('a'.repeat(64)).value();
+    const hash = RefreshTokenHashVO.create(SESSION_HASH).value();
 
     const now = new Date();
     const expiresAt = new Date(now);
@@ -47,9 +56,6 @@ describe('RefreshTokenUseCase', () => {
     let mockTokenGenerator: ReturnType<typeof mock<ITokenGenerator>>;
     let mockHashService: ReturnType<typeof mock<IHashService>>;
 
-    const validRefreshToken = 'a'.repeat(64);
-    const SESSION_HASH = 'a'.repeat(64);
-
     beforeEach(() => {
         jest.clearAllMocks();
         mockUserRepository = mock<IUserRepository>();
@@ -58,6 +64,9 @@ describe('RefreshTokenUseCase', () => {
         mockTokenGenerator = mock<ITokenGenerator>();
         mockHashService = mock<IHashService>();
 
+        // Hash dependiente del input: si producción dejara de hashear el token
+        // entrante (comparando crudo contra el hash almacenado), los tests fallarían.
+        mockHashService.hash.mockImplementation(value => hashOf(value));
         mockTokenGenerator.generate.mockReturnValue('b'.repeat(64));
         mockTokenService.generateAccessToken.mockReturnValue('new-access-token');
         mockSessionRepository.update.mockResolvedValue(undefined);
@@ -74,9 +83,8 @@ describe('RefreshTokenUseCase', () => {
     it('should refresh token successfully', async () => {
         const session = createValidSession();
         mockSessionRepository.findById.mockResolvedValue(session);
-        mockHashService.hash.mockReturnValue(SESSION_HASH);
         mockUserRepository.findById.mockResolvedValue(
-            { getId: () => 'user-123', getEmail: () => 'test@test.com', getRoleName: () => 'Admin' } as never
+            makeUserEntity({ id: 'user-123', email: 'test@test.com' })
         );
 
         const result = await useCase.execute({
@@ -85,8 +93,14 @@ describe('RefreshTokenUseCase', () => {
         });
 
         expect(result.isOk()).toBe(true);
-        expect(result.value()).toHaveProperty('accessToken');
-        expect(result.value()).toHaveProperty('refreshToken');
+        expect(result.value().accessToken).toBe('new-access-token');
+        expect(result.value().refreshToken).toBe('b'.repeat(64));
+        expect(mockTokenService.generateAccessToken).toHaveBeenCalledWith({
+            id: 'user-123',
+            email: 'test@test.com',
+            role: 'Admin',
+            sessionId: 'session-123',
+        });
         expect(mockSessionRepository.update).toHaveBeenCalledTimes(1);
     });
 
@@ -106,7 +120,6 @@ describe('RefreshTokenUseCase', () => {
         const session = createValidSession();
         session.revoke();
         mockSessionRepository.findById.mockResolvedValue(session);
-        mockHashService.hash.mockReturnValue(SESSION_HASH);
 
         const result = await useCase.execute({
             sessionId: 'session-123',
@@ -121,7 +134,7 @@ describe('RefreshTokenUseCase', () => {
         const deviceInfo = DeviceInfoVO.create({
             deviceName: 'Test', ip: '127.0.0.1', userAgent: 'Mozilla/5.0',
         }).value();
-        const hash = RefreshTokenHashVO.create('a'.repeat(64)).value();
+        const hash = RefreshTokenHashVO.create(SESSION_HASH).value();
         const past = new Date('2020-01-01');
         const pastExpiry = new Date('2020-01-02');
 
@@ -135,7 +148,6 @@ describe('RefreshTokenUseCase', () => {
         }).value();
 
         mockSessionRepository.findById.mockResolvedValue(session);
-        mockHashService.hash.mockReturnValue(SESSION_HASH);
 
         const result = await useCase.execute({
             sessionId: 'session-123',
@@ -148,16 +160,15 @@ describe('RefreshTokenUseCase', () => {
 
     it('should detect refresh token reuse and revoke all sessions', async () => {
         const session = createValidSession();
-        const previousHash = RefreshTokenHashVO.create('c'.repeat(64)).value();
-        session.rotateRefreshToken(previousHash);
+        const newHash = RefreshTokenHashVO.create(hashOf('c'.repeat(64))).value();
+        session.rotateRefreshToken(newHash);
 
         mockSessionRepository.findById.mockResolvedValue(session);
         mockSessionRepository.revokeAllByUserId.mockResolvedValue(undefined);
-        mockHashService.hash.mockReturnValue('a'.repeat(64));
 
         const result = await useCase.execute({
             sessionId: 'session-123',
-            refreshToken: 'a'.repeat(64),
+            refreshToken: validRefreshToken,
         });
 
         expect(result.isErr()).toBe(true);
@@ -168,10 +179,24 @@ describe('RefreshTokenUseCase', () => {
         );
     });
 
+    it('should return SessionNotFoundError when the session user no longer exists', async () => {
+        const session = createValidSession();
+        mockSessionRepository.findById.mockResolvedValue(session);
+        mockUserRepository.findById.mockResolvedValue(null);
+
+        const result = await useCase.execute({
+            sessionId: 'session-123',
+            refreshToken: validRefreshToken,
+        });
+
+        expect(result.isErr()).toBe(true);
+        expect(result.error()).toBeInstanceOf(SessionNotFoundError);
+        expect(mockSessionRepository.update).not.toHaveBeenCalled();
+    });
+
     it('should return error when hash of refresh token does not match', async () => {
         const session = createValidSession();
         mockSessionRepository.findById.mockResolvedValue(session);
-        mockHashService.hash.mockReturnValue('z'.repeat(64));
 
         const result = await useCase.execute({
             sessionId: 'session-123',
@@ -179,7 +204,7 @@ describe('RefreshTokenUseCase', () => {
         });
 
         expect(result.isErr()).toBe(true);
-        expect(result.error()?.code).toBe('INVALID_REFRESH_TOKEN_HASH');
+        expect(result.error()).toBeInstanceOf(InvalidRefreshTokenHashError);
     });
 
     it('should propagate repository errors', async () => {

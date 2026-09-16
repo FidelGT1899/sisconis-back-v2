@@ -4,6 +4,8 @@ import { UpdateUserByAdminUseCase } from '@users-application/use-cases/user/upda
 import { UserNotFoundError } from '@users-application/errors/user-not-found.error';
 import { EmailAlreadyInUseError } from '@users-application/errors/email-already-in-use.error';
 import { DniAlreadyInUseError } from '@users-application/errors/dni-already-in-use.error';
+import { InvalidEmailError } from '@users-domain/errors/invalid-email.error';
+import { InvalidDniError } from '@users-domain/errors/invalid-dni.error';
 import type { IUserRepository } from '@users-domain/repositories/user.repository.interface';
 
 import { makeUserEntity } from '@tests-factories/users/user.factory';
@@ -40,6 +42,9 @@ describe('UpdateUserByAdminUseCase', () => {
 
         expect(result.isOk()).toBe(true);
         expect(mockUserRepository.update).toHaveBeenCalledTimes(1);
+        expect(result.value().name).toBe('Updated');
+        expect(result.value().email).toBe('updated@example.com');
+        expect(result.value().dni).toBe('87654321');
     });
 
     it('should return UserNotFoundError if user does not exist', async () => {
@@ -72,6 +77,28 @@ describe('UpdateUserByAdminUseCase', () => {
 
         expect(result.isErr()).toBe(true);
         expect(result.error()).toBeInstanceOf(DniAlreadyInUseError);
+        expect(mockUserRepository.update).not.toHaveBeenCalled();
+    });
+
+    it('should return InvalidEmailError when email format is invalid', async () => {
+        mockUserRepository.findById.mockResolvedValue(makeUserEntity());
+        mockUserRepository.existsByEmailExcluding.mockResolvedValue(false);
+
+        const result = await useCase.execute({ id: inputDto.id, email: 'invalid-email' });
+
+        expect(result.isErr()).toBe(true);
+        expect(result.error()).toBeInstanceOf(InvalidEmailError);
+        expect(mockUserRepository.update).not.toHaveBeenCalled();
+    });
+
+    it('should return InvalidDniError when DNI format is invalid', async () => {
+        mockUserRepository.findById.mockResolvedValue(makeUserEntity());
+        mockUserRepository.existsByDniExcluding.mockResolvedValue(false);
+
+        const result = await useCase.execute({ id: inputDto.id, dni: 'invalid-dni' });
+
+        expect(result.isErr()).toBe(true);
+        expect(result.error()).toBeInstanceOf(InvalidDniError);
         expect(mockUserRepository.update).not.toHaveBeenCalled();
     });
 

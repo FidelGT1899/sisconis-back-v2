@@ -2,6 +2,7 @@ import { mock } from 'jest-mock-extended';
 
 import { UpdateRoleUseCase } from '@users-application/use-cases/role/update-role.use-case';
 import { RoleNotFoundError } from '@users-application/errors/role/role-not-found.error';
+import { RoleEntity } from '@users-domain/entities/role.entity';
 import type { IRoleRepository } from '@users-domain/repositories/role.repository.interface';
 
 import { makeRoleEntity } from '@tests-factories/users/role.factory';
@@ -28,7 +29,9 @@ describe('UpdateRoleUseCase', () => {
         });
 
         expect(result.isOk()).toBe(true);
-        expect(result.value()).toHaveProperty('id');
+        expect(result.value().id).toBe('role-123');
+        expect(result.value().name).toBe('New Name');
+        expect(result.value().description).toBe('Updated description');
         expect(mockRoleRepository.update).toHaveBeenCalledTimes(1);
     });
 
@@ -54,6 +57,25 @@ describe('UpdateRoleUseCase', () => {
 
         expect(result.isOk()).toBe(true);
         expect(role.getName()).toBe('Original');
+    });
+
+    it('should keep existing description when description not provided', async () => {
+        const role = RoleEntity.rehydrate({
+            id: 'role-123',
+            name: 'Admin',
+            description: 'Original desc',
+            level: 7,
+            createdAt: new Date('2024-01-01'),
+        });
+        mockRoleRepository.findById.mockResolvedValue(role);
+        mockRoleRepository.update.mockResolvedValue(role);
+
+        const result = await useCase.execute({ id: 'role-123', name: 'Renamed' });
+
+        expect(result.isOk()).toBe(true);
+        expect(role.getName()).toBe('Renamed');
+        expect(role.getDescription()).toBe('Original desc');
+        expect(result.value().description).toBe('Original desc');
     });
 
     it('should propagate repository errors', async () => {
